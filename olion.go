@@ -33,6 +33,8 @@ func getWinsize() (uint, uint) {
 	if int(retCode) == -1 {
 		panic(errno)
 	}
+
+	fmt.Printf("Xpixel=%v Ypixel=%v\n", ws.Xpixel, ws.Ypixel)
 	return uint(ws.Col), uint(ws.Row)
 }
 
@@ -44,8 +46,8 @@ func initScreen() *Screen {
 func (sc *Screen) draw(d1, d2 Dot) {
 }
 
-func main() {
+func Run() {
 	sc := initScreen()
 
-	fmt.Println("width=%v height=%v\n", sc.Width, sc.Height)
+	fmt.Printf("width=%v height=%v\n", sc.Width, sc.Height)
 }
