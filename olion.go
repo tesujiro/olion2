@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"syscall"
+	"time"
 	"unsafe"
 )
 
@@ -43,6 +44,7 @@ func getWinsize() (uint, uint) {
 
 func NewScreen() *Screen {
 	w, h := getWinsize()
+	fmt.Printf("W=%v H=%v\n", int(w), int(h))
 	return &Screen{Width: int(w), Height: int(h)}
 }
 
@@ -50,23 +52,37 @@ type View struct {
 	state Olion
 }
 
-func NewView() *View {
-	return &View{}
+func NewView(state *Olion) *View {
+	return &View{state: *state}
 }
 
 func (view *View) Loop(ctx context.Context, cancel func()) error {
 	defer cancel()
+	//fmt.Println("==>Loop")
 
+	tick := time.NewTicker(time.Millisecond * time.Duration(500)).C
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
+		case <-tick:
+			view.drawScreen()
 		}
 	}
 }
 
-func (v *View) drawScreen() {
+func (sc *Screen) printDot(dot Dot) {
+	//fmt.Printf("==>PrintDot %v\n", dot)
+	//fmt.Printf("==>PrintDot %v\n", sc)
+	fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+}
 
+func (view *View) drawScreen() {
+	//fmt.Println("==>drawScreen")
+	dot := Dot{X: 1, Y: 1}
+	//fmt.Printf("view.state=%v\n", view.state)
+	//fmt.Printf("view.state.screen=%v\n", view.state.screen)
+	view.state.screen.printDot(dot)
 }
 
 type Coordinates struct {
@@ -102,10 +118,11 @@ func (spc *Space) addObj(obj Object) {
 }
 
 func NewSpace() *Space {
+	fmt.Printf("NewSpace Start\n")
 	spc := &Space{}
 	min := -1000
 	max := 1000
-	interval := 10
+	interval := 100
 	for x := min; x <= max; x += interval {
 		for y := min; y <= max; y += interval {
 			for z := min; z <= max; z += interval {
@@ -119,6 +136,7 @@ func NewSpace() *Space {
 			}
 		}
 	}
+	fmt.Printf("NewSpace Finish Objects=%v\n", len(spc.Objects))
 	return spc
 }
 
@@ -129,7 +147,6 @@ type Olion struct {
 	Stderr io.Writer
 	//hub    MessageHub
 
-	//args       []string
 	//bufferSize int
 	// Config contains the values read in from config file
 	//config Config
@@ -137,8 +154,10 @@ type Olion struct {
 	//maxScanBufferSize int
 	readyCh chan struct{}
 	screen  *Screen
+	space   *Space
 
-	space *Space
+	position  Coordinates
+	direction Coordinates
 
 	// cancelFunc is called for Exit()
 	cancelFunc func()
@@ -157,11 +176,15 @@ func New() *Olion {
 		screen:  NewScreen(),
 		space:   NewSpace(),
 		//maxScanBufferSize: bufio.MaxScanTokenSize,
+		position:  Coordinates{X: 0, Y: 0, Z: 0},
+		direction: Coordinates{X: 0, Y: 0, Z: 1},
 	}
 }
 
 func (state *Olion) Run(ctx context.Context) (err error) {
 	//fmt.Printf("width=%v height=%v\n", v.Width, v.Height)
-	NewView().Loop(ctx, state.cancelFunc)
+	go NewView(state).Loop(ctx, state.cancelFunc)
+	time.Sleep(3 * time.Second)
+
 	return nil
 }
