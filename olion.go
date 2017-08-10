@@ -49,11 +49,11 @@ func NewScreen() *Screen {
 }
 
 type View struct {
-	state Olion
+	state *Olion
 }
 
 func NewView(state *Olion) *View {
-	return &View{state: *state}
+	return &View{state: state}
 }
 
 func (view *View) Loop(ctx context.Context, cancel func()) error {
@@ -80,8 +80,6 @@ func (sc *Screen) printDot(dot Dot) {
 func (view *View) drawScreen() {
 	//fmt.Println("==>drawScreen")
 	dot := Dot{X: 1, Y: 1}
-	//fmt.Printf("view.state=%v\n", view.state)
-	//fmt.Printf("view.state.screen=%v\n", view.state.screen)
 	view.state.screen.printDot(dot)
 }
 
