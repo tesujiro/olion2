@@ -38,13 +38,13 @@ func getWinsize() (uint, uint) {
 		panic(errno)
 	}
 
-	fmt.Printf("Xpixel=%v Ypixel=%v\n", ws.Xpixel, ws.Ypixel)
+	//fmt.Printf("Xpixel=%v Ypixel=%v\n", ws.Xpixel, ws.Ypixel)
 	return uint(ws.Col), uint(ws.Row)
 }
 
 func NewScreen() *Screen {
 	w, h := getWinsize()
-	fmt.Printf("W=%v H=%v\n", int(w), int(h))
+	//fmt.Printf("W=%v H=%v\n", int(w), int(h))
 	return &Screen{Width: int(w), Height: int(h)}
 }
 
@@ -60,7 +60,7 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 	defer cancel()
 	//fmt.Println("==>Loop")
 
-	tick := time.NewTicker(time.Millisecond * time.Duration(500)).C
+	tick := time.NewTicker(time.Millisecond * time.Duration(100)).C
 	for {
 		select {
 		case <-ctx.Done():
@@ -72,15 +72,16 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 }
 
 func (sc *Screen) printDot(dot Dot) {
-	//fmt.Printf("==>PrintDot %v\n", dot)
-	//fmt.Printf("==>PrintDot %v\n", sc)
-	fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+	fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, "X")
 }
 
 func (view *View) drawScreen() {
 	//fmt.Println("==>drawScreen")
-	dot := Dot{X: 1, Y: 1}
-	view.state.screen.printDot(dot)
+	for _, obj := range view.state.space.Objects {
+		dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
+		view.state.screen.printDot(dot)
+	}
+	fmt.Printf("\n")
 }
 
 type Coordinates struct {
@@ -120,7 +121,7 @@ func NewSpace() *Space {
 	spc := &Space{}
 	min := -1000
 	max := 1000
-	interval := 100
+	interval := 50
 	for x := min; x <= max; x += interval {
 		for y := min; y <= max; y += interval {
 			for z := min; z <= max; z += interval {
@@ -134,7 +135,7 @@ func NewSpace() *Space {
 			}
 		}
 	}
-	fmt.Printf("NewSpace Finish Objects=%v\n", len(spc.Objects))
+
 	return spc
 }
 
@@ -180,7 +181,6 @@ func New() *Olion {
 }
 
 func (state *Olion) Run(ctx context.Context) (err error) {
-	//fmt.Printf("width=%v height=%v\n", v.Width, v.Height)
 	go NewView(state).Loop(ctx, state.cancelFunc)
 	time.Sleep(3 * time.Second)
 
