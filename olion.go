@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"syscall"
 	"time"
@@ -16,8 +17,9 @@ type Dot struct {
 }
 
 type Screen struct {
-	Width  int
-	Height int
+	Width    int
+	Height   int
+	Distance int
 }
 
 type winsize struct {
@@ -44,12 +46,14 @@ func getWinsize() (uint, uint) {
 
 func NewScreen() *Screen {
 	w, h := getWinsize()
-	//fmt.Printf("W=%v H=%v\n", int(w), int(h))
-	return &Screen{Width: int(w), Height: int(h)}
+	d := 10
+	fmt.Printf("W=%v H=%v\n", int(w), int(h))
+	return &Screen{Width: int(w), Height: int(h), Distance: d}
 }
 
 type View struct {
 	state *Olion
+	drawn []Dot
 }
 
 func NewView(state *Olion) *View {
@@ -60,13 +64,14 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 	defer cancel()
 	//fmt.Println("==>Loop")
 
-	tick := time.NewTicker(time.Millisecond * time.Duration(100)).C
+	tick := time.NewTicker(time.Millisecond * time.Duration(50)).C
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-tick:
-			view.drawScreen()
+			view.eraseObjects()
+			view.drawObjects()
 		}
 	}
 }
@@ -75,13 +80,55 @@ func (sc *Screen) printDot(dot Dot) {
 	fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, "X")
 }
 
-func (view *View) drawScreen() {
-	//fmt.Println("==>drawScreen")
-	for _, obj := range view.state.space.Objects {
-		dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
-		view.state.screen.printDot(dot)
+func (sc *Screen) eraseDot(dot Dot) {
+	fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, " ")
+}
+
+func (view *View) mapObject(objPosition Coordinates) *Dot {
+	fmt.Printf("mapObject ObjectPosition:%v Screen:%v Position:%v Direction:%v", objPosition, view.state.screen, view.state.position, view.state.direction)
+	// reference http://www.geocities.co.jp/SiliconValley-Bay/4543/Rubic/Mathematics/Mathematics-5_1.html
+	myPosition := view.state.position
+	a := math.Sqrt(float64(math.Pow(float64(objPosition.X-myPosition.X), float64(2)) + math.Pow(float64(objPosition.Y-myPosition.Y), float64(2))))
+	b := math.Sqrt(float64(math.Pow(a, float64(2)) + math.Pow(float64(objPosition.Z-myPosition.Z), float64(2))))
+	sinTheta := float64(objPosition.Y-myPosition.Y) / a
+	cosTheta := float64(objPosition.X-myPosition.X) / a
+	sinPhi := float64(objPosition.Z-myPosition.Z) / b
+	cosPhi := a / b
+	diffX := float64(objPosition.X - myPosition.X)
+	diffY := float64(objPosition.Y - myPosition.Y)
+	diffZ := float64(objPosition.Z - myPosition.Z)
+	myCoorinates := Coordinates{
+		X: int(diffX*(-sinTheta) + diffY*cosTheta),
+		Y: int(diffX*(-sinPhi*cosTheta) + diffY*(-sinPhi*sinTheta) + diffZ*cosPhi),
+		Z: int(diffX*(-cosPhi*cosTheta) + diffY*(-cosPhi*sinTheta) + diffZ*(-sinPhi)),
 	}
-	fmt.Printf("\n")
+	dot := Dot{
+		X: int(myCoorinates.X / myCoorinates.Z),
+		Y: int(myCoorinates.Y / myCoorinates.Z),
+	}
+	fmt.Printf(" map=>%v \n", dot)
+	if 0 <= dot.X && dot.X <= view.state.screen.Width && 0 <= dot.Y && dot.Y <= view.state.screen.Height {
+		return &dot
+	}
+	return nil
+}
+
+func (view *View) drawObjects() {
+	//fmt.Println("==>drawObjects")
+	for _, obj := range view.state.space.Objects {
+		//dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
+		if dot := view.mapObject(obj.Position); dot != nil {
+			view.state.screen.printDot(*dot)
+			view.drawn = append(view.drawn, *dot)
+		}
+	}
+}
+
+func (view *View) eraseObjects() {
+	for _, dot := range view.drawn {
+		view.state.screen.eraseDot(dot)
+	}
+	view.drawn = nil
 }
 
 type Coordinates struct {
@@ -117,11 +164,11 @@ func (spc *Space) addObj(obj Object) {
 }
 
 func NewSpace() *Space {
-	fmt.Printf("NewSpace Start\n")
+	fmt.Printf("NewSpace Start")
 	spc := &Space{}
-	min := -1000
-	max := 1000
-	interval := 50
+	min := 0
+	max := 200
+	interval := 10
 	for x := min; x <= max; x += interval {
 		for y := min; y <= max; y += interval {
 			for z := min; z <= max; z += interval {
@@ -135,7 +182,7 @@ func NewSpace() *Space {
 			}
 		}
 	}
-
+	fmt.Printf("==> %v Objects\n", len(spc.Objects))
 	return spc
 }
 
@@ -176,7 +223,7 @@ func New() *Olion {
 		space:   NewSpace(),
 		//maxScanBufferSize: bufio.MaxScanTokenSize,
 		position:  Coordinates{X: 0, Y: 0, Z: 0},
-		direction: Coordinates{X: 0, Y: 0, Z: 1},
+		direction: Coordinates{X: 0, Y: 90, Z: 90},
 	}
 }
 
