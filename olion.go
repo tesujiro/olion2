@@ -7,9 +7,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"syscall"
 	"time"
-	"unsafe"
 
 	"github.com/nsf/termbox-go"
 )
@@ -32,6 +30,7 @@ type winsize struct {
 	Ypixel uint16
 }
 
+/*
 func getWinsize() (uint, uint) {
 	ws := &winsize{}
 	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
@@ -46,6 +45,7 @@ func getWinsize() (uint, uint) {
 	//fmt.Printf("Xpixel=%v Ypixel=%v\n", ws.Xpixel, ws.Ypixel)
 	return uint(ws.Col), uint(ws.Row)
 }
+*/
 
 func NewScreen() *Screen {
 	//w, h := getWinsize()
@@ -57,7 +57,7 @@ func NewScreen() *Screen {
 
 type View struct {
 	state *Olion
-	drawn []Dot
+	//drawn []Dot
 }
 
 func NewView(state *Olion) *View {
@@ -85,12 +85,15 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 }
 
 func (sc *Screen) printDot(dot Dot) {
-	fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, "X")
+	//fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, "X")
+	termbox.SetCell(dot.X, sc.Height-dot.Y+1, 'X', termbox.ColorDefault, 1)
 }
 
+/*
 func (sc *Screen) eraseDot(dot Dot) {
 	fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, " ")
 }
+*/
 
 /*
 func (view *View) mapObject(objPosition Coordinates) *Dot {
@@ -165,16 +168,20 @@ func (view *View) drawObjects() {
 		//dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
 		if dot := view.mapObject(obj.Position); dot != nil {
 			view.state.screen.printDot(*dot)
-			view.drawn = append(view.drawn, *dot)
+			//view.drawn = append(view.drawn, *dot)
 		}
 	}
+	termbox.Flush()
 }
 
 func (view *View) eraseObjects() {
-	for _, dot := range view.drawn {
-		view.state.screen.eraseDot(dot)
-	}
-	view.drawn = nil
+	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	/*
+		for _, dot := range view.drawn {
+			view.state.screen.eraseDot(dot)
+		}
+		view.drawn = nil
+	*/
 }
 
 type Coordinates struct {
