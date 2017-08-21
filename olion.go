@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/rand"
 	"os"
 	"syscall"
 	"time"
 	"unsafe"
+
+	"github.com/nsf/termbox-go"
 )
 
 type Dot struct {
@@ -45,7 +48,8 @@ func getWinsize() (uint, uint) {
 }
 
 func NewScreen() *Screen {
-	w, h := getWinsize()
+	//w, h := getWinsize()
+	w, h := termbox.Size()
 	d := 10
 	fmt.Printf("W=%v H=%v\n", int(w), int(h))
 	return &Screen{Width: int(w), Height: int(h), Distance: d}
@@ -64,7 +68,7 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 	defer cancel()
 	//fmt.Println("==>Loop")
 
-	tick := time.NewTicker(time.Millisecond * time.Duration(50)).C
+	tick := time.NewTicker(time.Millisecond * time.Duration(100)).C
 	for {
 		select {
 		case <-ctx.Done():
@@ -73,8 +77,8 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 			view.eraseObjects()
 			view.drawObjects()
 			view.state.direction = Direction{
-				theta: view.state.direction.theta + 1,
-				phi:   view.state.direction.phi + 1,
+				theta: view.state.direction.theta + 0.01,
+				phi:   view.state.direction.phi + 0.01,
 			}
 		}
 	}
@@ -213,22 +217,40 @@ func (spc *Space) addObj(obj Object) {
 func NewSpace() *Space {
 	fmt.Printf("NewSpace Start")
 	spc := &Space{}
-	min := -200
-	max := 200
-	interval := 10
-	//min = min + interval
-	for x := min; x <= max; x += interval {
-		for y := min; y <= max; y += interval {
-			for z := min; z <= max; z += interval {
-				obj := Object{
-					Position:  Coordinates{X: x, Y: y, Z: z},
-					Direction: Direction{theta: 0, phi: 0},
-					Type:      Obj_Star,
-					Size:      1,
+	/*
+		min := 0
+		max := 100
+		intervalX := 1
+		intervalY := 10
+		intervalZ := 10
+		//min = min + interval
+		for x := min; x <= max; x += intervalX {
+			for y := min; y <= max; y += intervalY {
+				for z := min; z <= max; z += intervalZ {
+					obj := Object{
+						Position:  Coordinates{X: x, Y: y, Z: z},
+						Direction: Direction{theta: 0, phi: 0},
+						Type:      Obj_Star,
+						Size:      1,
+					}
+					spc.addObj(obj)
 				}
-				spc.addObj(obj)
 			}
 		}
+	*/
+	count := 1000
+	min := 0
+	max := 100
+	for i := 0; i <= count; i++ {
+		spc.addObj(Object{
+			Position: Coordinates{
+				X: min + rand.Intn(max-min),
+				Y: min + rand.Intn(max-min),
+				Z: min + rand.Intn(max-min),
+			},
+			Type: Obj_Star,
+			Size: 1,
+		})
 	}
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
 	return spc
@@ -260,6 +282,7 @@ type Olion struct {
 }
 
 func New() *Olion {
+	rand.Seed(time.Now().UnixNano())
 	return &Olion{
 		Argv:   os.Args,
 		Stderr: os.Stderr,
@@ -277,8 +300,14 @@ func New() *Olion {
 }
 
 func (state *Olion) Run(ctx context.Context) (err error) {
+	err = termbox.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer termbox.Close()
+
 	go NewView(state).Loop(ctx, state.cancelFunc)
-	time.Sleep(3 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	return nil
 }
