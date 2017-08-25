@@ -7,7 +7,9 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"syscall"
 	"time"
+	"unsafe"
 
 	"github.com/nsf/termbox-go"
 )
@@ -30,7 +32,6 @@ type winsize struct {
 	Ypixel uint16
 }
 
-/*
 func getWinsize() (uint, uint) {
 	ws := &winsize{}
 	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
@@ -45,11 +46,10 @@ func getWinsize() (uint, uint) {
 	//fmt.Printf("Xpixel=%v Ypixel=%v\n", ws.Xpixel, ws.Ypixel)
 	return uint(ws.Col), uint(ws.Row)
 }
-*/
 
 func NewScreen() *Screen {
-	//w, h := getWinsize()
-	w, h := termbox.Size()
+	w, h := getWinsize()
+	//w, h := termbox.Size()    //????? no value
 	d := 10
 	fmt.Printf("W=%v H=%v\n", int(w), int(h))
 	return &Screen{Width: int(w), Height: int(h), Distance: d}
@@ -68,18 +68,23 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 	defer cancel()
 	//fmt.Println("==>Loop")
 
-	tick := time.NewTicker(time.Millisecond * time.Duration(100)).C
+	tick := time.NewTicker(time.Millisecond * time.Duration(10)).C
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-tick:
-			view.eraseObjects()
+			//view.eraseObjects()
 			view.drawObjects()
 			view.state.direction = Direction{
 				theta: view.state.direction.theta + 0.01,
 				phi:   view.state.direction.phi + 0.01,
 			}
+			/*
+				view.state.position = Coordinates{
+					X: view.state.position.X + 1,
+				}
+			*/
 		}
 	}
 }
@@ -87,6 +92,7 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 func (sc *Screen) printDot(dot Dot) {
 	//fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, "X")
 	termbox.SetCell(dot.X, sc.Height-dot.Y+1, 'X', termbox.ColorDefault, 1)
+
 }
 
 /*
@@ -148,6 +154,7 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 		Y: int(myCoordinates.Y * myCoordinates.Z / myScreen.Distance),
 	}
 	if 0 <= dot.X && dot.X <= view.state.screen.Width && 0 <= dot.Y && dot.Y <= view.state.screen.Height {
+		//fmt.Printf("dot=%v\n", dot)
 		/*
 			fmt.Printf("mapObject ObjectPosition:%v Screen:%v Position:%v Direction:%v", objPosition, myScreen, myPosition, myDirection)
 			fmt.Printf(" sinTheta=%v cosTheta=%v sinPhi=%v cosPhi=%v ", sinTheta, cosTheta, sinPhi, cosPhi)
@@ -163,19 +170,23 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
  */
 
 func (view *View) drawObjects() {
-	//fmt.Println("==>drawObjects")
+	//fmt.Printf("\n==>drawObjects(%v)\n", len(view.state.space.Objects))
+
+	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 	for _, obj := range view.state.space.Objects {
 		//dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
+		//fmt.Printf("obj=%v", obj)
 		if dot := view.mapObject(obj.Position); dot != nil {
 			view.state.screen.printDot(*dot)
+			//fmt.Printf("dot=%v", *dot)
 			//view.drawn = append(view.drawn, *dot)
 		}
 	}
 	termbox.Flush()
+	//fmt.Printf("\n")
 }
 
 func (view *View) eraseObjects() {
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 	/*
 		for _, dot := range view.drawn {
 			view.state.screen.eraseDot(dot)
@@ -225,40 +236,43 @@ func NewSpace() *Space {
 	fmt.Printf("NewSpace Start")
 	spc := &Space{}
 	/*
-		min := 0
-		max := 100
-		intervalX := 1
-		intervalY := 10
-		intervalZ := 10
-		//min = min + interval
-		for x := min; x <= max; x += intervalX {
-			for y := min; y <= max; y += intervalY {
-				for z := min; z <= max; z += intervalZ {
-					obj := Object{
-						Position:  Coordinates{X: x, Y: y, Z: z},
-						Direction: Direction{theta: 0, phi: 0},
-						Type:      Obj_Star,
-						Size:      1,
-					}
-					spc.addObj(obj)
+	 */
+	min := 0
+	max := 150
+	intervalX := 3
+	intervalY := 3
+	intervalZ := 3
+	//min = min + interval
+	for x := min; x <= max; x += intervalX {
+		for y := min; y <= max; y += intervalY {
+			for z := min; z <= max; z += intervalZ {
+				obj := Object{
+					Position:  Coordinates{X: x, Y: y, Z: z},
+					Direction: Direction{theta: 0, phi: 0},
+					Type:      Obj_Star,
+					Size:      1,
 				}
+				spc.addObj(obj)
 			}
 		}
-	*/
-	count := 1000
-	min := 0
-	max := 100
-	for i := 0; i <= count; i++ {
-		spc.addObj(Object{
-			Position: Coordinates{
-				X: min + rand.Intn(max-min),
-				Y: min + rand.Intn(max-min),
-				Z: min + rand.Intn(max-min),
-			},
-			Type: Obj_Star,
-			Size: 1,
-		})
 	}
+	/*
+		count := 1000
+		w, h := getWinsize()
+		min := 0
+		max := int((w + h) / 3)
+		for i := 0; i < count; i++ {
+			spc.addObj(Object{
+				Position: Coordinates{
+					X: min + rand.Intn(max-min),
+					Y: min + rand.Intn(max-min),
+					Z: min + rand.Intn(max-min),
+				},
+				Type: Obj_Star,
+				Size: 1,
+			})
+		}
+	*/
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
 	return spc
 }
@@ -307,6 +321,7 @@ func New() *Olion {
 }
 
 func (state *Olion) Run(ctx context.Context) (err error) {
+
 	err = termbox.Init()
 	if err != nil {
 		panic(err)
@@ -314,7 +329,7 @@ func (state *Olion) Run(ctx context.Context) (err error) {
 	defer termbox.Close()
 
 	go NewView(state).Loop(ctx, state.cancelFunc)
-	time.Sleep(10 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	return nil
 }
