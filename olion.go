@@ -68,7 +68,8 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 	defer cancel()
 	//fmt.Println("==>Loop")
 
-	tick := time.NewTicker(time.Millisecond * time.Duration(5)).C
+	tick := time.NewTicker(time.Millisecond * time.Duration(1)).C
+	count := 0
 	for {
 		select {
 		case <-ctx.Done():
@@ -85,6 +86,9 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 					X: view.state.position.X + 1,
 				}
 			*/
+			count++
+			drawLine(0, 0, fmt.Sprintf("counter=%v", count))
+			termbox.Flush()
 		}
 	}
 }
@@ -92,7 +96,17 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 func (sc *Screen) printDot(dot Dot) {
 	//fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, "X")
 	termbox.SetCell(dot.X, sc.Height-dot.Y+1, 'X', termbox.ColorDefault, 1)
+	//drawLine(10, 10, fmt.Sprintf("counter="))
+}
 
+func drawLine(x, y int, str string) {
+	color := termbox.ColorDefault
+	//backgroundColor := termbox.ColorDefault
+	runes := []rune(str)
+
+	for i := 0; i < len(runes); i += 1 {
+		termbox.SetCell(x+i, y, runes[i], color, 1)
+	}
 }
 
 /*
@@ -121,7 +135,7 @@ func sin(f float64) float64 {
 		return c
 	}
 	sin := math.Sin(f)
-	//cache_sin[f] = sin
+	cache_sin[f] = sin
 	return sin
 }
 
@@ -130,7 +144,7 @@ func cos(f float64) float64 {
 		return c
 	}
 	cos := math.Cos(f)
-	//cache_cos[f] = cos
+	cache_cos[f] = cos
 	return cos
 }
 
@@ -150,14 +164,14 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 	*/
 	theta := float64(myDirection.theta) / float64(180) * math.Pi
 	phi := float64(myDirection.phi) / float64(180) * math.Pi
-	//sinTheta := math.Sin(theta)
-	//cosTheta := math.Cos(theta)
-	sinTheta := sin(theta)
-	cosTheta := cos(theta)
-	//sinPhi := math.Sin(phi)
-	//cosPhi := math.Cos(phi)
-	sinPhi := sin(phi)
-	cosPhi := cos(phi)
+	sinTheta := math.Sin(theta)
+	cosTheta := math.Cos(theta)
+	//sinTheta := sin(theta)
+	//cosTheta := cos(theta)
+	sinPhi := math.Sin(phi)
+	cosPhi := math.Cos(phi)
+	//sinPhi := sin(phi)
+	//cosPhi := cos(phi)
 	diffX := float64(objPosition.X - myPosition.X)
 	diffY := float64(objPosition.Y - myPosition.Y)
 	diffZ := float64(objPosition.Z - myPosition.Z)
@@ -207,7 +221,6 @@ func (view *View) drawObjects() {
 			//view.drawn = append(view.drawn, *dot)
 		}
 	}
-	termbox.Flush()
 	//fmt.Printf("\n")
 }
 
