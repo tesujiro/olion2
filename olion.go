@@ -78,8 +78,8 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 			//view.eraseObjects()
 			view.drawObjects()
 			view.state.direction = Direction{
-				theta: view.state.direction.theta + 0.05,
-				phi:   view.state.direction.phi + 0.05,
+				theta: view.state.direction.theta + 0.01,
+				phi:   view.state.direction.phi + 0.01,
 			}
 			/*
 				view.state.position = Coordinates{
@@ -93,10 +93,53 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 	}
 }
 
+func (sc *Screen) cover(dot Dot) bool {
+	return 0 <= dot.X && dot.X <= sc.Width && 0 <= dot.Y && dot.Y <= sc.Height
+}
+
 func (sc *Screen) printDot(dot Dot) {
 	//fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, "X")
-	termbox.SetCell(dot.X, sc.Height-dot.Y+1, 'X', termbox.ColorDefault, 1)
+	if sc.cover(dot) {
+		termbox.SetCell(dot.X, sc.Height-dot.Y+1, ' ', termbox.ColorDefault, 1)
+	}
 	//drawLine(10, 10, fmt.Sprintf("counter="))
+}
+
+func (sc *Screen) printLine(d1, d2 *Dot) {
+	if d1 == nil || d2 == nil {
+		return
+	}
+	if (d1.X-d2.X)*(d1.X-d2.X) >= (d1.Y-d2.Y)*(d1.Y-d2.Y) {
+		switch {
+		case d1.X == d2.X:
+			sc.printDot(*d1)
+		case d1.X < d2.X:
+			for x := d1.X; x <= d2.X; x++ {
+				y := d1.Y + (d2.Y-d1.Y)*(x-d1.X)/(d2.X-d1.X)
+				sc.printDot(Dot{X: x, Y: y})
+			}
+		case d1.X > d2.X:
+			for x := d2.X; x <= d1.X; x++ {
+				y := d2.Y + (d1.Y-d2.Y)*(x-d2.X)/(d1.X-d2.X)
+				sc.printDot(Dot{X: x, Y: y})
+			}
+		}
+	} else {
+		switch {
+		//case d1.Y == d2.Y:
+		//sc.printDot(*d1)
+		case d1.Y < d2.Y:
+			for y := d1.Y; y <= d2.Y; y++ {
+				x := d1.X + (d2.X-d1.X)*(y-d1.Y)/(d2.Y-d1.Y)
+				sc.printDot(Dot{X: x, Y: y})
+			}
+		case d1.Y > d2.Y:
+			for y := d2.Y; y <= d1.Y; y++ {
+				x := d2.X + (d1.X-d2.X)*(y-d2.Y)/(d1.Y-d2.Y)
+				sc.printDot(Dot{X: x, Y: y})
+			}
+		}
+	}
 }
 
 func drawLine(x, y int, str string) {
@@ -192,17 +235,21 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 		X: int(myCoordinates.X * myCoordinates.Z / myScreen.Distance),
 		Y: int(myCoordinates.Y * myCoordinates.Z / myScreen.Distance),
 	}
-	if 0 <= dot.X && dot.X <= view.state.screen.Width && 0 <= dot.Y && dot.Y <= view.state.screen.Height {
-		//fmt.Printf("dot=%v\n", dot)
-		/*
-			fmt.Printf("mapObject ObjectPosition:%v Screen:%v Position:%v Direction:%v", objPosition, myScreen, myPosition, myDirection)
-			fmt.Printf(" sinTheta=%v cosTheta=%v sinPhi=%v cosPhi=%v ", sinTheta, cosTheta, sinPhi, cosPhi)
-			fmt.Printf(" diffX:%v diffY:%v diffZ:%v X:%v Y:%v Z:%v", diffX, diffY, diffZ, myCoordinates.X, myCoordinates.Y, myCoordinates.Z)
-			fmt.Printf(" map=>%v \n", dot)
-		*/
-		return &dot
-	}
-	return nil
+	/*
+		if 0 <= dot.X && dot.X <= view.state.screen.Width && 0 <= dot.Y && dot.Y <= view.state.screen.Height {
+	*/
+	//fmt.Printf("dot=%v\n", dot)
+	/*
+		fmt.Printf("mapObject ObjectPosition:%v Screen:%v Position:%v Direction:%v", objPosition, myScreen, myPosition, myDirection)
+		fmt.Printf(" sinTheta=%v cosTheta=%v sinPhi=%v cosPhi=%v ", sinTheta, cosTheta, sinPhi, cosPhi)
+		fmt.Printf(" diffX:%v diffY:%v diffZ:%v X:%v Y:%v Z:%v", diffX, diffY, diffZ, myCoordinates.X, myCoordinates.Y, myCoordinates.Z)
+		fmt.Printf(" map=>%v \n", dot)
+	*/
+	return &dot
+	/*
+		}
+		return nil
+	*/
 }
 
 /*
@@ -215,10 +262,38 @@ func (view *View) drawObjects() {
 	for _, obj := range view.state.space.Objects {
 		//dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
 		//fmt.Printf("obj=%v", obj)
-		if dot := view.mapObject(obj.Position); dot != nil {
-			view.state.screen.printDot(*dot)
-			//fmt.Printf("dot=%v", *dot)
-			//view.drawn = append(view.drawn, *dot)
+		switch obj.Type {
+		case Obj_Dot:
+			if dot := view.mapObject(obj.Position); dot != nil {
+				view.state.screen.printDot(*dot)
+				//fmt.Printf("dot=%v", *dot)
+				//view.drawn = append(view.drawn, *dot)
+			}
+		case Obj_Box:
+			dot1 := view.mapObject(Coordinates{
+				X: obj.Position.X + obj.Size,
+				Y: obj.Position.Y + obj.Size,
+				Z: obj.Position.Z,
+			})
+			dot2 := view.mapObject(Coordinates{
+				X: obj.Position.X + obj.Size,
+				Y: obj.Position.Y - obj.Size,
+				Z: obj.Position.Z,
+			})
+			dot3 := view.mapObject(Coordinates{
+				X: obj.Position.X - obj.Size,
+				Y: obj.Position.Y - obj.Size,
+				Z: obj.Position.Z,
+			})
+			dot4 := view.mapObject(Coordinates{
+				X: obj.Position.X - obj.Size,
+				Y: obj.Position.Y + obj.Size,
+				Z: obj.Position.Z,
+			})
+			view.state.screen.printLine(dot1, dot2)
+			view.state.screen.printLine(dot2, dot3)
+			view.state.screen.printLine(dot3, dot4)
+			view.state.screen.printLine(dot4, dot1)
 		}
 	}
 	//fmt.Printf("\n")
@@ -249,6 +324,7 @@ type Obj_type int
 const (
 	Obj_Dot Obj_type = iota
 	Obj_Line
+	Obj_Box
 	Obj_Char
 	Obj_Star
 )
@@ -274,43 +350,52 @@ func NewSpace() *Space {
 	fmt.Printf("NewSpace Start")
 	spc := &Space{}
 	/*
-	 */
-	min := 0
-	max := 300
-	intervalX := 1
-	intervalY := 12
-	intervalZ := 12
-	//min = min + interval
-	for x := min; x <= max; x += intervalX {
-		for y := min; y <= max; y += intervalY {
-			for z := min; z <= max; z += intervalZ {
-				obj := Object{
-					Position:  Coordinates{X: x, Y: y, Z: z},
-					Direction: Direction{theta: 0, phi: 0},
-					Type:      Obj_Star,
-					Size:      1,
+		min := 0
+		max := 300
+		intervalX := 1
+		intervalY := 12
+		intervalZ := 12
+		//min = min + interval
+		for x := min; x <= max; x += intervalX {
+			for y := min; y <= max; y += intervalY {
+				for z := min; z <= max; z += intervalZ {
+					obj := Object{
+						Position:  Coordinates{X: x, Y: y, Z: z},
+						Direction: Direction{theta: 0, phi: 0},
+						Type:      Obj_Star,
+						Size:      1,
+					}
+					spc.addObj(obj)
 				}
-				spc.addObj(obj)
 			}
 		}
-	}
-	/*
-		count := 1000
-		w, h := getWinsize()
-		min := 0
-		max := int((w + h) / 3)
-		for i := 0; i < count; i++ {
-			spc.addObj(Object{
-				Position: Coordinates{
-					X: min + rand.Intn(max-min),
-					Y: min + rand.Intn(max-min),
-					Z: min + rand.Intn(max-min),
-				},
-				Type: Obj_Star,
-				Size: 1,
-			})
-		}
 	*/
+	count := 1000
+	w, h := getWinsize()
+	min := 0
+	max := int((w + h) / 3)
+	for i := 0; i < count; i++ {
+		spc.addObj(Object{
+			Position: Coordinates{
+				X: min + rand.Intn(max-min),
+				Y: min + rand.Intn(max-min),
+				Z: min + rand.Intn(max-min),
+			},
+			Type: Obj_Dot,
+			Size: 1,
+		})
+	}
+
+	spc.addObj(Object{
+		Position: Coordinates{
+			X: 50,
+			Y: 50,
+			Z: 50,
+		},
+		Type: Obj_Box,
+		Size: 20,
+	})
+
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
 	return spc
 }
@@ -352,9 +437,9 @@ func New() *Olion {
 		screen:  NewScreen(),
 		space:   NewSpace(),
 		//maxScanBufferSize: bufio.MaxScanTokenSize,
-		position: Coordinates{X: 0, Y: 0, Z: 0},
-		//direction: Direction{theta: 0, phi: 0},
-		direction: Direction{theta: 10, phi: 20},
+		position:  Coordinates{X: 0, Y: 0, Z: 0},
+		direction: Direction{theta: 0, phi: 0},
+		//direction: Direction{theta: 10, phi: 20},
 	}
 }
 
