@@ -68,7 +68,7 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 	defer cancel()
 	//fmt.Println("==>Loop")
 
-	tick := time.NewTicker(time.Millisecond * time.Duration(10)).C
+	tick := time.NewTicker(time.Millisecond * time.Duration(5)).C
 	for {
 		select {
 		case <-ctx.Done():
@@ -77,8 +77,8 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 			//view.eraseObjects()
 			view.drawObjects()
 			view.state.direction = Direction{
-				theta: view.state.direction.theta + 0.01,
-				phi:   view.state.direction.phi + 0.01,
+				theta: view.state.direction.theta + 0.05,
+				phi:   view.state.direction.phi + 0.05,
 			}
 			/*
 				view.state.position = Coordinates{
@@ -113,6 +113,27 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 }
 */
 
+var cache_sin = map[float64]float64{}
+var cache_cos = map[float64]float64{}
+
+func sin(f float64) float64 {
+	if c, ok := cache_sin[f]; ok {
+		return c
+	}
+	sin := math.Sin(f)
+	//cache_sin[f] = sin
+	return sin
+}
+
+func cos(f float64) float64 {
+	if c, ok := cache_cos[f]; ok {
+		return c
+	}
+	cos := math.Cos(f)
+	//cache_cos[f] = cos
+	return cos
+}
+
 func (view *View) mapObject(objPosition Coordinates) *Dot {
 	myScreen := view.state.screen
 	myPosition := view.state.position
@@ -129,10 +150,14 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 	*/
 	theta := float64(myDirection.theta) / float64(180) * math.Pi
 	phi := float64(myDirection.phi) / float64(180) * math.Pi
-	sinTheta := math.Sin(theta)
-	cosTheta := math.Cos(theta)
-	sinPhi := math.Sin(phi)
-	cosPhi := math.Cos(phi)
+	//sinTheta := math.Sin(theta)
+	//cosTheta := math.Cos(theta)
+	sinTheta := sin(theta)
+	cosTheta := cos(theta)
+	//sinPhi := math.Sin(phi)
+	//cosPhi := math.Cos(phi)
+	sinPhi := sin(phi)
+	cosPhi := cos(phi)
 	diffX := float64(objPosition.X - myPosition.X)
 	diffY := float64(objPosition.Y - myPosition.Y)
 	diffZ := float64(objPosition.Z - myPosition.Z)
@@ -238,10 +263,10 @@ func NewSpace() *Space {
 	/*
 	 */
 	min := 0
-	max := 150
-	intervalX := 3
-	intervalY := 3
-	intervalZ := 3
+	max := 300
+	intervalX := 1
+	intervalY := 12
+	intervalZ := 12
 	//min = min + interval
 	for x := min; x <= max; x += intervalX {
 		for y := min; y <= max; y += intervalY {
@@ -329,7 +354,7 @@ func (state *Olion) Run(ctx context.Context) (err error) {
 	defer termbox.Close()
 
 	go NewView(state).Loop(ctx, state.cancelFunc)
-	time.Sleep(3 * time.Second)
+	time.Sleep(6 * time.Second)
 
 	return nil
 }
