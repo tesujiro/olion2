@@ -48,10 +48,10 @@ func getWinsize() (uint, uint) {
 }
 
 func NewScreen() *Screen {
-	w, h := getWinsize()
-	//w, h := termbox.Size()    //????? no value
+	w, h := termbox.Size() //????? no value
+	//w, h := getWinsize()
 	d := 10
-	fmt.Printf("W=%v H=%v\n", int(w), int(h))
+	fmt.Printf("\nW=%v H=%v\n", int(w), int(h))
 	return &Screen{Width: int(w), Height: int(h), Distance: d}
 }
 
@@ -77,17 +77,22 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 		case <-tick:
 			//view.eraseObjects()
 			view.drawObjects()
+			/*
+			 */
 			view.state.direction = Direction{
 				theta: view.state.direction.theta + 0.01,
-				phi:   view.state.direction.phi + 0.01,
+				phi:   view.state.direction.phi + 0.001,
 			}
-			/*
-				view.state.position = Coordinates{
-					X: view.state.position.X + 1,
-				}
-			*/
+			view.state.position = Coordinates{
+				/*
+					X: view.state.position.X + count/10000,
+				*/
+				X: view.state.position.X,
+				Y: view.state.position.Y,
+				Z: view.state.position.Z,
+			}
 			count++
-			drawLine(0, 0, fmt.Sprintf("counter=%v", count))
+			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v direction=%v", count, view.state.position, view.state.direction))
 			termbox.Flush()
 		}
 	}
@@ -371,9 +376,11 @@ func NewSpace() *Space {
 		}
 	*/
 	count := 1000
-	w, h := getWinsize()
-	min := 0
+	w, h := termbox.Size()
 	max := int((w + h) / 3)
+	//max := int((w + h) * 2)
+	//min := -max
+	min := 0
 	for i := 0; i < count; i++ {
 		spc.addObj(Object{
 			Position: Coordinates{
@@ -386,15 +393,18 @@ func NewSpace() *Space {
 		})
 	}
 
-	spc.addObj(Object{
-		Position: Coordinates{
-			X: 50,
-			Y: 50,
-			Z: 50,
-		},
-		Type: Obj_Box,
-		Size: 20,
-	})
+	count = 100
+	for i := 0; i < count; i++ {
+		spc.addObj(Object{
+			Position: Coordinates{
+				X: min + rand.Intn(max-min),
+				Y: min + rand.Intn(max-min),
+				Z: min + rand.Intn(max-min),
+			},
+			Type: Obj_Box,
+			Size: rand.Intn(10),
+		})
+	}
 
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
 	return spc
@@ -427,6 +437,7 @@ type Olion struct {
 
 func New() *Olion {
 	rand.Seed(time.Now().UnixNano())
+
 	return &Olion{
 		Argv:   os.Args,
 		Stderr: os.Stderr,
@@ -444,12 +455,6 @@ func New() *Olion {
 }
 
 func (state *Olion) Run(ctx context.Context) (err error) {
-
-	err = termbox.Init()
-	if err != nil {
-		panic(err)
-	}
-	defer termbox.Close()
 
 	go NewView(state).Loop(ctx, state.cancelFunc)
 	time.Sleep(6 * time.Second)

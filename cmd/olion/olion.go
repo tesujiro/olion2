@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 
+	termbox "github.com/nsf/termbox-go"
 	"github.com/tesujiro/olion"
 )
 
@@ -28,6 +29,14 @@ func _main() int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	err := termbox.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer termbox.Close()
+
+	olion := olion.New()
+
 	cpuprofile := "mycpu.prof"
 	f, err := os.Create(cpuprofile)
 	if err != nil {
@@ -35,8 +44,6 @@ func _main() int {
 	}
 	pprof.StartCPUProfile(f)
 	defer pprof.StopCPUProfile()
-
-	olion := olion.New()
 
 	if err := olion.Run(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
