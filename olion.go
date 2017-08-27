@@ -7,9 +7,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"syscall"
 	"time"
-	"unsafe"
 
 	"github.com/nsf/termbox-go"
 )
@@ -25,77 +23,19 @@ type Screen struct {
 	Distance int
 }
 
-type winsize struct {
-	Row    uint16
-	Col    uint16
-	Xpixel uint16
-	Ypixel uint16
-}
-
-func getWinsize() (uint, uint) {
-	ws := &winsize{}
-	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
-		uintptr(syscall.Stdin),
-		uintptr(syscall.TIOCGWINSZ),
-		uintptr(unsafe.Pointer(ws)))
-
-	if int(retCode) == -1 {
-		panic(errno)
-	}
-
-	//fmt.Printf("Xpixel=%v Ypixel=%v\n", ws.Xpixel, ws.Ypixel)
-	return uint(ws.Col), uint(ws.Row)
-}
-
 func NewScreen() *Screen {
-	w, h := termbox.Size() //????? no value
-	//w, h := getWinsize()
+	w, h := termbox.Size()
 	d := 10
 	fmt.Printf("\nW=%v H=%v\n", int(w), int(h))
 	return &Screen{Width: int(w), Height: int(h), Distance: d}
 }
 
-type View struct {
-	state *Olion
-	//drawn []Dot
+func (sc *Screen) clear() {
+	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 }
 
-func NewView(state *Olion) *View {
-	return &View{state: state}
-}
-
-func (view *View) Loop(ctx context.Context, cancel func()) error {
-	defer cancel()
-	//fmt.Println("==>Loop")
-
-	tick := time.NewTicker(time.Millisecond * time.Duration(1)).C
-	count := 0
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-tick:
-			//view.eraseObjects()
-			view.drawObjects()
-			/*
-			 */
-			view.state.direction = Direction{
-				theta: view.state.direction.theta + 0.01,
-				phi:   view.state.direction.phi + 0.001,
-			}
-			view.state.position = Coordinates{
-				/*
-					X: view.state.position.X + count/10000,
-				*/
-				X: view.state.position.X,
-				Y: view.state.position.Y,
-				Z: view.state.position.Z,
-			}
-			count++
-			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v direction=%v", count, view.state.position, view.state.direction))
-			termbox.Flush()
-		}
-	}
+func (sc *Screen) flush() {
+	termbox.Flush()
 }
 
 func (sc *Screen) cover(dot Dot) bool {
@@ -147,6 +87,15 @@ func (sc *Screen) printLine(d1, d2 *Dot) {
 	}
 }
 
+type View struct {
+	state *Olion
+	//drawn []Dot
+}
+
+func NewView(state *Olion) *View {
+	return &View{state: state}
+}
+
 func drawLine(x, y int, str string) {
 	color := termbox.ColorDefault
 	//backgroundColor := termbox.ColorDefault
@@ -156,24 +105,6 @@ func drawLine(x, y int, str string) {
 		termbox.SetCell(x+i, y, runes[i], color, 1)
 	}
 }
-
-/*
-func (sc *Screen) eraseDot(dot Dot) {
-	fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, " ")
-}
-*/
-
-/*
-func (view *View) mapObject(objPosition Coordinates) *Dot {
-	myScreen := view.state.screen
-	myPosition := view.state.position
-	myDirection := view.state.diretion
-	fmt.Printf("mapObject ObjectPosition:%v Screen:%v Position:%v Direction:%v", objPosition, myScreen, myPosition, myDirection)
-	// reference http://www.geocities.co.jp/SiliconValley-Bay/4543/Rubic/Mathematics/Mathematics-5_1.html
-
-	return nil
-}
-*/
 
 var cache_sin = map[float64]float64{}
 var cache_cos = map[float64]float64{}
@@ -241,29 +172,17 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 		Y: int(myCoordinates.Y * myCoordinates.Z / myScreen.Distance),
 	}
 	/*
-		if 0 <= dot.X && dot.X <= view.state.screen.Width && 0 <= dot.Y && dot.Y <= view.state.screen.Height {
-	*/
-	//fmt.Printf("dot=%v\n", dot)
-	/*
 		fmt.Printf("mapObject ObjectPosition:%v Screen:%v Position:%v Direction:%v", objPosition, myScreen, myPosition, myDirection)
 		fmt.Printf(" sinTheta=%v cosTheta=%v sinPhi=%v cosPhi=%v ", sinTheta, cosTheta, sinPhi, cosPhi)
 		fmt.Printf(" diffX:%v diffY:%v diffZ:%v X:%v Y:%v Z:%v", diffX, diffY, diffZ, myCoordinates.X, myCoordinates.Y, myCoordinates.Z)
 		fmt.Printf(" map=>%v \n", dot)
 	*/
 	return &dot
-	/*
-		}
-		return nil
-	*/
 }
-
-/*
- */
 
 func (view *View) drawObjects() {
 	//fmt.Printf("\n==>drawObjects(%v)\n", len(view.state.space.Objects))
 
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 	for _, obj := range view.state.space.Objects {
 		//dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
 		//fmt.Printf("obj=%v", obj)
@@ -304,13 +223,38 @@ func (view *View) drawObjects() {
 	//fmt.Printf("\n")
 }
 
-func (view *View) eraseObjects() {
-	/*
-		for _, dot := range view.drawn {
-			view.state.screen.eraseDot(dot)
+func (view *View) Loop(ctx context.Context, cancel func()) error {
+	defer cancel()
+	//fmt.Println("==>Loop")
+
+	tick := time.NewTicker(time.Millisecond * time.Duration(1)).C
+	count := 0
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-tick:
+			view.state.screen.clear()
+			view.drawObjects()
+			/*
+			 */
+			view.state.direction = Direction{
+				theta: view.state.direction.theta + 0.01,
+				phi:   view.state.direction.phi + 0.001,
+			}
+			view.state.position = Coordinates{
+				/*
+					X: view.state.position.X + count/10000,
+				*/
+				X: view.state.position.X,
+				Y: view.state.position.Y,
+				Z: view.state.position.Z,
+			}
+			count++
+			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v direction=%v", count, view.state.position, view.state.direction))
+			view.state.screen.flush()
 		}
-		view.drawn = nil
-	*/
+	}
 }
 
 type Coordinates struct {
@@ -377,7 +321,7 @@ func NewSpace() *Space {
 	*/
 	count := 1000
 	w, h := termbox.Size()
-	max := int((w + h) / 3)
+	max := int((w + h) / 2)
 	//max := int((w + h) * 2)
 	//min := -max
 	min := 0
