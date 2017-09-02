@@ -85,6 +85,15 @@ func (sc *Screen) printLine(d1, d2 *Dot) {
 	}
 }
 
+func (sc *Screen) printCircle(d *Dot, r int, fill bool) {
+}
+
+func (sc *Screen) printBox(d1, d2 *Dot, fill bool) {
+}
+
+func (sc *Screen) printTriangle(d1, d2, d3 *Dot, fill bool) {
+}
+
 type View struct {
 	state *Olion
 	//drawn []Dot
@@ -103,29 +112,6 @@ func drawLine(x, y int, str string) {
 		termbox.SetCell(x+i, y, runes[i], color, 1)
 	}
 }
-
-/*
-var cache_sin = map[float64]float64{}
-var cache_cos = map[float64]float64{}
-
-func sin(f float64) float64 {
-	if c, ok := cache_sin[f]; ok {
-		return c
-	}
-	sin := math.Sin(f)
-	cache_sin[f] = sin
-	return sin
-}
-
-func cos(f float64) float64 {
-	if c, ok := cache_cos[f]; ok {
-		return c
-	}
-	cos := math.Cos(f)
-	cache_cos[f] = cos
-	return cos
-}
-*/
 
 func (view *View) mapObject(objPosition Coordinates) *Dot {
 	myScreen := view.state.screen
@@ -199,7 +185,11 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 
 	tick := time.NewTicker(time.Millisecond * time.Duration(2)).C
 	count := 0
+	//mainloop:
 	for {
+		/*
+			ev := termbox.PollEvent()
+		*/
 		select {
 		case <-ctx.Done():
 			return nil
@@ -214,8 +204,16 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 			count++
 			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v", count, view.state.position))
 			view.state.screen.flush()
+			/*
+				if ev.Type == termbox.EventKey {
+					if ev.Key == termbox.KeyEsc {
+						break mainloop // Esc で実行終了
+					}
+				}
+			*/
 		}
 	}
+	return nil
 }
 
 type Coordinates struct {
@@ -362,7 +360,7 @@ func New() *Olion {
 func (state *Olion) Run(ctx context.Context) (err error) {
 
 	go NewView(state).Loop(ctx, state.cancelFunc)
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 
 	return nil
 }
