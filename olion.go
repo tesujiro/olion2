@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/nsf/termbox-go"
@@ -204,7 +205,7 @@ mainloop:
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			break mainloop
 		case <-tick:
 			view.state.screen.clear()
 			view.drawObjects()
@@ -372,8 +373,23 @@ func New() *Olion {
 
 func (state *Olion) Run(ctx context.Context) (err error) {
 
-	go NewView(state).Loop(ctx, state.cancelFunc)
-	time.Sleep(5 * time.Second)
+	var _cancelOnce sync.Once
+	var _cancel func()
+	ctx, _cancel = context.WithCancel(ctx)
+	cancel := func() {
+		_cancelOnce.Do(func() {
+			fmt.Printf("Olion.Run cancel called")
+			_cancel()
+		})
+	}
+
+	state.cancelFunc = cancel
+	go NewView(state).Loop(ctx, cancel)
+	//time.Sleep(5 * time.Second)
+	// Alright, done everything we need to do automatically. We'll let
+	// the user play with peco, and when we receive notification to
+	// bail out, the context should be canceled appropriately
+	<-ctx.Done()
 
 	return nil
 }
