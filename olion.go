@@ -94,6 +94,19 @@ func (sc *Screen) printBox(d1, d2 *Dot, fill bool) {
 func (sc *Screen) printTriangle(d1, d2, d3 *Dot, fill bool) {
 }
 
+//https://github.com/sjmudd/ps-top/blob/master/screen/screen.go
+// TermBoxChan creates a channel for termbox.Events and run a poller to send
+// these events to the channel.  Return the channel to the caller..
+func (sc *Screen) TermBoxChan() chan termbox.Event {
+	termboxChan := make(chan termbox.Event)
+	go func() {
+		for {
+			termboxChan <- termbox.PollEvent()
+		}
+	}()
+	return termboxChan
+}
+
 type View struct {
 	state *Olion
 	//drawn []Dot
@@ -180,16 +193,15 @@ func (view *View) drawObjects() {
 }
 
 func (view *View) Loop(ctx context.Context, cancel func()) error {
+	//func (view *View) Loop(ctx context.Context, cancel func()) {
 	defer cancel()
 	//fmt.Println("==>Loop")
 
+	TermBoxChan := view.state.screen.TermBoxChan()
 	tick := time.NewTicker(time.Millisecond * time.Duration(2)).C
 	count := 0
-	//mainloop:
+mainloop:
 	for {
-		/*
-			ev := termbox.PollEvent()
-		*/
 		select {
 		case <-ctx.Done():
 			return nil
@@ -204,13 +216,13 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 			count++
 			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v", count, view.state.position))
 			view.state.screen.flush()
-			/*
-				if ev.Type == termbox.EventKey {
-					if ev.Key == termbox.KeyEsc {
-						break mainloop // Esc で実行終了
-					}
+		case ev := <-TermBoxChan:
+			if ev.Type == termbox.EventKey {
+				if ev.Key == termbox.KeyEsc {
+					break mainloop // Esc で実行終了
 				}
-			*/
+			}
+
 		}
 	}
 	return nil
@@ -352,15 +364,16 @@ func New() *Olion {
 		screen:  NewScreen(),
 		space:   NewSpace(),
 		//maxScanBufferSize: bufio.MaxScanTokenSize,
-		position: Coordinates{X: 0, Y: 0, Z: 0},
-		speed:    1,
+		position:   Coordinates{X: 0, Y: 0, Z: 0},
+		speed:      1,
+		cancelFunc: func() {},
 	}
 }
 
 func (state *Olion) Run(ctx context.Context) (err error) {
 
 	go NewView(state).Loop(ctx, state.cancelFunc)
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	return nil
 }
