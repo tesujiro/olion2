@@ -89,7 +89,12 @@ func (sc *Screen) printLine(d1, d2 *Dot) {
 func (sc *Screen) printCircle(d *Dot, r int, fill bool) {
 }
 
-func (sc *Screen) printBox(d1, d2 *Dot, fill bool) {
+func (sc *Screen) printRectangle(d1, d2 *Dot, fill bool) {
+	//Todo:fill
+	printLine(Dot{X: d1.X, Y: d1.Y}, Dot{X: d1.X, Y: d2.Y})
+	printLine(Dot{X: d1.X, Y: d2.Y}, Dot{X: d2.X, Y: d2.Y})
+	printLine(Dot{X: d2.X, Y: d2.Y}, Dot{X: d2.X, Y: d1.Y})
+	printLine(Dot{X: d2.X, Y: d1.Y}, Dot{X: d1.X, Y: d1.Y})
 }
 
 func (sc *Screen) printTriangle(d1, d2, d3 *Dot, fill bool) {
@@ -156,39 +161,54 @@ func (view *View) drawObjects() {
 	for _, obj := range view.state.space.Objects {
 		//dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
 		//fmt.Printf("obj=%v", obj)
-		switch obj.Type {
-		case Obj_Dot:
-			if dot := view.mapObject(obj.Position); dot != nil {
-				view.state.screen.printDot(*dot)
-				//fmt.Printf("dot=%v", *dot)
-				//view.drawn = append(view.drawn, *dot)
+		if shaper, ok := obj.(Shaper); ok {
+			for _, part := range shaper.shape() {
+				switch part.Type {
+				case Part_Dot:
+
+				case Part_Circle:
+
+				case Part_Rectangle:
+
+				}
 			}
-		case Obj_Box:
-			dot1 := view.mapObject(Coordinates{
-				X: obj.Position.X + obj.Size*2,
-				Y: obj.Position.Y + obj.Size,
-				Z: obj.Position.Z,
-			})
-			dot2 := view.mapObject(Coordinates{
-				X: obj.Position.X + obj.Size*2,
-				Y: obj.Position.Y - obj.Size,
-				Z: obj.Position.Z,
-			})
-			dot3 := view.mapObject(Coordinates{
-				X: obj.Position.X - obj.Size*2,
-				Y: obj.Position.Y - obj.Size,
-				Z: obj.Position.Z,
-			})
-			dot4 := view.mapObject(Coordinates{
-				X: obj.Position.X - obj.Size*2,
-				Y: obj.Position.Y + obj.Size,
-				Z: obj.Position.Z,
-			})
-			view.state.screen.printLine(dot1, dot2)
-			view.state.screen.printLine(dot2, dot3)
-			view.state.screen.printLine(dot3, dot4)
-			view.state.screen.printLine(dot4, dot1)
 		}
+
+		/*
+			switch obj.Type {
+			case Obj_Dot:
+				if dot := view.mapObject(obj.Position); dot != nil {
+					view.state.screen.printDot(*dot)
+					//fmt.Printf("dot=%v", *dot)
+					//view.drawn = append(view.drawn, *dot)
+				}
+			case Obj_Box:
+				dot1 := view.mapObject(Coordinates{
+					X: obj.Position.X + obj.Size*2,
+					Y: obj.Position.Y + obj.Size,
+					Z: obj.Position.Z,
+				})
+				dot2 := view.mapObject(Coordinates{
+					X: obj.Position.X + obj.Size*2,
+					Y: obj.Position.Y - obj.Size,
+					Z: obj.Position.Z,
+				})
+				dot3 := view.mapObject(Coordinates{
+					X: obj.Position.X - obj.Size*2,
+					Y: obj.Position.Y - obj.Size,
+					Z: obj.Position.Z,
+				})
+				dot4 := view.mapObject(Coordinates{
+					X: obj.Position.X - obj.Size*2,
+					Y: obj.Position.Y + obj.Size,
+					Z: obj.Position.Z,
+				})
+				view.state.screen.printLine(dot1, dot2)
+				view.state.screen.printLine(dot2, dot3)
+				view.state.screen.printLine(dot3, dot4)
+				view.state.screen.printLine(dot4, dot1)
+			}
+		*/
 	}
 	//fmt.Printf("\n")
 }
@@ -241,25 +261,6 @@ type Direction struct {
 }
 */
 
-type Obj_type int
-
-const (
-	Obj_Dot Obj_type = iota
-	Obj_Line
-	Obj_Box
-	Obj_Char
-	Obj_Star
-)
-
-type Object struct {
-	Position Coordinates //位置
-	//Direction Direction   //方向
-	Type Obj_type
-	Size int
-}
-
-//func (obj *Object) getPosition
-
 type Space struct {
 	Objects []Object
 }
@@ -298,28 +299,34 @@ func NewSpace() *Space {
 	min := -max
 	depth := (w + h) * 100
 	for i := 0; i < count; i++ {
-		spc.addObj(Object{
-			Position: Coordinates{
-				X: (min + rand.Intn(max-min)) * 2,
-				Y: min + rand.Intn(max-min),
-				Z: rand.Intn(depth),
-			},
-			Type: Obj_Dot,
-			Size: 1,
-		})
+		spc.addObj(
+			Star{
+				Object{
+					Position: Coordinates{
+						X: (min + rand.Intn(max-min)) * 2,
+						Y: min + rand.Intn(max-min),
+						Z: rand.Intn(depth),
+					},
+					Type: Obj_Dot,
+					Size: 1,
+				},
+			})
 	}
 
 	count = 100
 	for i := 0; i < count; i++ {
-		spc.addObj(Object{
-			Position: Coordinates{
-				X: (min + rand.Intn(max-min)) * 2,
-				Y: min + rand.Intn(max-min),
-				Z: rand.Intn(depth),
-			},
-			Type: Obj_Box,
-			Size: rand.Intn(max),
-		})
+		spc.addObj(
+			SpaceShip{
+				Object{
+					Position: Coordinates{
+						X: (min + rand.Intn(max-min)) * 2,
+						Y: min + rand.Intn(max-min),
+						Z: rand.Intn(depth),
+					},
+					Type: Obj_Box,
+					Size: rand.Intn(max),
+				},
+			})
 	}
 
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
