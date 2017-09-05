@@ -199,7 +199,7 @@ func (view *View) Loop(ctx context.Context, cancel func()) error {
 	//fmt.Println("==>Loop")
 
 	TermBoxChan := view.state.screen.TermBoxChan()
-	tick := time.NewTicker(time.Millisecond * time.Duration(2)).C
+	tick := time.NewTicker(time.Millisecond * time.Duration(1)).C
 	count := 0
 mainloop:
 	for {
@@ -223,7 +223,6 @@ mainloop:
 					break mainloop // Esc で実行終了
 				}
 			}
-
 		}
 	}
 	return nil
@@ -365,9 +364,9 @@ func New() *Olion {
 		screen:  NewScreen(),
 		space:   NewSpace(),
 		//maxScanBufferSize: bufio.MaxScanTokenSize,
-		position:   Coordinates{X: 0, Y: 0, Z: 0},
-		speed:      1,
-		cancelFunc: func() {},
+		position: Coordinates{X: 0, Y: 0, Z: 0},
+		speed:    1,
+		//cancelFunc: func() {},
 	}
 }
 
@@ -386,6 +385,7 @@ func (state *Olion) Run(ctx context.Context) (err error) {
 	state.cancelFunc = cancel
 	go NewView(state).Loop(ctx, cancel)
 	//time.Sleep(5 * time.Second)
+
 	// Alright, done everything we need to do automatically. We'll let
 	// the user play with peco, and when we receive notification to
 	// bail out, the context should be canceled appropriately
