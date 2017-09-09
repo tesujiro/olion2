@@ -13,11 +13,17 @@ type Part struct {
 	Type Part_type
 }
 
+type Parter interface {
+	dots() []Coordinates
+}
+
 type DotPart struct {
+	Part
 	dot Coordinates
 }
 
 type LinePart struct {
+	Part
 	dot1, dot2 Coordinates
 }
 
@@ -37,10 +43,14 @@ const (
 )
 
 type Object struct {
-	Position Coordinates //位置
+	position Coordinates //位置
 	//Direction Direction   //方向
+	//Speed
+	//created
+	//weight
+
 	Type Obj_type
-	Size int
+	size int
 }
 
 type Shaper interface {
@@ -53,7 +63,7 @@ type Star struct {
 
 func (star *Star) shape() []Part {
 	return []Part{
-		&DotPart{dot: Coordinates{X: 0, Y: 0, Z: 0}},
+		interface{}(DotPart{dot: Coordinates{X: 0, Y: 0, Z: 0}}).(Part),
 	}
 }
 
@@ -65,7 +75,7 @@ func (ship *SpaceShip) shape() []Part {
 	dot1 := Coordinates{X: ship.size / 2, Y: ship.size / 2, Z: 0}
 	dot2 := Coordinates{X: -ship.size / 2, Y: -ship.size / 2, Z: 0}
 	return []Part{
-		&RectanglePart{dot1: dot1, dot2: dot2},
+		interface{}(RectanglePart{dot1: dot1, dot2: dot2}).(Part),
 		//Part_Line(dot1, dot3),
 		//Part_rectangle(dot3, dot4),
 	}

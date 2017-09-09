@@ -91,10 +91,10 @@ func (sc *Screen) printCircle(d *Dot, r int, fill bool) {
 
 func (sc *Screen) printRectangle(d1, d2 *Dot, fill bool) {
 	//Todo:fill
-	printLine(Dot{X: d1.X, Y: d1.Y}, Dot{X: d1.X, Y: d2.Y})
-	printLine(Dot{X: d1.X, Y: d2.Y}, Dot{X: d2.X, Y: d2.Y})
-	printLine(Dot{X: d2.X, Y: d2.Y}, Dot{X: d2.X, Y: d1.Y})
-	printLine(Dot{X: d2.X, Y: d1.Y}, Dot{X: d1.X, Y: d1.Y})
+	sc.printLine(&Dot{X: d1.X, Y: d1.Y}, &Dot{X: d1.X, Y: d2.Y})
+	sc.printLine(&Dot{X: d1.X, Y: d2.Y}, &Dot{X: d2.X, Y: d2.Y})
+	sc.printLine(&Dot{X: d2.X, Y: d2.Y}, &Dot{X: d2.X, Y: d1.Y})
+	sc.printLine(&Dot{X: d2.X, Y: d1.Y}, &Dot{X: d1.X, Y: d1.Y})
 }
 
 func (sc *Screen) printTriangle(d1, d2, d3 *Dot, fill bool) {
@@ -161,7 +161,7 @@ func (view *View) drawObjects() {
 	for _, obj := range view.state.space.Objects {
 		//dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
 		//fmt.Printf("obj=%v", obj)
-		if shaper, ok := obj.(Shaper); ok {
+		if shaper, ok := interface{}(obj).(Shaper); ok {
 			for _, part := range shaper.shape() {
 				switch part.Type {
 				case Part_Dot:
@@ -262,11 +262,13 @@ type Direction struct {
 */
 
 type Space struct {
-	Objects []Object
+	//Objects []Object
+	Objects []Shaper
 }
 
-func (spc *Space) addObj(obj Object) {
-	spc.Objects = append(spc.Objects, obj)
+//func (spc *Space) addObj(obj Object) {
+func (spc *Space) addObj(obj interface{}) {
+	spc.Objects = append(spc.Objects, obj.(Shaper))
 }
 
 func NewSpace() *Space {
@@ -300,15 +302,15 @@ func NewSpace() *Space {
 	depth := (w + h) * 100
 	for i := 0; i < count; i++ {
 		spc.addObj(
-			Star{
+			&Star{
 				Object{
-					Position: Coordinates{
+					position: Coordinates{
 						X: (min + rand.Intn(max-min)) * 2,
 						Y: min + rand.Intn(max-min),
 						Z: rand.Intn(depth),
 					},
 					Type: Obj_Dot,
-					Size: 1,
+					size: 1,
 				},
 			})
 	}
@@ -316,15 +318,15 @@ func NewSpace() *Space {
 	count = 100
 	for i := 0; i < count; i++ {
 		spc.addObj(
-			SpaceShip{
+			&SpaceShip{
 				Object{
-					Position: Coordinates{
+					position: Coordinates{
 						X: (min + rand.Intn(max-min)) * 2,
 						Y: min + rand.Intn(max-min),
 						Z: rand.Intn(depth),
 					},
 					Type: Obj_Box,
-					Size: rand.Intn(max),
+					size: rand.Intn(max),
 				},
 			})
 	}
