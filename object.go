@@ -11,25 +11,28 @@ const (
 
 type Part struct {
 	Type Part_type
+	dots []Coordinates
 }
 
 type Parter interface {
 	dots() []Coordinates
 }
 
+func (p *Part) getDots() []Coordinates {
+	return p.dots
+}
+
 type DotPart struct {
 	Part
-	dot Coordinates
 }
 
 type LinePart struct {
 	Part
-	dot1, dot2 Coordinates
 }
 
 type RectanglePart struct {
-	dot1, dot2 Coordinates
-	fill       bool
+	Part
+	fill bool
 }
 
 type Obj_type int
@@ -43,6 +46,7 @@ const (
 )
 
 type Object struct {
+	parts    []Part
 	position Coordinates //位置
 	//Direction Direction   //方向
 	//Speed
@@ -57,13 +61,26 @@ type Shaper interface {
 	shape() []Part
 }
 
+func (obj *Object) shape() []Part {
+	return obj.parts
+}
+
 type Star struct {
 	Object
 }
 
-func (star *Star) shape() []Part {
-	return []Part{
-		interface{}(DotPart{dot: Coordinates{X: 0, Y: 0, Z: 0}}).(Part),
+func newStar(s int) *Star {
+	return &Star{
+		Object{
+			size: s,
+			parts: []Part{
+				Part{
+					dots: []Coordinates{
+						Coordinates{X: 0, Y: 0, Z: 0},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -71,12 +88,18 @@ type SpaceShip struct {
 	Object
 }
 
-func (ship *SpaceShip) shape() []Part {
-	dot1 := Coordinates{X: ship.size / 2, Y: ship.size / 2, Z: 0}
-	dot2 := Coordinates{X: -ship.size / 2, Y: -ship.size / 2, Z: 0}
-	return []Part{
-		interface{}(RectanglePart{dot1: dot1, dot2: dot2}).(Part),
-		//Part_Line(dot1, dot3),
-		//Part_rectangle(dot3, dot4),
+func newSpaceShip(s int) *SpaceShip {
+	return &SpaceShip{
+		Object{
+			size: s,
+			parts: []Part{
+				Part{
+					dots: []Coordinates{
+						Coordinates{X: s / 2, Y: s / 2, Z: 0},
+						Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+					},
+				},
+			},
+		},
 	}
 }
