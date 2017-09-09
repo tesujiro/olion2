@@ -61,7 +61,7 @@ type Shaper interface {
 	shape() []Part
 }
 
-func (obj *Object) shape() []Part {
+func (obj Object) shape() []Part {
 	return obj.parts
 }
 
@@ -69,37 +69,52 @@ type Star struct {
 	Object
 }
 
-func newStar(s int) *Star {
-	return &Star{
-		Object{
-			size: s,
-			parts: []Part{
-				Part{
-					dots: []Coordinates{
-						Coordinates{X: 0, Y: 0, Z: 0},
-					},
-				},
+func newStar(s int, c Coordinates) *Star {
+	star := Star{}
+	star.size = s
+	star.position = c
+	star.parts = []Part{
+		Part{
+			Type: Part_Dot,
+			dots: []Coordinates{
+				Coordinates{X: 0, Y: 0, Z: 0},
 			},
 		},
 	}
+	return &star
 }
 
 type SpaceShip struct {
 	Object
 }
 
-func newSpaceShip(s int) *SpaceShip {
-	return &SpaceShip{
-		Object{
-			size: s,
-			parts: []Part{
-				Part{
-					dots: []Coordinates{
-						Coordinates{X: s / 2, Y: s / 2, Z: 0},
-						Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
-					},
-				},
+func newSpaceShip(s int, c Coordinates) *SpaceShip {
+	ship := SpaceShip{}
+	ship.size = s
+	ship.position = c
+	ship.parts = []Part{
+		Part{
+			Type: Part_Rectangle,
+			dots: []Coordinates{
+				Coordinates{X: s / 2, Y: s / 2, Z: 0},
+				Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
 			},
 		},
 	}
+	return &ship
+	/*
+		return &SpaceShip{
+			Object{
+				size: s,
+				parts: []Part{
+					Part{
+						dots: []Coordinates{
+							Coordinates{X: s / 2, Y: s / 2, Z: 0},
+							Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+						},
+					},
+				},
+			},
+		}
+	*/
 }

@@ -165,10 +165,16 @@ func (view *View) drawObjects() {
 			for _, part := range shaper.shape() {
 				switch part.Type {
 				case Part_Dot:
-
+					//fmt.Printf("Part_Dot: Obj=%v type=%v obj.position=%v\n", obj, reflect.TypeOf(obj), obj.(*Star).position)
+					if dot := view.mapObject(obj.(*Star).position); dot != nil {
+						view.state.screen.printDot(*dot)
+						//fmt.Printf("dot=%v", *dot)
+						//view.drawn = append(view.drawn, *dot)
+					}
 				case Part_Circle:
-
+					//fmt.Printf("Part_Circle")
 				case Part_Rectangle:
+					//fmt.Printf("Part_Part_Rectangle: Obj=%v\n", obj)
 
 				}
 			}
@@ -302,6 +308,12 @@ func NewSpace() *Space {
 	depth := (w + h) * 100
 	for i := 0; i < count; i++ {
 		spc.addObj(
+			newStar(1, Coordinates{
+				X: (min + rand.Intn(max-min)) * 2,
+				Y: min + rand.Intn(max-min),
+				Z: rand.Intn(depth),
+			}))
+		/*
 			&Star{
 				Object{
 					position: Coordinates{
@@ -313,11 +325,18 @@ func NewSpace() *Space {
 					size: 1,
 				},
 			})
+		*/
 	}
 
-	count = 100
+	count = 10
 	for i := 0; i < count; i++ {
 		spc.addObj(
+			newSpaceShip(1, Coordinates{
+				X: (min + rand.Intn(max-min)) * 2,
+				Y: min + rand.Intn(max-min),
+				Z: rand.Intn(depth),
+			}))
+		/*
 			&SpaceShip{
 				Object{
 					position: Coordinates{
@@ -329,6 +348,7 @@ func NewSpace() *Space {
 					size: rand.Intn(max),
 				},
 			})
+		*/
 	}
 
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
