@@ -15,16 +15,26 @@ type Part struct {
 }
 
 type Parter interface {
-	dots() []Coordinates
+	getParts() []Coordinates
 }
 
-func (p *Part) getDots() []Coordinates {
+func (p Part) getDots() []Coordinates {
 	return p.dots
 }
 
 type DotPart struct {
 	Part
 }
+
+func newDotPart(p Part) DotPart {
+	return DotPart{
+		Part: p,
+	}
+}
+
+//func (p *DotPart) getDots() []Coordinates {
+//return p.dots
+//}
 
 type LinePart struct {
 	Part
@@ -34,6 +44,17 @@ type RectanglePart struct {
 	Part
 	fill bool
 }
+
+func newRectanglePart(p Part, f bool) DotPart {
+	return DotPart{
+		Part: p,
+		fill: f,
+	}
+}
+
+//func (p *RectanglePart) getDots() []Coordinates {
+//return p.dots
+//}
 
 type Obj_type int
 
@@ -59,10 +80,15 @@ type Object struct {
 
 type Shaper interface {
 	shape() []Part
+	addPart(Parter)
 }
 
 func (obj Object) shape() []Part {
 	return obj.parts
+}
+
+func (obj Object) addPart(p Parter) {
+	obj.parts + append(obj.part, p)
 }
 
 type Star struct {
@@ -73,14 +99,18 @@ func newStar(s int, c Coordinates) *Star {
 	star := Star{}
 	star.size = s
 	star.position = c
-	star.parts = []Part{
-		Part{
-			Type: Part_Dot,
-			dots: []Coordinates{
-				Coordinates{X: 0, Y: 0, Z: 0},
-			},
-		},
+	//part := DotPart{}
+	part := Part{}
+	part.Type = Part_Dot
+	part.dots = []Coordinates{
+		Coordinates{X: 0, Y: 0, Z: 0},
 	}
+	star.parts = []Part{
+		part,
+		//interface{}(part).(Part),
+	}
+	star.addPart(newDotPart(part))
+
 	return &star
 }
 
@@ -102,19 +132,4 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 		},
 	}
 	return &ship
-	/*
-		return &SpaceShip{
-			Object{
-				size: s,
-				parts: []Part{
-					Part{
-						dots: []Coordinates{
-							Coordinates{X: s / 2, Y: s / 2, Z: 0},
-							Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
-						},
-					},
-				},
-			},
-		}
-	*/
 }

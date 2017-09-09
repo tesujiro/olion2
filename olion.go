@@ -91,6 +91,7 @@ func (sc *Screen) printCircle(d *Dot, r int, fill bool) {
 
 func (sc *Screen) printRectangle(d1, d2 *Dot, fill bool) {
 	//Todo:fill
+	//fmt.Printf("d1=%v\td2=%v\n", d1, d2)
 	sc.printLine(&Dot{X: d1.X, Y: d1.Y}, &Dot{X: d1.X, Y: d2.Y})
 	sc.printLine(&Dot{X: d1.X, Y: d2.Y}, &Dot{X: d2.X, Y: d2.Y})
 	sc.printLine(&Dot{X: d2.X, Y: d2.Y}, &Dot{X: d2.X, Y: d1.Y})
@@ -174,6 +175,23 @@ func (view *View) drawObjects() {
 				case Part_Circle:
 					//fmt.Printf("Part_Circle")
 				case Part_Rectangle:
+					position := obj.(*SpaceShip).position
+					dots := part.dots
+					dot1 := view.mapObject(Coordinates{
+						X: position.X + dots[0].X,
+						Y: position.Y + dots[0].Y,
+						Z: position.Z + dots[0].Z,
+					})
+					dot2 := view.mapObject(Coordinates{
+						X: position.X + dots[1].X,
+						Y: position.Y + dots[1].Y,
+						Z: position.Z + dots[1].Z,
+					})
+					if dot1 != nil && dot2 != nil {
+						//fmt.Printf("d1=%v\td2=%v", dot1, dot2)
+						//fmt.Printf("dots=%v\tposition=%v\td1=%v\td2=%v\n", dots, position, dot1, dot2)
+						view.state.screen.printRectangle(dot1, dot2, false)
+					}
 					//fmt.Printf("Part_Part_Rectangle: Obj=%v\n", obj)
 
 				}
@@ -280,27 +298,8 @@ func (spc *Space) addObj(obj interface{}) {
 func NewSpace() *Space {
 	//fmt.Printf("NewSpace Start")
 	spc := &Space{}
-	/*
-		min := 0
-		max := 300
-		intervalX := 1
-		intervalY := 12
-		intervalZ := 12
-		//min = min + interval
-		for x := min; x <= max; x += intervalX {
-			for y := min; y <= max; y += intervalY {
-				for z := min; z <= max; z += intervalZ {
-					obj := Object{
-						Position:  Coordinates{X: x, Y: y, Z: z},
-						Direction: Direction{theta: 0, phi: 0},
-						Type:      Obj_Star,
-						Size:      1,
-					}
-					spc.addObj(obj)
-				}
-			}
-		}
-	*/
+
+	//Add Star
 	count := 1000
 	w, h := termbox.Size()
 	max := int((w + h) * 10)
@@ -313,42 +312,17 @@ func NewSpace() *Space {
 				Y: min + rand.Intn(max-min),
 				Z: rand.Intn(depth),
 			}))
-		/*
-			&Star{
-				Object{
-					position: Coordinates{
-						X: (min + rand.Intn(max-min)) * 2,
-						Y: min + rand.Intn(max-min),
-						Z: rand.Intn(depth),
-					},
-					Type: Obj_Dot,
-					size: 1,
-				},
-			})
-		*/
 	}
 
-	count = 10
+	//Add SpaceShip
+	count = 100
 	for i := 0; i < count; i++ {
 		spc.addObj(
-			newSpaceShip(1, Coordinates{
+			newSpaceShip(rand.Intn(max), Coordinates{
 				X: (min + rand.Intn(max-min)) * 2,
 				Y: min + rand.Intn(max-min),
 				Z: rand.Intn(depth),
 			}))
-		/*
-			&SpaceShip{
-				Object{
-					position: Coordinates{
-						X: (min + rand.Intn(max-min)) * 2,
-						Y: min + rand.Intn(max-min),
-						Z: rand.Intn(depth),
-					},
-					Type: Obj_Box,
-					size: rand.Intn(max),
-				},
-			})
-		*/
 	}
 
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
