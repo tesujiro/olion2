@@ -260,8 +260,10 @@ type Space struct {
 }
 
 //func (spc *Space) addObj(obj Object) {
-func (spc *Space) addObj(obj interface{}) {
-	spc.Objects = append(spc.Objects, obj.(Shaper))
+//func (spc *Space) addObj(obj interface{}) {
+func (spc *Space) addObj(obj Shaper) {
+	//spc.Objects = append(spc.Objects, obj.(Shaper))
+	spc.Objects = append(spc.Objects, obj)
 }
 
 func NewSpace() *Space {
