@@ -15,26 +15,40 @@ type Part struct {
 }
 
 type Parter interface {
-	getParts() []Coordinates
+	getType() Part_type
+	getDots() []Coordinates
+	addDot(Coordinates)
+}
+
+/*
+func newPart() Part {
+	return Part{}
+}
+*/
+
+func (p Part) getType() Part_type {
+	return p.Type
 }
 
 func (p Part) getDots() []Coordinates {
 	return p.dots
 }
 
+func (p Part) addDot(d Coordinates) {
+	p.dots = append(p.dots, d)
+}
+
 type DotPart struct {
 	Part
 }
 
-func newDotPart(p Part) DotPart {
+func newDotPart(p Parter) DotPart {
+	// Todo: check len(p.getDots())
+	//fmt.Printf("p.(Part)=%v\n", p.(Part))
 	return DotPart{
-		Part: p,
+		Part: p.(Part),
 	}
 }
-
-//func (p *DotPart) getDots() []Coordinates {
-//return p.dots
-//}
 
 type LinePart struct {
 	Part
@@ -45,10 +59,10 @@ type RectanglePart struct {
 	fill bool
 }
 
-func newRectanglePart(p Part, f bool) DotPart {
-	return DotPart{
-		Part: p,
-		fill: f,
+func newRectanglePart(p Parter) RectanglePart {
+	// Todo: check len(p.getDots())
+	return RectanglePart{
+		Part: p.(Part),
 	}
 }
 
@@ -67,7 +81,7 @@ const (
 )
 
 type Object struct {
-	parts    []Part
+	parts    []Parter
 	position Coordinates //位置
 	//Direction Direction   //方向
 	//Speed
@@ -79,16 +93,18 @@ type Object struct {
 }
 
 type Shaper interface {
-	shape() []Part
+	shape() []Parter
 	addPart(Parter)
 }
 
-func (obj Object) shape() []Part {
+func (obj *Object) shape() []Parter {
 	return obj.parts
 }
 
-func (obj Object) addPart(p Parter) {
-	obj.parts + append(obj.part, p)
+func (obj *Object) addPart(p Parter) {
+	//fmt.Printf(" addPart p=%v  obj.Parts=%v  ==>  ", p, obj.parts)
+	obj.parts = append(obj.parts, p)
+	//fmt.Printf(" addPart p=%v  obj.Parts=%v ==> ", p, obj.parts)
 }
 
 type Star struct {
@@ -99,18 +115,16 @@ func newStar(s int, c Coordinates) *Star {
 	star := Star{}
 	star.size = s
 	star.position = c
-	//part := DotPart{}
-	part := Part{}
-	part.Type = Part_Dot
-	part.dots = []Coordinates{
-		Coordinates{X: 0, Y: 0, Z: 0},
-	}
-	star.parts = []Part{
-		part,
-		//interface{}(part).(Part),
-	}
-	star.addPart(newDotPart(part))
-
+	star.parts = []Parter{}
+	dot := newDotPart(Part{
+		Type: Part_Dot,
+		dots: []Coordinates{
+			Coordinates{X: 0, Y: 0, Z: 0},
+		},
+	})
+	//fmt.Printf("star.parts=%v dot=%v   ==> ", star.parts, dot)
+	star.addPart(dot)
+	//fmt.Printf("star.parts=%v dot=%v\n", star.parts, dot)
 	return &star
 }
 
@@ -122,14 +136,16 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 	ship := SpaceShip{}
 	ship.size = s
 	ship.position = c
-	ship.parts = []Part{
-		Part{
-			Type: Part_Rectangle,
-			dots: []Coordinates{
-				Coordinates{X: s / 2, Y: s / 2, Z: 0},
-				Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
-			},
+	ship.parts = []Parter{}
+	rectangle := newRectanglePart(Part{
+		Type: Part_Rectangle,
+		dots: []Coordinates{
+			Coordinates{X: s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
 		},
-	}
+	})
+	//fmt.Printf("ship.parts=%v dot=%v   ==> ", ship.parts, rectangle)
+	ship.addPart(rectangle)
+	//fmt.Printf("ship.parts=%v dot=%v\n", ship.parts, rectangle)
 	return &ship
 }

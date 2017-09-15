@@ -161,10 +161,12 @@ func (view *View) drawObjects() {
 
 	for _, obj := range view.state.space.Objects {
 		//dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
-		//fmt.Printf("obj=%v", obj)
+		//fmt.Printf("obj=%v\n", obj)
 		if shaper, ok := interface{}(obj).(Shaper); ok {
+			//fmt.Printf("cast OK obj=%v\n", obj)
 			for _, part := range shaper.shape() {
-				switch part.Type {
+				//fmt.Printf("shape OK obj=%v\n", obj)
+				switch part.getType() {
 				case Part_Dot:
 					//fmt.Printf("Part_Dot: Obj=%v type=%v obj.position=%v\n", obj, reflect.TypeOf(obj), obj.(*Star).position)
 					if dot := view.mapObject(obj.(*Star).position); dot != nil {
@@ -176,7 +178,7 @@ func (view *View) drawObjects() {
 					//fmt.Printf("Part_Circle")
 				case Part_Rectangle:
 					position := obj.(*SpaceShip).position
-					dots := part.dots
+					dots := part.getDots()
 					dot1 := view.mapObject(Coordinates{
 						X: position.X + dots[0].X,
 						Y: position.Y + dots[0].Y,
@@ -192,49 +194,16 @@ func (view *View) drawObjects() {
 						//fmt.Printf("dots=%v\tposition=%v\td1=%v\td2=%v\n", dots, position, dot1, dot2)
 						view.state.screen.printRectangle(dot1, dot2, false)
 					}
-					//fmt.Printf("Part_Part_Rectangle: Obj=%v\n", obj)
-
+				//fmt.Printf("Part_Part_Rectangle: Obj=%v\n", obj)
+				default:
+					fmt.Printf("NO TYPE\n")
 				}
 			}
+		} else {
+
+			fmt.Printf("CAST ERROR\n")
 		}
-
-		/*
-			switch obj.Type {
-			case Obj_Dot:
-				if dot := view.mapObject(obj.Position); dot != nil {
-					view.state.screen.printDot(*dot)
-					//fmt.Printf("dot=%v", *dot)
-					//view.drawn = append(view.drawn, *dot)
-				}
-			case Obj_Box:
-				dot1 := view.mapObject(Coordinates{
-					X: obj.Position.X + obj.Size*2,
-					Y: obj.Position.Y + obj.Size,
-					Z: obj.Position.Z,
-				})
-				dot2 := view.mapObject(Coordinates{
-					X: obj.Position.X + obj.Size*2,
-					Y: obj.Position.Y - obj.Size,
-					Z: obj.Position.Z,
-				})
-				dot3 := view.mapObject(Coordinates{
-					X: obj.Position.X - obj.Size*2,
-					Y: obj.Position.Y - obj.Size,
-					Z: obj.Position.Z,
-				})
-				dot4 := view.mapObject(Coordinates{
-					X: obj.Position.X - obj.Size*2,
-					Y: obj.Position.Y + obj.Size,
-					Z: obj.Position.Z,
-				})
-				view.state.screen.printLine(dot1, dot2)
-				view.state.screen.printLine(dot2, dot3)
-				view.state.screen.printLine(dot3, dot4)
-				view.state.screen.printLine(dot4, dot1)
-			}
-		*/
 	}
-	//fmt.Printf("\n")
 }
 
 func (view *View) Loop(ctx context.Context, cancel func()) error {
