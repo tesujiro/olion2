@@ -166,17 +166,20 @@ func (view *View) drawObjects() {
 			//fmt.Printf("cast OK obj=%v\n", obj)
 			for _, part := range shaper.shape() {
 				//fmt.Printf("shape OK obj=%v\n", obj)
-				switch part.getType() {
-				case Part_Dot:
+				//switch part.getType() {
+				switch part.(type) {
+				//case Part_Dot:
+				case DotPart:
 					//fmt.Printf("Part_Dot: Obj=%v type=%v obj.position=%v\n", obj, reflect.TypeOf(obj), obj.(*Star).position)
 					if dot := view.mapObject(obj.(*Star).position); dot != nil {
 						view.state.screen.printDot(*dot)
 						//fmt.Printf("dot=%v", *dot)
 						//view.drawn = append(view.drawn, *dot)
 					}
-				case Part_Circle:
-					//fmt.Printf("Part_Circle")
-				case Part_Rectangle:
+				//case Part_Circle:
+				//fmt.Printf("Part_Circle")
+				//case Part_Rectangle:
+				case RectanglePart:
 					position := obj.(*SpaceShip).position
 					dots := part.getDots()
 					dot1 := view.mapObject(Coordinates{
@@ -259,8 +262,6 @@ type Space struct {
 	Objects []Shaper
 }
 
-//func (spc *Space) addObj(obj Object) {
-//func (spc *Space) addObj(obj interface{}) {
 func (spc *Space) addObj(obj Shaper) {
 	//spc.Objects = append(spc.Objects, obj.(Shaper))
 	spc.Objects = append(spc.Objects, obj)
