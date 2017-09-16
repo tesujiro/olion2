@@ -61,13 +61,13 @@ type Object struct {
 	//Speed
 	//created
 	//weight
-
 	size int
 }
 
 type Shaper interface {
 	shape() []Parter
 	addPart(Parter)
+	getPosition() Coordinates
 }
 
 func (obj *Object) shape() []Parter {
@@ -76,6 +76,10 @@ func (obj *Object) shape() []Parter {
 
 func (obj *Object) addPart(p Parter) {
 	obj.parts = append(obj.parts, p)
+}
+
+func (obj *Object) getPosition() Coordinates {
+	return obj.position
 }
 
 type Star struct {
@@ -87,7 +91,6 @@ func newStar(s int, c Coordinates) *Star {
 	star.size = s
 	star.position = c
 	dot := newDotPart(Part{
-		//Type: Part_Dot,
 		dots: []Coordinates{
 			Coordinates{X: 0, Y: 0, Z: 0},
 		},
@@ -105,12 +108,20 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 	ship.size = s
 	ship.position = c
 	rectangle := newRectanglePart(Part{
-		//Type: Part_Rectangle,
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
 		},
 	})
 	ship.addPart(rectangle)
+	/*
+		rectangle = newRectanglePart(Part{
+			dots: []Coordinates{
+				Coordinates{X: s, Y: s, Z: 0},
+				Coordinates{X: -s, Y: -s, Z: 0},
+			},
+		})
+		ship.addPart(rectangle)
+	*/
 	return &ship
 }

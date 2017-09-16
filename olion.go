@@ -160,52 +160,42 @@ func (view *View) drawObjects() {
 	//fmt.Printf("\n==>drawObjects(%v)\n", len(view.state.space.Objects))
 
 	for _, obj := range view.state.space.Objects {
-		//dot := Dot{X: obj.Position.X, Y: obj.Position.Y}
-		//fmt.Printf("obj=%v\n", obj)
-		if shaper, ok := interface{}(obj).(Shaper); ok {
-			//fmt.Printf("cast OK obj=%v\n", obj)
-			for _, part := range shaper.shape() {
-				//fmt.Printf("shape OK obj=%v\n", obj)
-				//switch part.getType() {
-				switch part.(type) {
-				//case Part_Dot:
-				case DotPart:
-					//fmt.Printf("Part_Dot: Obj=%v type=%v obj.position=%v\n", obj, reflect.TypeOf(obj), obj.(*Star).position)
-					if dot := view.mapObject(obj.(*Star).position); dot != nil {
-						view.state.screen.printDot(*dot)
-						//fmt.Printf("dot=%v", *dot)
-						//view.drawn = append(view.drawn, *dot)
-					}
-				//case Part_Circle:
-				//fmt.Printf("Part_Circle")
-				//case Part_Rectangle:
-				case RectanglePart:
-					position := obj.(*SpaceShip).position
-					dots := part.getDots()
-					dot1 := view.mapObject(Coordinates{
-						X: position.X + dots[0].X,
-						Y: position.Y + dots[0].Y,
-						Z: position.Z + dots[0].Z,
-					})
-					dot2 := view.mapObject(Coordinates{
-						X: position.X + dots[1].X,
-						Y: position.Y + dots[1].Y,
-						Z: position.Z + dots[1].Z,
-					})
-					if dot1 != nil && dot2 != nil {
-						//fmt.Printf("d1=%v\td2=%v", dot1, dot2)
-						//fmt.Printf("dots=%v\tposition=%v\td1=%v\td2=%v\n", dots, position, dot1, dot2)
-						view.state.screen.printRectangle(dot1, dot2, false)
-					}
-				//fmt.Printf("Part_Part_Rectangle: Obj=%v\n", obj)
-				default:
-					fmt.Printf("NO TYPE\n")
+		//if shaper, ok := interface{}(obj).(Shaper); ok {
+		//for _, part := range shaper.shape() {
+		for _, part := range obj.shape() {
+			//fmt.Printf("shape OK obj=%v\n", obj)
+			switch part.(type) {
+			case DotPart:
+				//fmt.Printf("Part_Dot: Obj=%v type=%v obj.position=%v\n", obj, reflect.TypeOf(obj), obj.(*Star).position)
+				if dot := view.mapObject(obj.getPosition()); dot != nil {
+					view.state.screen.printDot(*dot)
+					//fmt.Printf("dot=%v", *dot)
+					//view.drawn = append(view.drawn, *dot)
 				}
+			case RectanglePart:
+				position := obj.getPosition()
+				dots := part.getDots()
+				dot1 := view.mapObject(Coordinates{
+					X: position.X + dots[0].X,
+					Y: position.Y + dots[0].Y,
+					Z: position.Z + dots[0].Z,
+				})
+				dot2 := view.mapObject(Coordinates{
+					X: position.X + dots[1].X,
+					Y: position.Y + dots[1].Y,
+					Z: position.Z + dots[1].Z,
+				})
+				if dot1 != nil && dot2 != nil {
+					//fmt.Printf("d1=%v\td2=%v", dot1, dot2)
+					//fmt.Printf("dots=%v\tposition=%v\td1=%v\td2=%v\n", dots, position, dot1, dot2)
+					view.state.screen.printRectangle(dot1, dot2, false)
+				}
+			//fmt.Printf("Part_Part_Rectangle: Obj=%v\n", obj)
+			default:
+				fmt.Printf("NO TYPE\n")
 			}
-		} else {
-
-			fmt.Printf("CAST ERROR\n")
 		}
+		//}
 	}
 }
 
