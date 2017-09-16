@@ -92,6 +92,7 @@ type Shaper interface {
 	shape() []Parter
 	addPart(Parter)
 	getPosition() Coordinates
+	setPosition(Coordinates)
 }
 
 func (obj *Object) shape() []Parter {
@@ -104,6 +105,10 @@ func (obj *Object) addPart(p Parter) {
 
 func (obj *Object) getPosition() Coordinates {
 	return obj.position
+}
+
+func (obj *Object) setPosition(c Coordinates) {
+	obj.position = c
 }
 
 type Star struct {

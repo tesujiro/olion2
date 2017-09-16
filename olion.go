@@ -42,9 +42,9 @@ func (sc *Screen) cover(dot Dot) bool {
 	return 0 <= dot.X && dot.X <= sc.Width && 0 <= dot.Y && dot.Y <= sc.Height
 }
 
-func (sc *Screen) printDot(dot Dot, color Attribute) {
+func (sc *Screen) printDot(dot *Dot, color Attribute) {
 	//fmt.Printf("Color=%v\n", color)
-	if sc.cover(dot) {
+	if sc.cover(*dot) {
 		//termbox.SetCell(dot.X, sc.Height-dot.Y+1, ' ', termbox.Attribute(color), 1)
 		termbox.SetCell(dot.X, sc.Height-dot.Y+1, ' ', termbox.ColorDefault, termbox.Attribute(color))
 	}
@@ -57,31 +57,29 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 	if (d1.X-d2.X)*(d1.X-d2.X) >= (d1.Y-d2.Y)*(d1.Y-d2.Y) {
 		switch {
 		case d1.X == d2.X:
-			sc.printDot(*d1, color)
+			sc.printDot(d1, color)
 		case d1.X < d2.X:
 			for x := d1.X; x <= d2.X; x++ {
 				y := d1.Y + (d2.Y-d1.Y)*(x-d1.X)/(d2.X-d1.X)
-				sc.printDot(Dot{X: x, Y: y}, color)
+				sc.printDot(&Dot{X: x, Y: y}, color)
 			}
 		case d1.X > d2.X:
 			for x := d2.X; x <= d1.X; x++ {
 				y := d2.Y + (d1.Y-d2.Y)*(x-d2.X)/(d1.X-d2.X)
-				sc.printDot(Dot{X: x, Y: y}, color)
+				sc.printDot(&Dot{X: x, Y: y}, color)
 			}
 		}
 	} else {
 		switch {
-		//case d1.Y == d2.Y:
-		//sc.printDot(*d1)
 		case d1.Y < d2.Y:
 			for y := d1.Y; y <= d2.Y; y++ {
 				x := d1.X + (d2.X-d1.X)*(y-d1.Y)/(d2.Y-d1.Y)
-				sc.printDot(Dot{X: x, Y: y}, color)
+				sc.printDot(&Dot{X: x, Y: y}, color)
 			}
 		case d1.Y > d2.Y:
 			for y := d2.Y; y <= d1.Y; y++ {
 				x := d2.X + (d1.X-d2.X)*(y-d2.Y)/(d1.Y-d2.Y)
-				sc.printDot(Dot{X: x, Y: y}, color)
+				sc.printDot(&Dot{X: x, Y: y}, color)
 			}
 		}
 	}
@@ -157,64 +155,51 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 	return &dot
 }
 
-func (view *View) drawObjects() {
-	//fmt.Printf("\n==>drawObjects(%v)\n", len(view.state.space.Objects))
-
+func (view *View) move(moveDiff Coordinates) {
 	for _, obj := range view.state.space.Objects {
-		//if shaper, ok := interface{}(obj).(Shaper); ok {
-		//for _, part := range shaper.shape() {
+		//Each Object Move
+		position := obj.getPosition()
+		newPosition := Coordinates{
+			X: position.X - moveDiff.X,
+			Y: position.Y - moveDiff.Y,
+			Z: position.Z - moveDiff.Z,
+		}
+		obj.setPosition(newPosition)
+	}
+}
+
+func (view *View) drawObjects() {
+	// Order Object
+	//fmt.Printf("\n==>drawObjects(%v)\n", len(view.state.space.Objects))
+	for _, obj := range view.state.space.Objects {
+	label1:
 		for _, part := range obj.shape() {
 			//fmt.Printf("shape OK obj=%v\n", obj)
+			//fmt.Printf("position=%v\n", obj.getPosition())
+			position := obj.getPosition()
+			dots := []Dot{}
+			for _, dot := range part.getDots() {
+				d := view.mapObject(Coordinates{
+					X: position.X + dot.X,
+					Y: position.Y + dot.Y,
+					Z: position.Z + dot.Z,
+				})
+				if d == nil {
+					continue label1
+				}
+				dots = append(dots, *d)
+			}
 			switch part.(type) {
 			case DotPart:
-				//fmt.Printf("Part_Dot: Obj=%v type=%v obj.position=%v\n", obj, reflect.TypeOf(obj), obj.(*Star).position)
-				if dot := view.mapObject(obj.getPosition()); dot != nil {
-					view.state.screen.printDot(*dot, part.getColor())
-					//fmt.Printf("dot=%v", *dot)
-					//view.drawn = append(view.drawn, *dot)
-				}
+				view.state.screen.printDot(&dots[0], part.getColor())
 			case LinePart:
-				position := obj.getPosition()
-				dots := part.getDots()
-				dot1 := view.mapObject(Coordinates{
-					X: position.X + dots[0].X,
-					Y: position.Y + dots[0].Y,
-					Z: position.Z + dots[0].Z,
-				})
-				dot2 := view.mapObject(Coordinates{
-					X: position.X + dots[1].X,
-					Y: position.Y + dots[1].Y,
-					Z: position.Z + dots[1].Z,
-				})
-				if dot1 != nil && dot2 != nil {
-					//fmt.Printf("d1=%v\td2=%v", dot1, dot2)
-					//fmt.Printf("dots=%v\tposition=%v\td1=%v\td2=%v\n", dots, position, dot1, dot2)
-					view.state.screen.printLine(dot1, dot2, part.getColor())
-				}
+				view.state.screen.printLine(&dots[0], &dots[1], part.getColor())
 			case RectanglePart:
-				position := obj.getPosition()
-				dots := part.getDots()
-				dot1 := view.mapObject(Coordinates{
-					X: position.X + dots[0].X,
-					Y: position.Y + dots[0].Y,
-					Z: position.Z + dots[0].Z,
-				})
-				dot2 := view.mapObject(Coordinates{
-					X: position.X + dots[1].X,
-					Y: position.Y + dots[1].Y,
-					Z: position.Z + dots[1].Z,
-				})
-				if dot1 != nil && dot2 != nil {
-					//fmt.Printf("d1=%v\td2=%v", dot1, dot2)
-					//fmt.Printf("dots=%v\tposition=%v\td1=%v\td2=%v\n", dots, position, dot1, dot2)
-					view.state.screen.printRectangle(dot1, dot2, part.getColor(), false)
-				}
-			//fmt.Printf("Part_Part_Rectangle: Obj=%v\n", obj)
+				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), false)
 			default:
 				fmt.Printf("NO TYPE\n")
 			}
 		}
-		//}
 	}
 }
 
@@ -233,12 +218,17 @@ mainloop:
 			break mainloop
 		case <-tick:
 			view.state.screen.clear()
+			//view.state.position = Coordinates{
+			//X: view.state.position.X, //ここにカーソル移動を入れる
+			//Y: view.state.position.Y, //ここにカーソル移動を入れる
+			//Z: view.state.position.Z + view.state.speed,
+			//}
+			view.move(Coordinates{
+				X: 0,
+				Y: 0,
+				Z: view.state.speed,
+			})
 			view.drawObjects()
-			view.state.position = Coordinates{
-				X: view.state.position.X, //ここにカーソル移動を入れる
-				Y: view.state.position.Y, //ここにカーソル移動を入れる
-				Z: view.state.position.Z + view.state.speed,
-			}
 			count++
 			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v", count, view.state.position))
 			view.state.screen.flush()
