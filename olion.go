@@ -43,10 +43,10 @@ func (sc *Screen) cover(dot Dot) bool {
 }
 
 func (sc *Screen) printDot(dot Dot, color Attribute) {
-	//fmt.Printf("\x1b[%v;%vH%s", sc.Height-dot.Y+1, dot.X, "X")
+	//fmt.Printf("Color=%v\n", color)
 	if sc.cover(dot) {
-		//termbox.SetCell(dot.X, sc.Height-dot.Y+1, ' ', termbox.ColorDefault, 1)
-		termbox.SetCell(dot.X, sc.Height-dot.Y+1, ' ', termbox.Attribute(color), 1)
+		//termbox.SetCell(dot.X, sc.Height-dot.Y+1, ' ', termbox.Attribute(color), 1)
+		termbox.SetCell(dot.X, sc.Height-dot.Y+1, ' ', termbox.ColorDefault, termbox.Attribute(color))
 	}
 }
 
