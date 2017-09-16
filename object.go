@@ -1,14 +1,27 @@
 package olion
 
-type Part_type int
+type Attribute uint16
+
+const (
+	ColorDefault Attribute = iota
+	ColorBlack
+	ColorRed
+	ColorGreen
+	ColorYellow
+	ColorBlue
+	ColorMagenta
+	ColorCyan
+	ColorWhite
+)
 
 type Part struct {
-	dots []Coordinates
-	// color
+	dots  []Coordinates
+	color Attribute
 }
 
 type Parter interface {
 	getDots() []Coordinates
+	getColor() Attribute
 	addDot(Coordinates)
 }
 
@@ -26,6 +39,10 @@ func (p Part) addDot(d Coordinates) {
 	p.dots = append(p.dots, d)
 }
 
+func (p Part) getColor() Attribute {
+	return p.color
+}
+
 /* one dot part */
 type DotPart struct {
 	Part
@@ -40,6 +57,13 @@ func newDotPart(p Parter) DotPart {
 
 type LinePart struct {
 	Part
+}
+
+func newLinePart(p Parter) LinePart {
+	// Todo: check len(p.getDots())
+	return LinePart{
+		Part: p.(Part),
+	}
 }
 
 type RectanglePart struct {
@@ -94,6 +118,7 @@ func newStar(s int, c Coordinates) *Star {
 		dots: []Coordinates{
 			Coordinates{X: 0, Y: 0, Z: 0},
 		},
+		color: ColorWhite,
 	})
 	star.addPart(dot)
 	return &star
@@ -107,21 +132,45 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 	ship := SpaceShip{}
 	ship.size = s
 	ship.position = c
-	rectangle := newRectanglePart(Part{
+	rectangle1 := newRectanglePart(Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
 		},
+		color: ColorRed,
 	})
-	ship.addPart(rectangle)
-	/*
-		rectangle = newRectanglePart(Part{
-			dots: []Coordinates{
-				Coordinates{X: s, Y: s, Z: 0},
-				Coordinates{X: -s, Y: -s, Z: 0},
-			},
-		})
-		ship.addPart(rectangle)
-	*/
+	ship.addPart(rectangle1)
+	line1 := newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: s, Y: 0, Z: 0},
+			Coordinates{X: s / 2, Y: 0, Z: 0},
+		},
+		color: ColorRed,
+	})
+	ship.addPart(line1)
+	line2 := newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: -s, Y: 0, Z: 0},
+			Coordinates{X: -s / 2, Y: 0, Z: 0},
+		},
+		color: ColorRed,
+	})
+	ship.addPart(line2)
+	line3 := newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: s, Y: s / 2, Z: 0},
+			Coordinates{X: s, Y: -s / 2, Z: 0},
+		},
+		color: ColorRed,
+	})
+	ship.addPart(line3)
+	line4 := newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: -s, Y: s / 2, Z: 0},
+			Coordinates{X: -s, Y: -s / 2, Z: 0},
+		},
+		color: ColorRed,
+	})
+	ship.addPart(line4)
 	return &ship
 }
