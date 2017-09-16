@@ -78,6 +78,14 @@ func newRectanglePart(p Parter) RectanglePart {
 	}
 }
 
+func (p *RectanglePart) setFill(b bool) {
+	p.fill = b
+}
+
+func (p *RectanglePart) getFill() bool {
+	return p.fill
+}
+
 type Object struct {
 	parts    []Parter
 	position Coordinates //位置
@@ -144,6 +152,7 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 		},
 		color: ColorRed,
 	})
+	rectangle1.setFill(true)
 	ship.addPart(rectangle1)
 	line1 := newLinePart(Part{
 		dots: []Coordinates{

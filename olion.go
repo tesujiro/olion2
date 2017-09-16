@@ -42,6 +42,16 @@ func (sc *Screen) cover(dot Dot) bool {
 	return 0 <= dot.X && dot.X <= sc.Width && 0 <= dot.Y && dot.Y <= sc.Height
 }
 
+func (sc *Screen) cover2(dot1, dot2 Dot) bool {
+	if dot1.X < 0 && dot2.X < 0 || dot1.X > sc.Width && dot2.X > sc.Width {
+		return false
+	}
+	if dot1.Y < 0 && dot2.Y < 0 || dot1.Y > sc.Height && dot2.Y > sc.Height {
+		return false
+	}
+	return true
+}
+
 func (sc *Screen) printDot(dot *Dot, color Attribute) {
 	//fmt.Printf("Color=%v\n", color)
 	if sc.cover(*dot) {
@@ -54,6 +64,26 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 	if d1 == nil || d2 == nil {
 		return
 	}
+	if !sc.cover2(*d1, *d2) {
+		return
+	}
+	/*
+		var diffX, diffY int
+		if d1.X < d2.X {
+			diffX = 1
+		} else {
+			diffX = -1
+		}
+		if d1.Y < d2.Y {
+			diffY = 1
+		} else {
+			diffY = -1
+		}
+		for x, y := d1.X, d1.Y; x != d2.X && y != d2.Y; x, y = x+diffX, y+diffY {
+			sc.printDot(&Dot{X: x, Y: y}, color)
+		}
+	*/
+
 	if (d1.X-d2.X)*(d1.X-d2.X) >= (d1.Y-d2.Y)*(d1.Y-d2.Y) {
 		switch {
 		case d1.X == d2.X:
@@ -91,10 +121,22 @@ func (sc *Screen) printCircle(d *Dot, r int, color Attribute, fill bool) {
 func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
 	//Todo:fill
 	//fmt.Printf("d1=%v\td2=%v\n", d1, d2)
-	sc.printLine(&Dot{X: d1.X, Y: d1.Y}, &Dot{X: d1.X, Y: d2.Y}, color)
-	sc.printLine(&Dot{X: d1.X, Y: d2.Y}, &Dot{X: d2.X, Y: d2.Y}, color)
-	sc.printLine(&Dot{X: d2.X, Y: d2.Y}, &Dot{X: d2.X, Y: d1.Y}, color)
-	sc.printLine(&Dot{X: d2.X, Y: d1.Y}, &Dot{X: d1.X, Y: d1.Y}, color)
+	if fill {
+		var diffY int
+		if d1.Y < d2.Y {
+			diffY = 1
+		} else {
+			diffY = -1
+		}
+		for y := d1.Y; y != d2.Y; y += diffY {
+			sc.printLine(&Dot{X: d1.X, Y: y}, &Dot{X: d2.X, Y: y}, color)
+		}
+	} else {
+		sc.printLine(&Dot{X: d1.X, Y: d1.Y}, &Dot{X: d1.X, Y: d2.Y}, color)
+		sc.printLine(&Dot{X: d1.X, Y: d2.Y}, &Dot{X: d2.X, Y: d2.Y}, color)
+		sc.printLine(&Dot{X: d2.X, Y: d2.Y}, &Dot{X: d2.X, Y: d1.Y}, color)
+		sc.printLine(&Dot{X: d2.X, Y: d1.Y}, &Dot{X: d1.X, Y: d1.Y}, color)
+	}
 }
 
 func (sc *Screen) printTriangle(d1, d2, d3 *Dot, fill bool) {
@@ -195,7 +237,8 @@ func (view *View) drawObjects() {
 			case LinePart:
 				view.state.screen.printLine(&dots[0], &dots[1], part.getColor())
 			case RectanglePart:
-				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), false)
+				r, _ := part.(RectanglePart)
+				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), r.getFill())
 			default:
 				fmt.Printf("NO TYPE\n")
 			}
@@ -218,14 +261,9 @@ mainloop:
 			break mainloop
 		case <-tick:
 			view.state.screen.clear()
-			//view.state.position = Coordinates{
-			//X: view.state.position.X, //ここにカーソル移動を入れる
-			//Y: view.state.position.Y, //ここにカーソル移動を入れる
-			//Z: view.state.position.Z + view.state.speed,
-			//}
 			view.move(Coordinates{
-				X: 0,
-				Y: 0,
+				X: 0, //ここにカーソル移動を入れる
+				Y: 0, //ここにカーソル移動を入れる
 				Z: view.state.speed,
 			})
 			view.drawObjects()
