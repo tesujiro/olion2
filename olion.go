@@ -54,9 +54,7 @@ func (sc *Screen) cover2(dot1, dot2 Dot) bool {
 }
 
 func (sc *Screen) printDot(dot *Dot, color Attribute) {
-	//fmt.Printf("Color=%v\n", color)
 	if sc.cover(*dot) {
-		//termbox.SetCell(dot.X, sc.Height-dot.Y+1, ' ', termbox.Attribute(color), 1)
 		termbox.SetCell(dot.X, sc.Height-dot.Y+1, ' ', termbox.ColorDefault, termbox.Attribute(color))
 	}
 }
@@ -68,22 +66,6 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 	if !sc.cover2(*d1, *d2) {
 		return
 	}
-	/*
-		var diffX, diffY int
-		if d1.X < d2.X {
-			diffX = 1
-		} else {
-			diffX = -1
-		}
-		if d1.Y < d2.Y {
-			diffY = 1
-		} else {
-			diffY = -1
-		}
-		for x, y := d1.X, d1.Y; x != d2.X && y != d2.Y; x, y = x+diffX, y+diffY {
-			sc.printDot(&Dot{X: x, Y: y}, color)
-		}
-	*/
 
 	if (d1.X-d2.X)*(d1.X-d2.X) >= (d1.Y-d2.Y)*(d1.Y-d2.Y) {
 		switch {
@@ -207,7 +189,11 @@ func (view *View) move(moveDiff Coordinates) {
 			Y: position.Y - moveDiff.Y,
 			Z: position.Z - moveDiff.Z,
 		}
-		obj.setPosition(newPosition)
+		if view.state.space.inTheSpace(newPosition) {
+			obj.setPosition(newPosition)
+		} else {
+			obj.setPosition(view.state.space.randomSpace())
+		}
 	}
 }
 
@@ -252,12 +238,10 @@ func (view *View) drawObjects() {
 }
 
 func (view *View) Loop(ctx context.Context, cancel func()) error {
-	//func (view *View) Loop(ctx context.Context, cancel func()) {
 	defer cancel()
-	//fmt.Println("==>Loop")
 
 	TermBoxChan := view.state.screen.TermBoxChan()
-	tick := time.NewTicker(time.Millisecond * time.Duration(1)).C
+	tick := time.NewTicker(time.Millisecond * time.Duration(5)).C
 	count := 0
 mainloop:
 	for {
@@ -300,43 +284,60 @@ type Direction struct {
 */
 
 type Space struct {
-	//Objects []Object
 	Objects []Shaper
+	Min     Coordinates
+	Max     Coordinates
 }
 
 func (spc *Space) addObj(obj Shaper) {
-	//spc.Objects = append(spc.Objects, obj.(Shaper))
 	spc.Objects = append(spc.Objects, obj)
+}
+
+func (spc *Space) randomSpace() Coordinates {
+	return Coordinates{
+		X: (spc.Min.X + rand.Intn(spc.Max.X-spc.Min.X)),
+		Y: (spc.Min.Y + rand.Intn(spc.Max.Y-spc.Min.Y)),
+		Z: (spc.Min.Z + rand.Intn(spc.Max.Z-spc.Min.Z)),
+	}
+}
+
+func (spc *Space) inTheSpace(c Coordinates) bool {
+	return c.X >= spc.Min.X && c.X <= spc.Max.X && c.Y >= spc.Min.Y && c.Y <= spc.Max.Y && c.Z >= spc.Min.Z && c.Z <= spc.Max.Z
+}
+
+func (spc *Space) genObject() {
+	num := rand.Intn(100)
+	switch {
+	case num < 10:
+		//Add SpaceShip
+		spc.addObj(newSpaceShip(500, spc.randomSpace()))
+	default:
+		//Add Star
+		spc.addObj(newStar(1, spc.randomSpace()))
+	}
 }
 
 func NewSpace() *Space {
 	//fmt.Printf("NewSpace Start")
 	spc := &Space{}
 
-	//Add Star
-	count := 1000
 	w, h := termbox.Size()
 	max := int((w + h) * 10)
 	min := -max
 	depth := (w + h) * 100
-	for i := 0; i < count; i++ {
-		spc.addObj(
-			newStar(1, Coordinates{
-				X: (min + rand.Intn(max-min)) * 2,
-				Y: min + rand.Intn(max-min),
-				Z: rand.Intn(depth),
-			}))
-	}
 
-	//Add SpaceShip
-	count = 100
-	for i := 0; i < count; i++ {
-		spc.addObj(
-			newSpaceShip(rand.Intn(max), Coordinates{
-				X: (min + rand.Intn(max-min)) * 2,
-				Y: min + rand.Intn(max-min),
-				Z: rand.Intn(depth),
-			}))
+	spc.Min = Coordinates{
+		X: min,
+		Y: min,
+		Z: 0,
+	}
+	spc.Max = Coordinates{
+		X: max,
+		Y: max,
+		Z: depth,
+	}
+	for i := 0; i <= 350; i++ {
+		spc.genObject()
 	}
 
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
