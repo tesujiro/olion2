@@ -170,6 +170,7 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 		},
 		color: ColorBlack,
 	})
+
 	ship.addPart(line1)
 	line2 := newLinePart(Part{
 		dots: []Coordinates{
@@ -179,6 +180,7 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 		color: ColorBlack,
 	})
 	ship.addPart(line2)
+
 	line3 := newLinePart(Part{
 		dots: []Coordinates{
 			Coordinates{X: s, Y: s / 2, Z: 0},
@@ -195,5 +197,40 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 		color: ColorBlack,
 	})
 	ship.addPart(line4)
+
+	var line LinePart
+	line = newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: s, Y: s / 2, Z: 0},
+			Coordinates{X: s / 2, Y: s, Z: 0},
+		},
+		color: ColorBlack,
+	})
+	ship.addPart(line)
+	line = newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: s, Y: -s / 2, Z: 0},
+			Coordinates{X: s / 2, Y: -s, Z: 0},
+		},
+		color: ColorBlack,
+	})
+	ship.addPart(line)
+	line = newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: -s, Y: s / 2, Z: 0},
+			Coordinates{X: -s / 2, Y: s, Z: 0},
+		},
+		color: ColorBlack,
+	})
+	ship.addPart(line)
+	line = newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: -s, Y: -s / 2, Z: 0},
+			Coordinates{X: -s / 2, Y: -s, Z: 0},
+		},
+		color: ColorBlack,
+	})
+	ship.addPart(line)
+
 	return &ship
 }
