@@ -154,12 +154,21 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 	})
 	rectangle1.setFill(true)
 	ship.addPart(rectangle1)
+	rectangle2 := newRectanglePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+		},
+		color: ColorBlack,
+	})
+	rectangle2.setFill(false)
+	ship.addPart(rectangle2)
 	line1 := newLinePart(Part{
 		dots: []Coordinates{
 			Coordinates{X: s, Y: 0, Z: 0},
 			Coordinates{X: s / 2, Y: 0, Z: 0},
 		},
-		color: ColorRed,
+		color: ColorBlack,
 	})
 	ship.addPart(line1)
 	line2 := newLinePart(Part{
@@ -167,7 +176,7 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 			Coordinates{X: -s, Y: 0, Z: 0},
 			Coordinates{X: -s / 2, Y: 0, Z: 0},
 		},
-		color: ColorRed,
+		color: ColorBlack,
 	})
 	ship.addPart(line2)
 	line3 := newLinePart(Part{
@@ -175,7 +184,7 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 			Coordinates{X: s, Y: s / 2, Z: 0},
 			Coordinates{X: s, Y: -s / 2, Z: 0},
 		},
-		color: ColorRed,
+		color: ColorBlack,
 	})
 	ship.addPart(line3)
 	line4 := newLinePart(Part{
@@ -183,7 +192,7 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 			Coordinates{X: -s, Y: s / 2, Z: 0},
 			Coordinates{X: -s, Y: -s / 2, Z: 0},
 		},
-		color: ColorRed,
+		color: ColorBlack,
 	})
 	ship.addPart(line4)
 	return &ship

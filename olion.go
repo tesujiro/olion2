@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"sort"
 	"sync"
 	"time"
 
@@ -211,7 +212,11 @@ func (view *View) move(moveDiff Coordinates) {
 }
 
 func (view *View) drawObjects() {
-	// Order Object
+	// Sort Object
+	sort.Slice(view.state.space.Objects, func(i, j int) bool {
+		return view.state.space.Objects[i].getPosition().Z > view.state.space.Objects[j].getPosition().Z
+	})
+
 	//fmt.Printf("\n==>drawObjects(%v)\n", len(view.state.space.Objects))
 	for _, obj := range view.state.space.Objects {
 	label1:
