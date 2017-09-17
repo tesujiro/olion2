@@ -140,7 +140,6 @@ func (sc *Screen) TermBoxChan() chan termbox.Event {
 
 type View struct {
 	state *Olion
-	//drawn []Dot
 }
 
 func NewView(state *Olion) *View {
@@ -149,7 +148,6 @@ func NewView(state *Olion) *View {
 
 func drawLine(x, y int, str string) {
 	color := termbox.ColorDefault
-	//backgroundColor := termbox.ColorDefault
 	runes := []rune(str)
 
 	for i := 0; i < len(runes); i += 1 {
@@ -163,13 +161,12 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 	diffX := objPosition.X - myPosition.X
 	diffY := objPosition.Y - myPosition.Y
 	diffZ := objPosition.Z - myPosition.Z
-	//if diffX <= 0 || diffY < +0 || diffZ <= 0 {
 	if diffZ <= 0 {
 		return nil
 	}
 	dot := Dot{
 		X: int(diffX*myScreen.Distance/diffZ) + myScreen.Width/2,
-		Y: int(diffY*myScreen.Distance/diffZ) + myScreen.Height/2,
+		Y: int(diffY*myScreen.Distance/diffZ)/2 + myScreen.Height/2, //横に長くする
 	}
 	/*
 		fmt.Printf("mapObject ObjectPosition:%v Screen:%v Position:%v Direction:%v", objPosition, myScreen, myPosition, myDirection)
@@ -180,29 +177,11 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 	return &dot
 }
 
-func (view *View) move(moveDiff Coordinates) {
-	for _, obj := range view.state.space.Objects {
-		//Each Object Move
-		position := obj.getPosition()
-		newPosition := Coordinates{
-			X: position.X - moveDiff.X,
-			Y: position.Y - moveDiff.Y,
-			Z: position.Z - moveDiff.Z,
-		}
-		if view.state.space.inTheSpace(newPosition) {
-			obj.setPosition(newPosition)
-		} else {
-			obj.setPosition(view.state.space.randomSpace())
-		}
-	}
-}
-
 func (view *View) drawObjects() {
 	// Sort Object
 	sort.Slice(view.state.space.Objects, func(i, j int) bool {
 		return view.state.space.Objects[i].getPosition().Z > view.state.space.Objects[j].getPosition().Z
 	})
-
 	//fmt.Printf("\n==>drawObjects(%v)\n", len(view.state.space.Objects))
 	for _, obj := range view.state.space.Objects {
 	label1:
@@ -235,39 +214,6 @@ func (view *View) drawObjects() {
 			}
 		}
 	}
-}
-
-func (view *View) Loop(ctx context.Context, cancel func()) error {
-	defer cancel()
-
-	TermBoxChan := view.state.screen.TermBoxChan()
-	tick := time.NewTicker(time.Millisecond * time.Duration(5)).C
-	count := 0
-mainloop:
-	for {
-		select {
-		case <-ctx.Done():
-			break mainloop
-		case <-tick:
-			view.state.screen.clear()
-			view.move(Coordinates{
-				X: 0, //ここにカーソル移動を入れる
-				Y: 0, //ここにカーソル移動を入れる
-				Z: view.state.speed,
-			})
-			view.drawObjects()
-			count++
-			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v", count, view.state.position))
-			view.state.screen.flush()
-		case ev := <-TermBoxChan:
-			if ev.Type == termbox.EventKey {
-				if ev.Key == termbox.KeyEsc {
-					break mainloop // Esc で実行終了
-				}
-			}
-		}
-	}
-	return nil
 }
 
 type Coordinates struct {
@@ -318,7 +264,6 @@ func (spc *Space) genObject() {
 }
 
 func NewSpace() *Space {
-	//fmt.Printf("NewSpace Start")
 	spc := &Space{}
 
 	w, h := termbox.Size()
@@ -336,12 +281,29 @@ func NewSpace() *Space {
 		Y: max,
 		Z: depth,
 	}
-	for i := 0; i <= 350; i++ {
+	for i := 0; i < 300; i++ {
 		spc.genObject()
 	}
 
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
 	return spc
+}
+
+func (spc *Space) move(moveDiff Coordinates) {
+	for _, obj := range spc.Objects {
+		position := obj.getPosition()
+		newPosition := Coordinates{
+			X: position.X - moveDiff.X,
+			Y: position.Y - moveDiff.Y,
+			Z: position.Z - moveDiff.Z,
+		}
+		if spc.inTheSpace(newPosition) {
+			obj.setPosition(newPosition)
+		} else {
+			// If the object is out of the Space, move to another random position
+			obj.setPosition(spc.randomSpace())
+		}
+	}
 }
 
 type Olion struct {
@@ -388,6 +350,39 @@ func New() *Olion {
 	}
 }
 
+func (state *Olion) Loop(view *View, ctx context.Context, cancel func()) error {
+	defer cancel()
+
+	TermBoxChan := state.screen.TermBoxChan()
+	tick := time.NewTicker(time.Millisecond * time.Duration(5)).C
+	count := 0
+mainloop:
+	for {
+		select {
+		case <-ctx.Done():
+			break mainloop
+		case <-tick:
+			state.screen.clear()
+			state.space.move(Coordinates{
+				X: 0, //ここにカーソル移動を入れる
+				Y: 0, //ここにカーソル移動を入れる
+				Z: state.speed,
+			})
+			view.drawObjects()
+			count++
+			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v", count, state.position))
+			state.screen.flush()
+		case ev := <-TermBoxChan:
+			if ev.Type == termbox.EventKey {
+				if ev.Key == termbox.KeyEsc {
+					break mainloop // Esc で実行終了
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func (state *Olion) Run(ctx context.Context) (err error) {
 
 	var _cancelOnce sync.Once
@@ -401,7 +396,7 @@ func (state *Olion) Run(ctx context.Context) (err error) {
 	}
 
 	state.cancelFunc = cancel
-	go NewView(state).Loop(ctx, cancel)
+	go state.Loop(NewView(state), ctx, cancel)
 	//time.Sleep(5 * time.Second)
 
 	// Alright, done everything we need to do automatically. We'll let
