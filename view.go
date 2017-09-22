@@ -171,6 +171,35 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 	return &dot
 }
 
+func (view *View) drawBackgroundObjects() {
+	for _, obj := range view.state.outerSpace.Objects {
+	label1:
+		for _, part := range obj.shape() {
+			position := obj.getPosition()
+			dots := []Dot{}
+			for _, dot := range part.getDots() {
+				d := Dot{X: position.X + dot.X, Y: position.Y + dot.Y}
+				//fmt.Printf("position=%v dot=%v\n", position, dot)
+				if !view.state.screen.cover(d) {
+					continue label1
+				}
+				dots = append(dots, d)
+			}
+			switch part.(type) {
+			case DotPart:
+				view.state.screen.printDot(&dots[0], part.getColor())
+			case LinePart:
+				view.state.screen.printLine(&dots[0], &dots[1], part.getColor())
+			case RectanglePart:
+				r, _ := part.(RectanglePart)
+				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), r.getFill())
+			default:
+				fmt.Printf("NO TYPE\n")
+			}
+		}
+	}
+}
+
 func (view *View) drawObjects() {
 	// Sort Object
 	sort.Slice(view.state.space.Objects, func(i, j int) bool {

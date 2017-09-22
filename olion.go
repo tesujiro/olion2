@@ -36,10 +36,18 @@ func (spc *Space) addObj(obj Shaper) {
 }
 
 func (spc *Space) randomSpace() Coordinates {
-	return Coordinates{
-		X: (spc.Min.X + rand.Intn(spc.Max.X-spc.Min.X)),
-		Y: (spc.Min.Y + rand.Intn(spc.Max.Y-spc.Min.Y)),
-		Z: (spc.Min.Z + rand.Intn(spc.Max.Z-spc.Min.Z)),
+	if spc.Max.Z-spc.Min.Z > 0 {
+		return Coordinates{
+			X: (spc.Min.X + rand.Intn(spc.Max.X-spc.Min.X)),
+			Y: (spc.Min.Y + rand.Intn(spc.Max.Y-spc.Min.Y)),
+			Z: (spc.Min.Z + rand.Intn(spc.Max.Z-spc.Min.Z)),
+		}
+	} else {
+		return Coordinates{
+			X: (spc.Min.X + rand.Intn(spc.Max.X-spc.Min.X)),
+			Y: (spc.Min.Y + rand.Intn(spc.Max.Y-spc.Min.Y)),
+			Z: 0,
+		}
 	}
 }
 
@@ -53,6 +61,15 @@ func (spc *Space) genObject() {
 	case num < 10:
 		//Add SpaceShip
 		spc.addObj(newSpaceShip(500, spc.randomSpace()))
+	default:
+		//Add Star
+		//spc.addObj(newStar(1, spc.randomSpace()))
+	}
+}
+
+func (spc *Space) genBackgroundObject() {
+	//num := rand.Intn(100)
+	switch {
 	default:
 		//Add Star
 		spc.addObj(newStar(1, spc.randomSpace()))
@@ -85,6 +102,31 @@ func NewSpace() *Space {
 	return spc
 }
 
+func NewOuterSpace() *Space {
+	spc := &Space{}
+
+	w, h := termbox.Size()
+	max := int((w + h) * 2)
+	min := 0
+	//depth := (w + h) * 100
+
+	spc.Min = Coordinates{
+		X: min,
+		Y: min,
+		Z: 0,
+	}
+	spc.Max = Coordinates{
+		X: max,
+		Y: max,
+		Z: 0,
+	}
+	for i := 0; i < 100; i++ {
+		spc.genBackgroundObject()
+	}
+
+	return spc
+}
+
 func (spc *Space) move(moveDiff Coordinates) {
 	for _, obj := range spc.Objects {
 		position := obj.getPosition()
@@ -114,9 +156,10 @@ type Olion struct {
 	//config Config
 	//currentLineBuffer Buffer
 	//maxScanBufferSize int
-	readyCh chan struct{}
-	screen  *Screen
-	space   *Space
+	readyCh    chan struct{}
+	screen     *Screen
+	space      *Space
+	outerSpace *Space
 
 	position Coordinates
 	speed    int
@@ -136,9 +179,10 @@ func New() *Olion {
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
-		readyCh: make(chan struct{}),
-		screen:  NewScreen(),
-		space:   NewSpace(),
+		readyCh:    make(chan struct{}),
+		screen:     NewScreen(),
+		space:      NewSpace(),
+		outerSpace: NewOuterSpace(),
 		//maxScanBufferSize: bufio.MaxScanTokenSize,
 		position: Coordinates{X: 0, Y: 0, Z: 0},
 		speed:    1,
@@ -164,6 +208,7 @@ mainloop:
 				Y: 0, //ここにカーソル移動を入れる
 				Z: state.speed,
 			})
+			view.drawBackgroundObjects()
 			view.drawObjects()
 			count++
 			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v", count, state.position))
