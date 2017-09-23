@@ -196,6 +196,7 @@ func (state *Olion) Loop(view *View, ctx context.Context, cancel func()) error {
 	TermBoxChan := state.screen.TermBoxChan()
 	tick := time.NewTicker(time.Millisecond * time.Duration(5)).C
 	count := 0
+	moveX, moveY := 0, 0
 mainloop:
 	for {
 		select {
@@ -204,19 +205,36 @@ mainloop:
 		case <-tick:
 			state.screen.clear()
 			state.space.move(Coordinates{
-				X: 0, //ここにカーソル移動を入れる
-				Y: 0, //ここにカーソル移動を入れる
+				X: moveX,
+				Y: moveY,
 				Z: state.speed,
 			})
+			if count%10 == 0 {
+				state.outerSpace.move(Coordinates{
+					X: moveX,
+					Y: moveY,
+					Z: 0,
+				})
+			}
 			view.drawBackgroundObjects()
 			view.drawObjects()
 			count++
-			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v", count, state.position))
+			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v move=(%v,%v)", count, state.position, moveX, moveY))
 			state.screen.flush()
+			//moveX, moveY = 0, 0
 		case ev := <-TermBoxChan:
 			if ev.Type == termbox.EventKey {
-				if ev.Key == termbox.KeyEsc {
+				switch ev.Key {
+				case termbox.KeyEsc:
 					break mainloop // Esc で実行終了
+				case termbox.KeyArrowUp:
+					moveY--
+				case termbox.KeyArrowDown:
+					moveY++
+				case termbox.KeyArrowLeft:
+					moveX++
+				case termbox.KeyArrowRight:
+					moveX--
 				}
 			}
 		}
