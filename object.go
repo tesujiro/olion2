@@ -1,5 +1,10 @@
 package olion
 
+import (
+	"context"
+	"time"
+)
+
 type Attribute uint16
 
 const (
@@ -87,13 +92,13 @@ func (p *RectanglePart) getFill() bool {
 }
 
 type Object struct {
-	parts    []Parter
-	position Coordinates //位置
-	//Direction Direction   //方向
-	//Speed
-	//created
+	parts []Parter
+	size  int
 	//weight
-	size int
+	speed float32
+	time  time.Time
+	//Direction Direction   //方向
+	position Coordinates //位置
 }
 
 type Shaper interface {
@@ -101,6 +106,12 @@ type Shaper interface {
 	addPart(Parter)
 	getPosition() Coordinates
 	setPosition(Coordinates)
+	//getTime() time.Time
+	//setTime(time.Time)
+}
+
+type Runner interface {
+	run()
 }
 
 func (obj *Object) shape() []Parter {
@@ -119,6 +130,31 @@ func (obj *Object) setPosition(c Coordinates) {
 	obj.position = c
 }
 
+func (obj *Object) setTime(t time.Time) {
+	obj.time = t
+}
+
+func (obj *Object) getTime() time.Time {
+	return obj.time
+}
+
+// チャネル
+// Main -> Object : Move{X,Y,Z},time
+// Object -> Main : SHaper ?  Position,Parts
+
+//func (obj *Object) run(ctx context.Context, cancel func(), inChan Direction, outChan Shaper) {
+func (obj *Object) run(ctx context.Context, cancel func()) {
+	defer cancel()
+mainloop:
+	for {
+		select {
+		case <-ctx.Done():
+			break mainloop
+			//case in := <- inChan
+		}
+	}
+}
+
 type Star struct {
 	Object
 }
@@ -134,6 +170,7 @@ func newStar(s int, c Coordinates) *Star {
 		color: ColorWhite,
 	})
 	star.addPart(dot)
+	//star.setCreatedTime()
 	return &star
 }
 
@@ -141,10 +178,11 @@ type SpaceShip struct {
 	Object
 }
 
-func newSpaceShip(s int, c Coordinates) *SpaceShip {
+func newSpaceShip(s int, c Coordinates, t time.Time) *SpaceShip {
 	ship := SpaceShip{}
 	ship.size = s
 	ship.position = c
+	ship.time = t
 	rectangle1 := newRectanglePart(Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
@@ -231,6 +269,7 @@ func newSpaceShip(s int, c Coordinates) *SpaceShip {
 		color: ColorBlack,
 	})
 	ship.addPart(line)
+	//ship.setCreatedTime()
 
 	return &ship
 }

@@ -55,15 +55,16 @@ func (spc *Space) inTheSpace(c Coordinates) bool {
 	return c.X >= spc.Min.X && c.X <= spc.Max.X && c.Y >= spc.Min.Y && c.Y <= spc.Max.Y && c.Z >= spc.Min.Z && c.Z <= spc.Max.Z
 }
 
-func (spc *Space) genObject() {
+func (spc *Space) genObject(now time.Time, broadcast Broadcast, quit chan interface{}) {
 	num := rand.Intn(100)
 	switch {
-	case num < 10:
-		//Add SpaceShip
-		spc.addObj(newSpaceShip(500, spc.randomSpace()))
+	//case num < 10:
 	default:
-		//Add Star
-		//spc.addObj(newStar(1, spc.randomSpace()))
+		//Add SpaceShip
+		//spc.addObj(newSpaceShip(500, spc.randomSpace()))
+
+		quit := make(chan interface{})
+		newSpaceShip(now, 500, spc.randomSpace(), quit)
 	}
 }
 
@@ -82,7 +83,7 @@ func NewSpace() *Space {
 	w, h := termbox.Size()
 	max := int((w + h) * 10)
 	min := -max
-	depth := (w + h) * 100
+	depth := (w + h) * 50
 
 	spc.Min = Coordinates{
 		X: min,
@@ -94,8 +95,9 @@ func NewSpace() *Space {
 		Y: max,
 		Z: depth,
 	}
-	for i := 0; i < 300; i++ {
-		spc.genObject()
+	now := time.Now()
+	for i := 0; i < 100; i++ {
+		go spc.genObject(now).run(ctx, cancel)
 	}
 
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
@@ -204,24 +206,42 @@ mainloop:
 			break mainloop
 		case <-tick:
 			state.screen.clear()
-			state.space.move(Coordinates{
+			state.space.move(time.Now(), Coordinates{
 				X: moveX,
 				Y: moveY,
 				Z: state.speed,
 			})
-			if count%10 == 0 {
-				state.outerSpace.move(Coordinates{
-					X: moveX,
-					Y: moveY,
-					Z: 0,
-				})
-			}
+			state.outerSpace.move(time.Now(), Coordinates{
+				X: moveX,
+				Y: moveY,
+				Z: 0,
+			})
 			view.drawBackgroundObjects()
 			view.drawObjects()
 			count++
 			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v move=(%v,%v)", count, state.position, moveX, moveY))
 			state.screen.flush()
-			//moveX, moveY = 0, 0
+			/*
+				state.screen.clear()
+				state.space.move(Coordinates{
+					X: moveX,
+					Y: moveY,
+					Z: state.speed,
+				})
+				if count%10 == 0 {
+					state.outerSpace.move(Coordinates{
+						X: moveX,
+						Y: moveY,
+						Z: 0,
+					})
+				}
+				view.drawBackgroundObjects()
+				view.drawObjects()
+				count++
+				drawLine(0, 0, fmt.Sprintf("counter=%v position=%v move=(%v,%v)", count, state.position, moveX, moveY))
+				state.screen.flush()
+				//moveX, moveY = 0, 0
+			*/
 		case ev := <-TermBoxChan:
 			if ev.Type == termbox.EventKey {
 				switch ev.Key {
@@ -235,6 +255,7 @@ mainloop:
 					moveX++
 				case termbox.KeyArrowRight:
 					moveX--
+					//dafault:
 				}
 			}
 		}
