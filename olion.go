@@ -55,16 +55,12 @@ func (spc *Space) inTheSpace(c Coordinates) bool {
 	return c.X >= spc.Min.X && c.X <= spc.Max.X && c.Y >= spc.Min.Y && c.Y <= spc.Max.Y && c.Z >= spc.Min.Z && c.Z <= spc.Max.Z
 }
 
-//func (spc *Space) genObject(now time.Time, broadcast Broadcast, quit chan interface{}) {
 func (spc *Space) genObject(now time.Time) Exister {
 	//num := rand.Intn(100)
 	switch {
 	//case num < 10:
 	default:
 		//Add SpaceShip
-		//spc.addObj(newSpaceShip(500, spc.randomSpace()))
-
-		//quit := make(chan interface{})
 		return newSpaceShip(now, 500, spc.randomSpace())
 	}
 }
@@ -140,37 +136,9 @@ func (spc *Space) move(t time.Time, dp Coordinates) {
 		deltaPosition: dp,
 	}
 	for _, obj := range spc.Objects {
-		fmt.Printf("Object=%v downMsg=%v\n", obj, downMsg)
+		//fmt.Printf("Object=%v downMsg=%v\n", obj, downMsg)
 		obj.downCh() <- downMsg
 	}
-
-	//for _, obj := range spc.Objects {
-	//upMsg := <-obj.upCh()
-	//newPosition := upMsg.position
-	/*
-		if !spc.inTheSpace(newPosition) {
-			obj.quit <- struct{}{}
-			spc.removeObject(obj)
-
-			// create a new object
-			go spc.genObject(now).run(ctx, cancel)
-		}
-	*/
-	//}
-	/*
-		position := obj.getPosition()
-		newPosition := Coordinates{
-			X: position.X - moveDiff.X,
-			Y: position.Y - moveDiff.Y,
-			Z: position.Z - moveDiff.Z,
-
-		if spc.inTheSpace(newPosition) {
-			obj.setPosition(newPosition)
-		} else {
-			// If the object is out of the Space, move to another random position
-			obj.setPosition(spc.randomSpace())
-		}
-	*/
 }
 
 type Olion struct {
@@ -239,38 +207,19 @@ mainloop:
 				Z: state.speed,
 			})
 			/*
-				state.outerSpace.move(time.Now(), Coordinates{
-					X: moveX,
-					Y: moveY,
-					Z: 0,
-				})
-			*/
-			view.drawBackgroundObjects()
-			view.drawObjects()
-			count++
-			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v move=(%v,%v)", count, state.position, moveX, moveY))
-			state.screen.flush()
-			/*
-				state.screen.clear()
-				state.space.move(Coordinates{
-					X: moveX,
-					Y: moveY,
-					Z: state.speed,
-				})
 				if count%10 == 0 {
-					state.outerSpace.move(Coordinates{
+					state.outerSpace.move(time.Now(), Coordinates{
 						X: moveX,
 						Y: moveY,
 						Z: 0,
 					})
 				}
-				view.drawBackgroundObjects()
-				view.drawObjects()
-				count++
-				drawLine(0, 0, fmt.Sprintf("counter=%v position=%v move=(%v,%v)", count, state.position, moveX, moveY))
-				state.screen.flush()
-				//moveX, moveY = 0, 0
 			*/
+			//view.drawBackgroundObjects()
+			view.drawObjects()
+			count++
+			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v move=(%v,%v)", count, state.position, moveX, moveY))
+			state.screen.flush()
 		case ev := <-TermBoxChan:
 			if ev.Type == termbox.EventKey {
 				switch ev.Key {

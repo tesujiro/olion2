@@ -174,10 +174,7 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 func (view *View) drawBackgroundObjects() {
 	for _, obj := range view.state.outerSpace.Objects {
 		upMsg := <-obj.upCh()
-		//for _, part := range obj.shape() {
-		//position := obj.getPosition()
 		position := upMsg.position
-		//for _, part := range obj.shape() {
 	label1:
 		for _, part := range upMsg.parts {
 			dots := []Dot{}
@@ -207,16 +204,16 @@ func (view *View) drawBackgroundObjects() {
 func (view *View) drawObjects() {
 	upMsgs := []upMessage{}
 	for _, obj := range view.state.space.Objects {
+		//fmt.Printf("upMsg := <-obj.upCh()")
 		upMsg := <-obj.upCh()
+		//fmt.Printf("(upMsg:%v)\n", upMsg)
 		upMsgs = append(upMsgs, upMsg)
 	}
 	// Sort Object
-	//sort.Slice(view.state.space.Objects, func(i, j int) bool {
 	sort.Slice(upMsgs, func(i, j int) bool {
 		return upMsgs[i].position.Z > upMsgs[j].position.Z
 	})
 	//fmt.Printf("\n==>drawObjects(%v)\n", len(view.state.space.Objects))
-	//for _, obj := range view.state.space.Objects {
 	for _, msg := range upMsgs {
 		position := msg.position
 	label1:

@@ -2,6 +2,7 @@ package olion
 
 import (
 	"context"
+	"math/rand"
 	"time"
 )
 
@@ -29,12 +30,6 @@ type Parter interface {
 	getColor() Attribute
 	addDot(Coordinates)
 }
-
-/*
-func newPart() Part {
-	return Part{}
-}
-*/
 
 func (p Part) getDots() []Coordinates {
 	return p.dots
@@ -101,16 +96,6 @@ type Shaper interface {
 */
 
 type Exister interface {
-	/*
-		downCh() chan struct {
-			deltaPosition Coordinates
-			time          time.Time
-		} // Read from Main Loop
-		upCh() chan struct {
-			position Coordinates
-			parts    []Parter
-		} // Write to Main Loop
-	*/
 	downCh() downChannel
 	upCh() upChannel
 	//quitCh() quitChannel
@@ -135,7 +120,7 @@ type Object struct {
 	parts []Parter
 	size  int
 	//weight
-	speed float32
+	speed Coordinates
 	time  time.Time
 	//Direction Direction   //方向
 	position Coordinates //位置
@@ -161,18 +146,6 @@ func (obj *Object) addPart(p Parter) {
 	obj.parts = append(obj.parts, p)
 }
 
-/*
-func (obj *Object) getPosition() Coordinates {
-	return obj.position
-}
-*/
-
-/*
-func (obj *Object) setPosition(c Coordinates) {
-	obj.position = c
-}
-*/
-
 func (obj *Object) setTime(t time.Time) {
 	obj.time = t
 }
@@ -189,11 +162,6 @@ func (obj *Object) upCh() upChannel {
 	return obj.upChannel
 }
 
-// チャネル
-// Main -> Object : Move{X,Y,Z},time
-// Object -> Main : SHaper ?  Position,Parts
-
-//func (obj *Object) run(ctx context.Context, cancel func(), inChan Direction, outChan Shaper) {
 func (obj *Object) run(ctx context.Context, cancel func()) {
 	defer cancel()
 mainloop:
@@ -202,10 +170,11 @@ mainloop:
 		case <-ctx.Done():
 			break mainloop
 		case downMsg := <-obj.downChannel:
+			//fmt.Printf("Object: <-obj.downChannel %v\n", downMsg)
 			newPosition := Coordinates{
-				X: obj.position.X - downMsg.deltaPosition.X,
-				Y: obj.position.Y - downMsg.deltaPosition.Y,
-				Z: obj.position.Z - downMsg.deltaPosition.Z,
+				X: obj.position.X - downMsg.deltaPosition.X - obj.speed.X,
+				Y: obj.position.Y - downMsg.deltaPosition.Y - obj.speed.Y,
+				Z: obj.position.Z - downMsg.deltaPosition.Z - obj.speed.Z,
 			}
 			obj.position = newPosition
 			obj.time = downMsg.time
@@ -245,6 +214,11 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 	ship.size = s
 	ship.position = c
 	ship.time = t
+	ship.speed = Coordinates{
+		X: rand.Intn(4) - 2,
+		Y: rand.Intn(4) - 2,
+		Z: rand.Intn(3),
+	}
 	rectangle1 := newRectanglePart(Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
