@@ -171,6 +171,7 @@ mainloop:
 			break mainloop
 		case downMsg := <-obj.downChannel:
 			//fmt.Printf("Object: <-obj.downChannel %v\n", downMsg)
+			//fmt.Printf("Object: <-obj.downChannel %v\n", downMsg)
 			newPosition := Coordinates{
 				X: obj.position.X - downMsg.deltaPosition.X - obj.speed.X,
 				Y: obj.position.Y - downMsg.deltaPosition.Y - obj.speed.Y,
@@ -191,9 +192,15 @@ type Star struct {
 }
 
 func newStar(t time.Time, s int, c Coordinates) *Star {
-	star := Star{}
+	star := Star{Object: *newObject()}
 	star.size = s
 	star.position = c
+	star.time = t
+	star.speed = Coordinates{
+		X: 0,
+		Y: 0,
+		Z: 0,
+	}
 	dot := newDotPart(Part{
 		dots: []Coordinates{
 			Coordinates{X: 0, Y: 0, Z: 0},

@@ -62,6 +62,7 @@ func (spc *Space) genObject(now time.Time) Exister {
 	default:
 		//Add SpaceShip
 		return newSpaceShip(now, 500, spc.randomSpace())
+		//return newStar(now, 1, spc.randomSpace())
 	}
 }
 
@@ -93,7 +94,7 @@ func NewSpace(ctx context.Context, cancel func()) *Space {
 		Z: depth,
 	}
 	now := time.Now()
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 50; i++ {
 		obj := spc.genObject(now)
 		spc.addObj(obj)
 		go obj.run(ctx, cancel)
@@ -122,11 +123,13 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 		Z: 0,
 	}
 	now := time.Now()
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 200; i++ {
 		obj := spc.genBackgroundObject(now)
 		spc.addObj(obj)
+		go obj.run(ctx, cancel)
 	}
 
+	fmt.Printf("OuterSpace ==> %v Objects\n", len(spc.Objects))
 	return spc
 }
 
@@ -135,9 +138,14 @@ func (spc *Space) move(t time.Time, dp Coordinates) {
 		time:          t,
 		deltaPosition: dp,
 	}
+	//fmt.Printf("len(spc.Objects)=%d                                              \n", len(spc.Objects))
 	for _, obj := range spc.Objects {
 		//fmt.Printf("Object=%v downMsg=%v\n", obj, downMsg)
-		obj.downCh() <- downMsg
+		ch := obj.downCh()
+		//fmt.Printf("send message=%v type(obj.downCh())=%v\n", downMsg, reflect.TypeOf(ch))
+		//obj.downCh() <- downMsg
+		ch <- downMsg
+		//fmt.Printf("finished send message\n")
 	}
 }
 
@@ -196,6 +204,7 @@ func (state *Olion) Loop(view *View, ctx context.Context, cancel func()) error {
 	moveX, moveY := 0, 0
 mainloop:
 	for {
+		//fmt.Printf("[count=%v]\n", count)
 		select {
 		case <-ctx.Done():
 			break mainloop
@@ -206,16 +215,14 @@ mainloop:
 				Y: moveY,
 				Z: state.speed,
 			})
-			/*
-				if count%10 == 0 {
-					state.outerSpace.move(time.Now(), Coordinates{
-						X: moveX,
-						Y: moveY,
-						Z: 0,
-					})
-				}
-			*/
-			//view.drawBackgroundObjects()
+			var c Coordinates
+			if count%20 == 0 {
+				c = Coordinates{X: moveX, Y: moveY, Z: 0}
+			} else {
+				c = Coordinates{X: 0, Y: 0, Z: 0}
+			}
+			state.outerSpace.move(time.Now(), c)
+			view.drawBackgroundObjects()
 			view.drawObjects()
 			count++
 			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v move=(%v,%v)", count, state.position, moveX, moveY))

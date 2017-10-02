@@ -172,8 +172,11 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 }
 
 func (view *View) drawBackgroundObjects() {
+	//fmt.Printf("drawBackgroundObjects : len(view.state.outerSpace.Objects)=%v\n", len(view.state.outerSpace.Objects))
 	for _, obj := range view.state.outerSpace.Objects {
+		//fmt.Printf("upMsg := <-obj.upCh()")
 		upMsg := <-obj.upCh()
+		//fmt.Printf("(upMsg:%v)\n", upMsg)
 		position := upMsg.position
 	label1:
 		for _, part := range upMsg.parts {
