@@ -91,6 +91,46 @@ func (p *RectanglePart) getFill() bool {
 	return p.fill
 }
 
+/*
+type Shaper interface {
+	shape() []Parter
+	addPart(Parter)
+	getPosition() Coordinates
+	setPosition(Coordinates)
+}
+*/
+
+type Exister interface {
+	/*
+		downCh() chan struct {
+			deltaPosition Coordinates
+			time          time.Time
+		} // Read from Main Loop
+		upCh() chan struct {
+			position Coordinates
+			parts    []Parter
+		} // Write to Main Loop
+	*/
+	downCh() downChannel
+	upCh() upChannel
+	//quitCh() quitChannel
+	run(context.Context, func())
+}
+
+type downChannel chan downMessage // Read from Main Loop
+
+type upChannel chan upMessage // Write to Main Loop
+
+type downMessage struct {
+	time          time.Time
+	deltaPosition Coordinates
+}
+
+type upMessage struct {
+	position Coordinates
+	parts    []Parter
+}
+
 type Object struct {
 	parts []Parter
 	size  int
@@ -99,36 +139,39 @@ type Object struct {
 	time  time.Time
 	//Direction Direction   //方向
 	position Coordinates //位置
+
+	downChannel downChannel
+	upChannel   upChannel
 }
 
-type Shaper interface {
-	shape() []Parter
-	addPart(Parter)
-	getPosition() Coordinates
-	setPosition(Coordinates)
-	//getTime() time.Time
-	//setTime(time.Time)
+func newObject() *Object {
+	return &Object{
+		downChannel: make(downChannel),
+		upChannel:   make(upChannel),
+	}
 }
 
-type Runner interface {
-	run()
-}
-
+/*
 func (obj *Object) shape() []Parter {
 	return obj.parts
 }
+*/
 
 func (obj *Object) addPart(p Parter) {
 	obj.parts = append(obj.parts, p)
 }
 
+/*
 func (obj *Object) getPosition() Coordinates {
 	return obj.position
 }
+*/
 
+/*
 func (obj *Object) setPosition(c Coordinates) {
 	obj.position = c
 }
+*/
 
 func (obj *Object) setTime(t time.Time) {
 	obj.time = t
@@ -136,6 +179,14 @@ func (obj *Object) setTime(t time.Time) {
 
 func (obj *Object) getTime() time.Time {
 	return obj.time
+}
+
+func (obj *Object) downCh() downChannel {
+	return obj.downChannel
+}
+
+func (obj *Object) upCh() upChannel {
+	return obj.upChannel
 }
 
 // チャネル
@@ -150,7 +201,18 @@ mainloop:
 		select {
 		case <-ctx.Done():
 			break mainloop
-			//case in := <- inChan
+		case downMsg := <-obj.downChannel:
+			newPosition := Coordinates{
+				X: obj.position.X - downMsg.deltaPosition.X,
+				Y: obj.position.Y - downMsg.deltaPosition.Y,
+				Z: obj.position.Z - downMsg.deltaPosition.Z,
+			}
+			obj.position = newPosition
+			obj.time = downMsg.time
+			obj.upChannel <- upMessage{
+				position: newPosition,
+				parts:    obj.parts,
+			}
 		}
 	}
 }
@@ -159,7 +221,7 @@ type Star struct {
 	Object
 }
 
-func newStar(s int, c Coordinates) *Star {
+func newStar(t time.Time, s int, c Coordinates) *Star {
 	star := Star{}
 	star.size = s
 	star.position = c
@@ -178,8 +240,8 @@ type SpaceShip struct {
 	Object
 }
 
-func newSpaceShip(s int, c Coordinates, t time.Time) *SpaceShip {
-	ship := SpaceShip{}
+func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
+	ship := SpaceShip{Object: *newObject()}
 	ship.size = s
 	ship.position = c
 	ship.time = t

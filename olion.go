@@ -26,12 +26,12 @@ type Direction struct {
 */
 
 type Space struct {
-	Objects []Shaper
+	Objects []Exister
 	Min     Coordinates
 	Max     Coordinates
 }
 
-func (spc *Space) addObj(obj Shaper) {
+func (spc *Space) addObj(obj Exister) {
 	spc.Objects = append(spc.Objects, obj)
 }
 
@@ -55,29 +55,30 @@ func (spc *Space) inTheSpace(c Coordinates) bool {
 	return c.X >= spc.Min.X && c.X <= spc.Max.X && c.Y >= spc.Min.Y && c.Y <= spc.Max.Y && c.Z >= spc.Min.Z && c.Z <= spc.Max.Z
 }
 
-func (spc *Space) genObject(now time.Time, broadcast Broadcast, quit chan interface{}) {
-	num := rand.Intn(100)
+//func (spc *Space) genObject(now time.Time, broadcast Broadcast, quit chan interface{}) {
+func (spc *Space) genObject(now time.Time) Exister {
+	//num := rand.Intn(100)
 	switch {
 	//case num < 10:
 	default:
 		//Add SpaceShip
 		//spc.addObj(newSpaceShip(500, spc.randomSpace()))
 
-		quit := make(chan interface{})
-		newSpaceShip(now, 500, spc.randomSpace(), quit)
+		//quit := make(chan interface{})
+		return newSpaceShip(now, 500, spc.randomSpace())
 	}
 }
 
-func (spc *Space) genBackgroundObject() {
+func (spc *Space) genBackgroundObject(now time.Time) Exister {
 	//num := rand.Intn(100)
 	switch {
 	default:
 		//Add Star
-		spc.addObj(newStar(1, spc.randomSpace()))
+		return newStar(now, 1, spc.randomSpace())
 	}
 }
 
-func NewSpace() *Space {
+func NewSpace(ctx context.Context, cancel func()) *Space {
 	spc := &Space{}
 
 	w, h := termbox.Size()
@@ -97,14 +98,16 @@ func NewSpace() *Space {
 	}
 	now := time.Now()
 	for i := 0; i < 100; i++ {
-		go spc.genObject(now).run(ctx, cancel)
+		obj := spc.genObject(now)
+		spc.addObj(obj)
+		go obj.run(ctx, cancel)
 	}
 
 	fmt.Printf("==> %v Objects\n", len(spc.Objects))
 	return spc
 }
 
-func NewOuterSpace() *Space {
+func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	spc := &Space{}
 
 	w, h := termbox.Size()
@@ -122,28 +125,52 @@ func NewOuterSpace() *Space {
 		Y: max,
 		Z: 0,
 	}
+	now := time.Now()
 	for i := 0; i < 100; i++ {
-		spc.genBackgroundObject()
+		obj := spc.genBackgroundObject(now)
+		spc.addObj(obj)
 	}
 
 	return spc
 }
 
-func (spc *Space) move(moveDiff Coordinates) {
+func (spc *Space) move(t time.Time, dp Coordinates) {
+	downMsg := downMessage{
+		time:          t,
+		deltaPosition: dp,
+	}
 	for _, obj := range spc.Objects {
+		fmt.Printf("Object=%v downMsg=%v\n", obj, downMsg)
+		obj.downCh() <- downMsg
+	}
+
+	//for _, obj := range spc.Objects {
+	//upMsg := <-obj.upCh()
+	//newPosition := upMsg.position
+	/*
+		if !spc.inTheSpace(newPosition) {
+			obj.quit <- struct{}{}
+			spc.removeObject(obj)
+
+			// create a new object
+			go spc.genObject(now).run(ctx, cancel)
+		}
+	*/
+	//}
+	/*
 		position := obj.getPosition()
 		newPosition := Coordinates{
 			X: position.X - moveDiff.X,
 			Y: position.Y - moveDiff.Y,
 			Z: position.Z - moveDiff.Z,
-		}
+
 		if spc.inTheSpace(newPosition) {
 			obj.setPosition(newPosition)
 		} else {
 			// If the object is out of the Space, move to another random position
 			obj.setPosition(spc.randomSpace())
 		}
-	}
+	*/
 }
 
 type Olion struct {
@@ -172,7 +199,7 @@ type Olion struct {
 	err error
 }
 
-func New() *Olion {
+func New(ctx context.Context, cancel func()) *Olion {
 	rand.Seed(time.Now().UnixNano())
 
 	return &Olion{
@@ -183,8 +210,8 @@ func New() *Olion {
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
 		readyCh:    make(chan struct{}),
 		screen:     NewScreen(),
-		space:      NewSpace(),
-		outerSpace: NewOuterSpace(),
+		space:      NewSpace(ctx, cancel),
+		outerSpace: NewOuterSpace(ctx, cancel),
 		//maxScanBufferSize: bufio.MaxScanTokenSize,
 		position: Coordinates{X: 0, Y: 0, Z: 0},
 		speed:    1,
@@ -211,11 +238,13 @@ mainloop:
 				Y: moveY,
 				Z: state.speed,
 			})
-			state.outerSpace.move(time.Now(), Coordinates{
-				X: moveX,
-				Y: moveY,
-				Z: 0,
-			})
+			/*
+				state.outerSpace.move(time.Now(), Coordinates{
+					X: moveX,
+					Y: moveY,
+					Z: 0,
+				})
+			*/
 			view.drawBackgroundObjects()
 			view.drawObjects()
 			count++
