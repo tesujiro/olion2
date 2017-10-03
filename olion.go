@@ -108,9 +108,9 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	spc := &Space{}
 
 	w, h := termbox.Size()
-	max := int((w + h) * 2)
-	min := 0
-	//depth := (w + h) * 100
+	max := int((w + h) * 500)
+	min := -max
+	depth := max
 
 	spc.Min = Coordinates{
 		X: min,
@@ -120,10 +120,10 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	spc.Max = Coordinates{
 		X: max,
 		Y: max,
-		Z: 0,
+		Z: depth / 2,
 	}
 	now := time.Now()
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 100; i++ {
 		obj := spc.genBackgroundObject(now)
 		spc.addObj(obj)
 		go obj.run(ctx, cancel)
@@ -222,8 +222,10 @@ mainloop:
 				c = Coordinates{X: 0, Y: 0, Z: 0}
 			}
 			state.outerSpace.move(time.Now(), c)
-			view.drawBackgroundObjects()
-			view.drawObjects()
+			view.draw(state.outerSpace.Objects)
+			//view.drawBackgroundObjects()
+			view.draw(state.space.Objects)
+			//view.drawObjects()
 			count++
 			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v move=(%v,%v)", count, state.position, moveX, moveY))
 			state.screen.flush()
