@@ -29,10 +29,21 @@ type Space struct {
 	Objects []Exister
 	Min     Coordinates
 	Max     Coordinates
+	GenFunc func(time.Time) Exister
 }
 
 func (spc *Space) addObj(obj Exister) {
 	spc.Objects = append(spc.Objects, obj)
+}
+
+func (spc *Space) deleteObj(obj Exister) {
+	objects := []Exister{}
+	for _, v := range spc.Objects {
+		if v != obj {
+			objects = append(objects, v)
+		}
+	}
+	spc.Objects = objects
 }
 
 func (spc *Space) randomSpace() Coordinates {
@@ -77,6 +88,7 @@ func (spc *Space) genBackgroundObject(now time.Time) Exister {
 
 func NewSpace(ctx context.Context, cancel func()) *Space {
 	spc := &Space{}
+	spc.GenFunc = spc.genObject
 
 	w, h := termbox.Size()
 	max := int((w + h) * 10)
@@ -95,7 +107,7 @@ func NewSpace(ctx context.Context, cancel func()) *Space {
 	}
 	now := time.Now()
 	for i := 0; i < 50; i++ {
-		obj := spc.genObject(now)
+		obj := spc.GenFunc(now)
 		spc.addObj(obj)
 		go obj.run(ctx, cancel)
 	}
@@ -106,9 +118,10 @@ func NewSpace(ctx context.Context, cancel func()) *Space {
 
 func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	spc := &Space{}
+	spc.GenFunc = spc.genBackgroundObject
 
 	w, h := termbox.Size()
-	max := int((w + h) * 200)
+	max := int((w + h) * 20)
 	min := -max
 	depth := max
 
@@ -120,11 +133,11 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	spc.Max = Coordinates{
 		X: max,
 		Y: max,
-		Z: depth / 40,
+		Z: depth / 20,
 	}
 	now := time.Now()
 	for i := 0; i < 30; i++ {
-		obj := spc.genBackgroundObject(now)
+		obj := spc.GenFunc(now)
 		spc.addObj(obj)
 		go obj.run(ctx, cancel)
 	}
@@ -133,7 +146,7 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	return spc
 }
 
-func (spc *Space) move(t time.Time, dp Coordinates) []upMessage {
+func (spc *Space) move(t time.Time, dp Coordinates, ctx context.Context, cancel func()) []upMessage {
 	downMsg := downMessage{
 		time:          t,
 		deltaPosition: dp,
@@ -148,10 +161,20 @@ func (spc *Space) move(t time.Time, dp Coordinates) []upMessage {
 		ch <- downMsg
 		//fmt.Printf("finished send message\n")
 	}
+	now := time.Now()
 	for _, obj := range spc.Objects {
 		//fmt.Printf("upMsg := <-obj.upCh()")
 		upMsg := <-obj.upCh()
 		//fmt.Printf("(upMsg:%v)\n", upMsg)
+		//if objct is out of the Space , remove and create new one
+		if !spc.inTheSpace(upMsg.position) {
+			spc.deleteObj(obj)
+			newObj := spc.GenFunc(now)
+			spc.addObj(newObj)
+			go newObj.run(ctx, cancel)
+			newObj.downCh() <- downMsg
+			upMsg = <-newObj.upCh()
+		}
 		upMsgs = append(upMsgs, upMsg)
 	}
 	return upMsgs
@@ -222,14 +245,14 @@ mainloop:
 				X: moveX,
 				Y: moveY,
 				Z: state.speed,
-			})
+			}, ctx, cancel)
 			var c Coordinates
 			if count%20 == 0 {
 				c = Coordinates{X: moveX, Y: moveY, Z: 0}
 			} else {
 				c = Coordinates{X: 0, Y: 0, Z: 0}
 			}
-			upMsgsOuterSpace := state.outerSpace.move(time.Now(), c)
+			upMsgsOuterSpace := state.outerSpace.move(time.Now(), c, ctx, cancel)
 			//view.draw(state.outerSpace.Objects)
 			view.draw(upMsgsOuterSpace)
 			//view.draw(state.space.Objects)
