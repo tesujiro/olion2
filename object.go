@@ -146,6 +146,7 @@ func (obj *Object) addPart(p Parter) {
 	obj.parts = append(obj.parts, p)
 }
 
+/*
 func (obj *Object) setTime(t time.Time) {
 	obj.time = t
 }
@@ -153,6 +154,7 @@ func (obj *Object) setTime(t time.Time) {
 func (obj *Object) getTime() time.Time {
 	return obj.time
 }
+*/
 
 func (obj *Object) downCh() downChannel {
 	return obj.downChannel
@@ -172,13 +174,22 @@ mainloop:
 		case downMsg := <-obj.downChannel:
 			//fmt.Printf("Object: <-obj.downChannel %v\n", downMsg)
 			//fmt.Printf("Object: <-obj.downChannel %v\n", downMsg)
+			deltaTime := int(downMsg.time.Sub(obj.time) / time.Second)
+			/*
+				if deltaTime != 0 && obj.speed.X != 0 {
+					fmt.Printf("(%d,%d,%d)\n", obj.speed.X*deltaTime, obj.speed.Y*deltaTime, obj.speed.Z*deltaTime)
+				}
+			*/
+
 			newPosition := Coordinates{
-				X: obj.position.X - downMsg.deltaPosition.X - obj.speed.X,
-				Y: obj.position.Y - downMsg.deltaPosition.Y - obj.speed.Y,
-				Z: obj.position.Z - downMsg.deltaPosition.Z - obj.speed.Z,
+				//X: obj.position.X - downMsg.deltaPosition.X - int(float64(obj.speed.X)*float64(deltaTime/time.Second)),
+				X: obj.position.X - downMsg.deltaPosition.X - obj.speed.X*deltaTime,
+				Y: obj.position.Y - downMsg.deltaPosition.Y - obj.speed.Y*deltaTime,
+				Z: obj.position.Z - downMsg.deltaPosition.Z - obj.speed.Z*deltaTime,
 			}
 			obj.position = newPosition
-			obj.time = downMsg.time
+			//obj.time = downMsg.time
+			obj.time = obj.time.Add(time.Duration(deltaTime) * time.Second)
 			obj.upChannel <- upMessage{
 				position: newPosition,
 				parts:    obj.parts,
@@ -224,7 +235,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 	ship.speed = Coordinates{
 		X: rand.Intn(4) - 2,
 		Y: rand.Intn(4) - 2,
-		Z: rand.Intn(3),
+		Z: rand.Intn(20),
 	}
 	rectangle1 := newRectanglePart(Part{
 		dots: []Coordinates{

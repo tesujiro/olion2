@@ -116,7 +116,7 @@ func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
 	}
 }
 
-func (sc *Screen) printTriangle(d1, d2, d3 *Dot, fill bool) {
+func (sc *Screen) printPentagon(color Attribute, fill bool, dots ...*Dot) {
 }
 
 //https://github.com/sjmudd/ps-top/blob/master/screen/screen.go
