@@ -171,14 +171,8 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 	return &dot
 }
 
-func (view *View) draw(objects []Exister) {
-	upMsgs := []upMessage{}
-	for _, obj := range objects {
-		//fmt.Printf("upMsg := <-obj.upCh()")
-		upMsg := <-obj.upCh()
-		//fmt.Printf("(upMsg:%v)\n", upMsg)
-		upMsgs = append(upMsgs, upMsg)
-	}
+//func (view *View) draw(objects []Exister) {
+func (view *View) draw(upMsgs []upMessage) {
 	// Sort Object
 	sort.Slice(upMsgs, func(i, j int) bool {
 		return upMsgs[i].position.Z > upMsgs[j].position.Z
@@ -216,85 +210,3 @@ func (view *View) draw(objects []Exister) {
 		}
 	}
 }
-
-/*
-func (view *View) drawBackgroundObjects() {
-	//fmt.Printf("drawBackgroundObjects : len(view.state.outerSpace.Objects)=%v\n", len(view.state.outerSpace.Objects))
-	for _, obj := range view.state.outerSpace.Objects {
-		//fmt.Printf("upMsg := <-obj.upCh()")
-		upMsg := <-obj.upCh()
-		//fmt.Printf("(upMsg:%v)\n", upMsg)
-		position := upMsg.position
-	label1:
-		for _, part := range upMsg.parts {
-			dots := []Dot{}
-			for _, dot := range part.getDots() {
-				d := Dot{X: position.X + dot.X, Y: position.Y + dot.Y}
-				//fmt.Printf("position=%v dot=%v\n", position, dot)
-				if !view.state.screen.cover(d) {
-					continue label1
-				}
-				dots = append(dots, d)
-			}
-			switch part.(type) {
-			case DotPart:
-				view.state.screen.printDot(&dots[0], part.getColor())
-			case LinePart:
-				view.state.screen.printLine(&dots[0], &dots[1], part.getColor())
-			case RectanglePart:
-				r, _ := part.(RectanglePart)
-				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), r.getFill())
-			default:
-				fmt.Printf("NO TYPE\n")
-			}
-		}
-	}
-}
-
-/*
-func (view *View) drawObjects() {
-	upMsgs := []upMessage{}
-	for _, obj := range view.state.space.Objects {
-		//fmt.Printf("upMsg := <-obj.upCh()")
-		upMsg := <-obj.upCh()
-		//fmt.Printf("(upMsg:%v)\n", upMsg)
-		upMsgs = append(upMsgs, upMsg)
-	}
-	// Sort Object
-	sort.Slice(upMsgs, func(i, j int) bool {
-		return upMsgs[i].position.Z > upMsgs[j].position.Z
-	})
-	//fmt.Printf("\n==>drawObjects(%v)\n", len(view.state.space.Objects))
-	for _, msg := range upMsgs {
-		position := msg.position
-	label1:
-		for _, part := range msg.parts {
-			//fmt.Printf("shape OK obj=%v\n", obj)
-			//fmt.Printf("position=%v\n", obj.getPosition())
-			dots := []Dot{}
-			for _, dot := range part.getDots() {
-				d := view.mapObject(Coordinates{
-					X: position.X + dot.X,
-					Y: position.Y + dot.Y,
-					Z: position.Z + dot.Z,
-				})
-				if d == nil {
-					continue label1
-				}
-				dots = append(dots, *d)
-			}
-			switch part.(type) {
-			case DotPart:
-				view.state.screen.printDot(&dots[0], part.getColor())
-			case LinePart:
-				view.state.screen.printLine(&dots[0], &dots[1], part.getColor())
-			case RectanglePart:
-				r, _ := part.(RectanglePart)
-				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), r.getFill())
-			default:
-				fmt.Printf("NO TYPE\n")
-			}
-		}
-	}
-}
-*/

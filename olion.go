@@ -108,7 +108,7 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	spc := &Space{}
 
 	w, h := termbox.Size()
-	max := int((w + h) * 500)
+	max := int((w + h) * 200)
 	min := -max
 	depth := max
 
@@ -120,10 +120,10 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	spc.Max = Coordinates{
 		X: max,
 		Y: max,
-		Z: depth / 2,
+		Z: depth / 40,
 	}
 	now := time.Now()
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 30; i++ {
 		obj := spc.genBackgroundObject(now)
 		spc.addObj(obj)
 		go obj.run(ctx, cancel)
@@ -133,11 +133,12 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	return spc
 }
 
-func (spc *Space) move(t time.Time, dp Coordinates) {
+func (spc *Space) move(t time.Time, dp Coordinates) []upMessage {
 	downMsg := downMessage{
 		time:          t,
 		deltaPosition: dp,
 	}
+	upMsgs := []upMessage{}
 	//fmt.Printf("len(spc.Objects)=%d                                              \n", len(spc.Objects))
 	for _, obj := range spc.Objects {
 		//fmt.Printf("Object=%v downMsg=%v\n", obj, downMsg)
@@ -147,6 +148,13 @@ func (spc *Space) move(t time.Time, dp Coordinates) {
 		ch <- downMsg
 		//fmt.Printf("finished send message\n")
 	}
+	for _, obj := range spc.Objects {
+		//fmt.Printf("upMsg := <-obj.upCh()")
+		upMsg := <-obj.upCh()
+		//fmt.Printf("(upMsg:%v)\n", upMsg)
+		upMsgs = append(upMsgs, upMsg)
+	}
+	return upMsgs
 }
 
 type Olion struct {
@@ -210,7 +218,7 @@ mainloop:
 			break mainloop
 		case <-tick:
 			state.screen.clear()
-			state.space.move(time.Now(), Coordinates{
+			upMsgs := state.space.move(time.Now(), Coordinates{
 				X: moveX,
 				Y: moveY,
 				Z: state.speed,
@@ -221,11 +229,11 @@ mainloop:
 			} else {
 				c = Coordinates{X: 0, Y: 0, Z: 0}
 			}
-			state.outerSpace.move(time.Now(), c)
-			view.draw(state.outerSpace.Objects)
-			//view.drawBackgroundObjects()
-			view.draw(state.space.Objects)
-			//view.drawObjects()
+			upMsgsOuterSpace := state.outerSpace.move(time.Now(), c)
+			//view.draw(state.outerSpace.Objects)
+			view.draw(upMsgsOuterSpace)
+			//view.draw(state.space.Objects)
+			view.draw(upMsgs)
 			count++
 			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v move=(%v,%v)", count, state.position, moveX, moveY))
 			state.screen.flush()
