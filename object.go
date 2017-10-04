@@ -23,12 +23,14 @@ const (
 type Part struct {
 	dots  []Coordinates
 	color Attribute
+	size  int
 	fill  bool
 }
 
 type Parter interface {
 	getDots() []Coordinates
 	getColor() Attribute
+	getSize() int
 	addDot(Coordinates)
 	setFill(bool)
 	getFill() bool
@@ -44,6 +46,10 @@ func (p Part) addDot(d Coordinates) {
 
 func (p Part) getColor() Attribute {
 	return p.color
+}
+
+func (p Part) getSize() int {
+	return p.size
 }
 
 func (p Part) setFill(b bool) {
@@ -79,7 +85,6 @@ func newLinePart(p Parter) LinePart {
 
 type RectanglePart struct {
 	Part
-	fill bool
 }
 
 func newRectanglePart(p Parter) RectanglePart {
@@ -91,7 +96,6 @@ func newRectanglePart(p Parter) RectanglePart {
 
 type CirclePart struct {
 	Part
-	fill bool
 }
 
 func newCirclePart(p Parter) CirclePart {
@@ -225,14 +229,17 @@ func newStar(t time.Time, s int, c Coordinates) *Star {
 		Y: 0,
 		Z: 0,
 	}
-	dot := newDotPart(Part{
+	//dot := newDotPart(Part{
+	circle := newCirclePart(Part{
 		dots: []Coordinates{
 			Coordinates{X: 0, Y: 0, Z: 0},
 		},
 		color: ColorWhite,
+		//color: ColorYellow,
+		fill: true,
+		size: rand.Intn(2),
 	})
-	star.addPart(dot)
-	//star.setCreatedTime()
+	star.addPart(circle)
 	return &star
 }
 

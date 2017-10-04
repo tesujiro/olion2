@@ -136,7 +136,7 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 		Z: depth / 20,
 	}
 	now := time.Now()
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 10; i++ {
 		obj := spc.GenFunc(now)
 		spc.addObj(obj)
 		go obj.run(ctx, cancel)

@@ -116,7 +116,8 @@ func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
 
 func (sc *Screen) printCircle(d *Dot, r int, color Attribute, fill bool) {
 	for x := d.X - r; x <= d.X+r; x++ {
-		h := int(math.Sqrt(float64(r*r - (x-r)*(x-r))))
+		//h := int(math.Sqrt(float64(r*r - (x-r)*(x-r))))
+		h := int(math.Sqrt(float64(r*r - (x-d.X)*(x-d.X))))
 		if fill {
 			for y := d.Y - h; y <= d.Y+h; y++ {
 				sc.printDot(&Dot{X: x, Y: y}, color)
@@ -216,9 +217,7 @@ func (view *View) draw(upMsgs []upMessage) {
 			case RectanglePart:
 				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), part.getFill())
 			case CirclePart:
-				center := Dot{X: (dots[0].X + dots[1].X) / 2, Y: (dots[0].Y + dots[1].Y) / 2}
-				r := int(math.Abs(float64((dots[0].X - dots[1].X + dots[0].Y - dots[1].Y) / 2)))
-				view.state.screen.printCircle(&center, r, part.getColor(), part.getFill())
+				view.state.screen.printCircle(&dots[0], part.getSize(), part.getColor(), part.getFill())
 			default:
 				fmt.Printf("NO TYPE\n")
 			}
