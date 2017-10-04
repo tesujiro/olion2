@@ -2,6 +2,7 @@ package olion
 
 import (
 	"fmt"
+	"math"
 	"sort"
 
 	"github.com/nsf/termbox-go"
@@ -92,9 +93,6 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 	}
 }
 
-func (sc *Screen) printCircle(d *Dot, r int, color Attribute, fill bool) {
-}
-
 func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
 	//Todo:fill
 	//fmt.Printf("d1=%v\td2=%v\n", d1, d2)
@@ -113,6 +111,20 @@ func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
 		sc.printLine(&Dot{X: d1.X, Y: d2.Y}, &Dot{X: d2.X, Y: d2.Y}, color)
 		sc.printLine(&Dot{X: d2.X, Y: d2.Y}, &Dot{X: d2.X, Y: d1.Y}, color)
 		sc.printLine(&Dot{X: d2.X, Y: d1.Y}, &Dot{X: d1.X, Y: d1.Y}, color)
+	}
+}
+
+func (sc *Screen) printCircle(d *Dot, r int, color Attribute, fill bool) {
+	for x := d.X - r; x <= d.X+r; x++ {
+		h := int(math.Sqrt(float64(r*r - (x-r)*(x-r))))
+		if fill {
+			for y := d.Y - h; y <= d.Y+h; y++ {
+				sc.printDot(&Dot{X: x, Y: y}, color)
+			}
+		} else {
+			sc.printDot(&Dot{X: x, Y: d.Y - h}, color)
+			sc.printDot(&Dot{X: x, Y: d.Y + h}, color)
+		}
 	}
 }
 
@@ -202,8 +214,11 @@ func (view *View) draw(upMsgs []upMessage) {
 			case LinePart:
 				view.state.screen.printLine(&dots[0], &dots[1], part.getColor())
 			case RectanglePart:
-				r, _ := part.(RectanglePart)
-				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), r.getFill())
+				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), part.getFill())
+			case CirclePart:
+				center := Dot{X: (dots[0].X + dots[1].X) / 2, Y: (dots[0].Y + dots[1].Y) / 2}
+				r := int(math.Abs(float64((dots[0].X - dots[1].X + dots[0].Y - dots[1].Y) / 2)))
+				view.state.screen.printCircle(&center, r, part.getColor(), part.getFill())
 			default:
 				fmt.Printf("NO TYPE\n")
 			}

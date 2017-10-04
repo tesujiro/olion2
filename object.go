@@ -23,12 +23,15 @@ const (
 type Part struct {
 	dots  []Coordinates
 	color Attribute
+	fill  bool
 }
 
 type Parter interface {
 	getDots() []Coordinates
 	getColor() Attribute
 	addDot(Coordinates)
+	setFill(bool)
+	getFill() bool
 }
 
 func (p Part) getDots() []Coordinates {
@@ -41,6 +44,14 @@ func (p Part) addDot(d Coordinates) {
 
 func (p Part) getColor() Attribute {
 	return p.color
+}
+
+func (p Part) setFill(b bool) {
+	p.fill = b
+}
+
+func (p Part) getFill() bool {
+	return p.fill
 }
 
 /* one dot part */
@@ -78,12 +89,16 @@ func newRectanglePart(p Parter) RectanglePart {
 	}
 }
 
-func (p *RectanglePart) setFill(b bool) {
-	p.fill = b
+type CirclePart struct {
+	Part
+	fill bool
 }
 
-func (p *RectanglePart) getFill() bool {
-	return p.fill
+func newCirclePart(p Parter) CirclePart {
+	// Todo: check len(p.getDots())
+	return CirclePart{
+		Part: p.(Part),
+	}
 }
 
 /*
@@ -182,13 +197,11 @@ mainloop:
 			*/
 
 			newPosition := Coordinates{
-				//X: obj.position.X - downMsg.deltaPosition.X - int(float64(obj.speed.X)*float64(deltaTime/time.Second)),
 				X: obj.position.X - downMsg.deltaPosition.X - obj.speed.X*deltaTime,
 				Y: obj.position.Y - downMsg.deltaPosition.Y - obj.speed.Y*deltaTime,
 				Z: obj.position.Z - downMsg.deltaPosition.Z - obj.speed.Z*deltaTime,
 			}
 			obj.position = newPosition
-			//obj.time = downMsg.time
 			obj.time = obj.time.Add(time.Duration(deltaTime) * time.Second)
 			obj.upChannel <- upMessage{
 				position: newPosition,
@@ -243,8 +256,8 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
 		},
 		color: ColorRed,
+		fill:  true,
 	})
-	rectangle1.setFill(true)
 	ship.addPart(rectangle1)
 	rectangle2 := newRectanglePart(Part{
 		dots: []Coordinates{
@@ -252,8 +265,8 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
 		},
 		color: ColorBlack,
+		fill:  false,
 	})
-	rectangle2.setFill(false)
 	ship.addPart(rectangle2)
 	line1 := newLinePart(Part{
 		dots: []Coordinates{
