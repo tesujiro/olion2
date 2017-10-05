@@ -162,17 +162,26 @@ func (obj *mobile) getSpeed() Coordinates {
 func (obj *mobile) move(currentTime time.Time) Coordinates {
 	prevTime := obj.getTime()
 	speed := obj.getSpeed()
-	deltaTime := int(currentTime.Sub(prevTime) / time.Second)
+	//deltaTime := int(currentTime.Sub(prevTime) / time.Second)
+	//deltaTime := float64(currentTime.Sub(prevTime) / time.Second)
+	deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
+	//fmt.Printf("deltaTime=%v                            \n", deltaTime)
 	/*
 		if deltaTime != 0 && obj.speed.X != 0 {
 			fmt.Printf("(%d,%d,%d)\n", obj.speed.X*deltaTime, obj.speed.Y*deltaTime, obj.speed.Z*deltaTime)
 		}
 	*/
-	obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Second))
+	//obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Second))
+	obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Millisecond))
 	distance := Coordinates{
-		X: speed.X * deltaTime,
-		Y: speed.Y * deltaTime,
-		Z: speed.Z * deltaTime,
+		/*
+			X: speed.X * deltaTime,
+			Y: speed.Y * deltaTime,
+			Z: speed.Z * deltaTime,
+		*/
+		X: int(float64(speed.X) * deltaTime / 100),
+		Y: int(float64(speed.Y) * deltaTime / 100),
+		Z: int(float64(speed.Z) * deltaTime / 100),
 	}
 	return distance
 }
@@ -225,7 +234,6 @@ mainloop:
 		case <-ctx.Done():
 			break mainloop
 		case downMsg := <-obj.downChannel:
-			//distance := mobile(obj).move(downMsg.time)
 			distance := obj.move(downMsg.time)
 			newPosition := Coordinates{
 				X: obj.position.X - downMsg.deltaPosition.X - distance.X,
@@ -279,9 +287,9 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 	ship.position = c
 	ship.time = t
 	ship.speed = Coordinates{
-		X: rand.Intn(4) - 2,
-		Y: rand.Intn(4) - 2,
-		Z: rand.Intn(20),
+		X: rand.Intn(40) - 2,
+		Y: rand.Intn(40) - 2,
+		Z: rand.Intn(40),
 	}
 	rectangle1 := newRectanglePart(Part{
 		dots: []Coordinates{

@@ -199,8 +199,9 @@ type Olion struct {
 
 	position Coordinates
 	//speed    int
-	speed Coordinates
-	time  time.Time
+	//speed Coordinates
+	//time  time.Time
+	mobile
 
 	// cancelFunc is called for Exit()
 	cancelFunc func()
@@ -223,23 +224,9 @@ func New(ctx context.Context, cancel func()) *Olion {
 		outerSpace: NewOuterSpace(ctx, cancel),
 		//maxScanBufferSize: bufio.MaxScanTokenSize,
 		position: Coordinates{X: 0, Y: 0, Z: 0},
-		//speed:    1,
-		speed: Coordinates{X: 0, Y: 0, Z: 1},
-		time:  time.Now(),
+		mobile:   mobile{speed: Coordinates{X: 0, Y: 0, Z: 20}, time: time.Now()},
 		//cancelFunc: func() {},
 	}
-}
-
-func (state *Olion) getTime() time.Time {
-	return state.time
-}
-
-func (state *Olion) setTime(t time.Time) {
-	state.time = t
-}
-
-func (state *Olion) getSpeed() Coordinates {
-	return state.speed
 }
 
 func (state *Olion) Loop(view *View, ctx context.Context, cancel func()) error {
@@ -248,7 +235,6 @@ func (state *Olion) Loop(view *View, ctx context.Context, cancel func()) error {
 	TermBoxChan := state.screen.TermBoxChan()
 	tick := time.NewTicker(time.Millisecond * time.Duration(5)).C
 	count := 0
-	//moveX, moveY := 0, 0
 mainloop:
 	for {
 		//fmt.Printf("[count=%v]\n", count)
@@ -257,22 +243,17 @@ mainloop:
 			break mainloop
 		case <-tick:
 			state.screen.clear()
-			upMsgs := state.space.move(time.Now(), Coordinates{
-				X: state.speed.X,
-				Y: state.speed.Y,
-				Z: state.speed.Z,
-			}, ctx, cancel)
+			now := time.Now()
+			distance := state.move(now)
+			upMsgs := state.space.move(time.Now(), distance, ctx, cancel)
 			var c Coordinates
 			if count%20 == 0 {
-				//c = Coordinates{X: moveX, Y: moveY, Z: 0}
 				c = Coordinates{X: state.speed.X, Y: state.speed.Y, Z: 0}
 			} else {
 				c = Coordinates{X: 0, Y: 0, Z: 0}
 			}
 			upMsgsOuterSpace := state.outerSpace.move(time.Now(), c, ctx, cancel)
-			//view.draw(state.outerSpace.Objects)
 			view.draw(upMsgsOuterSpace)
-			//view.draw(state.space.Objects)
 			view.draw(upMsgs)
 			count++
 			drawLine(0, 0, fmt.Sprintf("counter=%v position=%v move=%v", count, state.position, state.speed))
@@ -283,16 +264,12 @@ mainloop:
 				case termbox.KeyEsc:
 					break mainloop // Esc で実行終了
 				case termbox.KeyArrowUp:
-					//moveY--
 					state.speed.Y--
 				case termbox.KeyArrowDown:
-					//moveY++
 					state.speed.Y++
 				case termbox.KeyArrowLeft:
-					//moveX++
 					state.speed.X++
 				case termbox.KeyArrowRight:
-					//moveX--
 					state.speed.X--
 					//dafault:
 				}
