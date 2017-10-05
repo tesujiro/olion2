@@ -271,6 +271,12 @@ mainloop:
 					state.speed.X++
 				case termbox.KeyArrowRight:
 					state.speed.X--
+				case termbox.KeySpace:
+					state.speed.Z++
+				case termbox.KeyTab, termbox.KeyCtrlSpace:
+					if state.speed.Z > 0 {
+						state.speed.Z--
+					}
 					//dafault:
 				}
 			}

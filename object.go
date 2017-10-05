@@ -162,23 +162,9 @@ func (obj *mobile) getSpeed() Coordinates {
 func (obj *mobile) move(currentTime time.Time) Coordinates {
 	prevTime := obj.getTime()
 	speed := obj.getSpeed()
-	//deltaTime := int(currentTime.Sub(prevTime) / time.Second)
-	//deltaTime := float64(currentTime.Sub(prevTime) / time.Second)
 	deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
-	//fmt.Printf("deltaTime=%v                            \n", deltaTime)
-	/*
-		if deltaTime != 0 && obj.speed.X != 0 {
-			fmt.Printf("(%d,%d,%d)\n", obj.speed.X*deltaTime, obj.speed.Y*deltaTime, obj.speed.Z*deltaTime)
-		}
-	*/
-	//obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Second))
 	obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Millisecond))
 	distance := Coordinates{
-		/*
-			X: speed.X * deltaTime,
-			Y: speed.Y * deltaTime,
-			Z: speed.Z * deltaTime,
-		*/
 		X: int(float64(speed.X) * deltaTime / 100),
 		Y: int(float64(speed.Y) * deltaTime / 100),
 		Z: int(float64(speed.Z) * deltaTime / 100),
@@ -192,8 +178,6 @@ type Object struct {
 	//weight
 	//mobile mobile
 	mobile
-	//speed Coordinates
-	//time  time.Time
 	//Direction Direction   //方向
 	position Coordinates //位置
 
