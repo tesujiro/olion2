@@ -114,13 +114,6 @@ type Shaper interface {
 }
 */
 
-type Exister interface {
-	downCh() downChannel
-	upCh() upChannel
-	//quitCh() quitChannel
-	run(context.Context, func())
-}
-
 type downChannel chan downMessage // Read from Main Loop
 
 type upChannel chan upMessage // Write to Main Loop
@@ -135,12 +128,63 @@ type upMessage struct {
 	parts    []Parter
 }
 
+type Exister interface {
+	downCh() downChannel
+	upCh() upChannel
+	//quitCh() quitChannel
+	run(context.Context, func())
+}
+
+type Mover interface {
+	getTime() time.Time
+	setTime(time.Time)
+	getSpeed() Coordinates
+	move(time.Time) Coordinates
+}
+
+type mobile struct {
+	speed Coordinates
+	time  time.Time
+}
+
+func (obj *mobile) setTime(t time.Time) {
+	obj.time = t
+}
+
+func (obj *mobile) getTime() time.Time {
+	return obj.time
+}
+
+func (obj *mobile) getSpeed() Coordinates {
+	return obj.speed
+}
+
+func (obj *mobile) move(currentTime time.Time) Coordinates {
+	prevTime := obj.getTime()
+	speed := obj.getSpeed()
+	deltaTime := int(currentTime.Sub(prevTime) / time.Second)
+	/*
+		if deltaTime != 0 && obj.speed.X != 0 {
+			fmt.Printf("(%d,%d,%d)\n", obj.speed.X*deltaTime, obj.speed.Y*deltaTime, obj.speed.Z*deltaTime)
+		}
+	*/
+	obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Second))
+	distance := Coordinates{
+		X: speed.X * deltaTime,
+		Y: speed.Y * deltaTime,
+		Z: speed.Z * deltaTime,
+	}
+	return distance
+}
+
 type Object struct {
 	parts []Parter
 	size  int
 	//weight
-	speed Coordinates
-	time  time.Time
+	//mobile mobile
+	mobile
+	//speed Coordinates
+	//time  time.Time
 	//Direction Direction   //方向
 	position Coordinates //位置
 
@@ -165,16 +209,6 @@ func (obj *Object) addPart(p Parter) {
 	obj.parts = append(obj.parts, p)
 }
 
-/*
-func (obj *Object) setTime(t time.Time) {
-	obj.time = t
-}
-
-func (obj *Object) getTime() time.Time {
-	return obj.time
-}
-*/
-
 func (obj *Object) downCh() downChannel {
 	return obj.downChannel
 }
@@ -191,22 +225,14 @@ mainloop:
 		case <-ctx.Done():
 			break mainloop
 		case downMsg := <-obj.downChannel:
-			//fmt.Printf("Object: <-obj.downChannel %v\n", downMsg)
-			//fmt.Printf("Object: <-obj.downChannel %v\n", downMsg)
-			deltaTime := int(downMsg.time.Sub(obj.time) / time.Second)
-			/*
-				if deltaTime != 0 && obj.speed.X != 0 {
-					fmt.Printf("(%d,%d,%d)\n", obj.speed.X*deltaTime, obj.speed.Y*deltaTime, obj.speed.Z*deltaTime)
-				}
-			*/
-
+			//distance := mobile(obj).move(downMsg.time)
+			distance := obj.move(downMsg.time)
 			newPosition := Coordinates{
-				X: obj.position.X - downMsg.deltaPosition.X - obj.speed.X*deltaTime,
-				Y: obj.position.Y - downMsg.deltaPosition.Y - obj.speed.Y*deltaTime,
-				Z: obj.position.Z - downMsg.deltaPosition.Z - obj.speed.Z*deltaTime,
+				X: obj.position.X - downMsg.deltaPosition.X - distance.X,
+				Y: obj.position.Y - downMsg.deltaPosition.Y - distance.Y,
+				Z: obj.position.Z - downMsg.deltaPosition.Z - distance.Z,
 			}
 			obj.position = newPosition
-			obj.time = obj.time.Add(time.Duration(deltaTime) * time.Second)
 			obj.upChannel <- upMessage{
 				position: newPosition,
 				parts:    obj.parts,
