@@ -22,7 +22,7 @@ type Screen struct {
 func NewScreen() *Screen {
 	w, h := termbox.Size()
 	d := 5
-	fmt.Printf("\nW=%v H=%v\n", int(w), int(h))
+	//fmt.Printf("\nW=%v H=%v\n", int(w), int(h))
 	return &Screen{Width: int(w), Height: int(h), Distance: d}
 }
 
@@ -184,7 +184,6 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 	return &dot
 }
 
-//func (view *View) draw(objects []Exister) {
 func (view *View) draw(upMsgs []upMessage) {
 	// Sort Object
 	sort.Slice(upMsgs, func(i, j int) bool {

@@ -133,14 +133,17 @@ type Exister interface {
 	upCh() upChannel
 	//quitCh() quitChannel
 	run(context.Context, func())
+	isBomb() bool
 }
 
+/*
 type Mover interface {
 	getTime() time.Time
 	setTime(time.Time)
 	getSpeed() Coordinates
 	move(time.Time) Coordinates
 }
+*/
 
 type mobile struct {
 	speed Coordinates
@@ -176,13 +179,12 @@ type Object struct {
 	parts []Parter
 	size  int
 	//weight
-	//mobile mobile
 	mobile
-	//Direction Direction   //方向
 	position Coordinates //位置
 
 	downChannel downChannel
 	upChannel   upChannel
+	bomb        bool
 }
 
 func newObject() *Object {
@@ -208,6 +210,10 @@ func (obj *Object) downCh() downChannel {
 
 func (obj *Object) upCh() upChannel {
 	return obj.upChannel
+}
+
+func (obj *Object) isBomb() bool {
+	return obj.bomb
 }
 
 func (obj *Object) run(ctx context.Context, cancel func()) {
@@ -261,6 +267,29 @@ func newStar(t time.Time, s int, c Coordinates) *Star {
 	return &star
 }
 
+type Bomb struct {
+	Object
+}
+
+func newBomb(t time.Time, s int, speed Coordinates) *Bomb {
+	bomb := Bomb{Object: *newObject()}
+	//bomb.position = Coordinates{X: 0, Y: 0, Z: 0}
+	bomb.position = speed
+	bomb.time = t
+	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z - 80}
+	bomb.bomb = true
+	rectangle1 := newRectanglePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+		},
+		color: ColorGreen,
+		fill:  false,
+	})
+	bomb.addPart(rectangle1)
+	return &bomb
+}
+
 type SpaceShip struct {
 	Object
 }
@@ -271,8 +300,8 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 	ship.position = c
 	ship.time = t
 	ship.speed = Coordinates{
-		X: rand.Intn(40) - 2,
-		Y: rand.Intn(40) - 2,
+		X: rand.Intn(40) - 20,
+		Y: rand.Intn(40) - 20,
 		Z: rand.Intn(40),
 	}
 	rectangle1 := newRectanglePart(Part{
