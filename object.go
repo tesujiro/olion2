@@ -128,23 +128,6 @@ type upMessage struct {
 	parts    []Parter
 }
 
-type Exister interface {
-	downCh() downChannel
-	upCh() upChannel
-	//quitCh() quitChannel
-	run(context.Context, func())
-	isBomb() bool
-}
-
-/*
-type Mover interface {
-	getTime() time.Time
-	setTime(time.Time)
-	getSpeed() Coordinates
-	getDistance(time.Time) Coordinates
-}
-*/
-
 type mobile struct {
 	speed Coordinates
 	time  time.Time
@@ -175,6 +158,26 @@ func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
 	return distance
 }
 
+type Exister interface {
+	downCh() downChannel
+	upCh() upChannel
+	isBomb() bool
+	run(context.Context, func())
+	explode()
+	getPosition() Coordinates
+	setPosition(Coordinates)
+	getSize() int
+}
+
+/*
+type Mover interface {
+	getTime() time.Time
+	setTime(time.Time)
+	getSpeed() Coordinates
+	getDistance(time.Time) Coordinates
+}
+*/
+
 type Object struct {
 	parts []Parter
 	size  int
@@ -185,6 +188,7 @@ type Object struct {
 	downChannel downChannel
 	upChannel   upChannel
 	bomb        bool
+	explodedAt  time.Time
 }
 
 func newObject() *Object {
@@ -212,6 +216,18 @@ func (obj *Object) upCh() upChannel {
 	return obj.upChannel
 }
 
+func (obj *Object) getPosition() Coordinates {
+	return obj.position
+}
+
+func (obj *Object) setPosition(p Coordinates) {
+	obj.position = p
+}
+
+func (obj *Object) getSize() int {
+	return obj.size
+}
+
 func (obj *Object) isBomb() bool {
 	return obj.bomb
 }
@@ -237,6 +253,20 @@ mainloop:
 			}
 		}
 	}
+}
+
+func (obj *Object) explode() {
+	obj.parts = []Parter{}
+	circle := newCirclePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: 0, Y: 0, Z: 0},
+		},
+		fill:  false,
+		color: ColorRed,
+		size:  100,
+	})
+	obj.addPart(circle)
+	obj.explodedAt = obj.time
 }
 
 type Star struct {
@@ -278,6 +308,7 @@ func newBomb(t time.Time, s int, speed Coordinates) *Bomb {
 	bomb.time = t
 	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z - 80}
 	bomb.bomb = true
+	bomb.size = s
 	rectangle1 := newRectanglePart(Part{
 		dots: []Coordinates{
 			Coordinates{X: s, Y: s, Z: 0},

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"math/rand"
 	"os"
 	"sync"
@@ -176,6 +177,33 @@ func (spc *Space) move(t time.Time, dp Coordinates, ctx context.Context, cancel 
 	return upMsgs
 }
 
+func distance(p1, p2 Coordinates) int {
+	return int(math.Sqrt(float64((p1.X-p2.X)*(p1.X-p2.X) + (p1.Y-p2.Y)*(p1.Y-p2.Y) + (p1.Z-p2.Z)*(p1.Z-p2.Z))))
+}
+
+func (spc *Space) judgeExplosion() {
+	bombs := []Exister{}
+	flyings := []Exister{}
+	for _, obj := range spc.Objects {
+		if obj.isBomb() {
+			bombs = append(bombs, obj)
+		} else {
+			flyings = append(flyings, obj)
+		}
+	}
+	for _, flying := range flyings {
+	Loop:
+		for _, bomb := range bombs {
+			if distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
+				//fmt.Printf("distance=%v size=%v\n", distance(flying.getPosition(), bomb.getPosition()), bomb.getSize())
+				flying.explode()
+				bomb.setPosition(Coordinates{})
+				break Loop
+			}
+		}
+	}
+}
+
 type Olion struct {
 	Argv   []string
 	Stdin  io.Reader
@@ -242,15 +270,8 @@ mainloop:
 		case <-tick:
 			state.screen.clear()
 			//OuterSpace
-			/*
-				var c Coordinates
-				if count%20 == 0 {
-					c = Coordinates{X: state.speed.X, Y: state.speed.Y, Z: 0}
-				} else {
-					c = Coordinates{X: 0, Y: 0, Z: 0}
-				}
-			*/
-			speed := Coordinates{X: state.speed.X / 10, Y: state.speed.Y / 10, Z: 0}
+			//speed := Coordinates{X: state.speed.X / 10, Y: state.speed.Y / 10, Z: 0}
+			speed := Coordinates{X: state.speed.X, Y: state.speed.Y, Z: 0}
 			upMsgsOuterSpace := state.outerSpace.move(time.Now(), speed, ctx, cancel)
 			view.draw(upMsgsOuterSpace)
 			//Space
@@ -264,6 +285,7 @@ mainloop:
 			}
 			forward := state.getDistance(now)
 			upMsgs := state.space.move(time.Now(), forward, ctx, cancel)
+			state.space.judgeExplosion()
 			view.draw(upMsgs)
 			count++
 			fireBomb = false
