@@ -141,7 +141,7 @@ type Mover interface {
 	getTime() time.Time
 	setTime(time.Time)
 	getSpeed() Coordinates
-	move(time.Time) Coordinates
+	getDistance(time.Time) Coordinates
 }
 */
 
@@ -162,7 +162,7 @@ func (obj *mobile) getSpeed() Coordinates {
 	return obj.speed
 }
 
-func (obj *mobile) move(currentTime time.Time) Coordinates {
+func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
 	prevTime := obj.getTime()
 	speed := obj.getSpeed()
 	deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
@@ -224,7 +224,7 @@ mainloop:
 		case <-ctx.Done():
 			break mainloop
 		case downMsg := <-obj.downChannel:
-			distance := obj.move(downMsg.time)
+			distance := obj.getDistance(downMsg.time)
 			newPosition := Coordinates{
 				X: obj.position.X - downMsg.deltaPosition.X - distance.X,
 				Y: obj.position.Y - downMsg.deltaPosition.Y - distance.Y,
@@ -280,13 +280,24 @@ func newBomb(t time.Time, s int, speed Coordinates) *Bomb {
 	bomb.bomb = true
 	rectangle1 := newRectanglePart(Part{
 		dots: []Coordinates{
-			Coordinates{X: s / 2, Y: s / 2, Z: 0},
-			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+			Coordinates{X: s, Y: s, Z: 0},
+			Coordinates{X: -s, Y: -s, Z: 0},
 		},
 		color: ColorGreen,
 		fill:  false,
 	})
 	bomb.addPart(rectangle1)
+	/*
+		circle := newCirclePart(Part{
+			dots: []Coordinates{
+				Coordinates{X: 0, Y: 0, Z: 0},
+			},
+			fill:  false,
+			color: ColorGreen,
+			size:  s / 10,
+		})
+		bomb.addPart(circle)
+	*/
 	return &bomb
 }
 

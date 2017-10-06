@@ -133,7 +133,8 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	spc.Max = Coordinates{
 		X: max,
 		Y: max,
-		Z: depth / 20,
+		//Z: depth / 20,
+		Z: depth / 10,
 	}
 	now := time.Now()
 	for i := 0; i < 10; i++ {
@@ -261,7 +262,7 @@ mainloop:
 				state.space.addObj(newObj)
 				go newObj.run(ctx, cancel)
 			}
-			forward := state.move(now)
+			forward := state.getDistance(now)
 			upMsgs := state.space.move(time.Now(), forward, ctx, cancel)
 			view.draw(upMsgs)
 			count++

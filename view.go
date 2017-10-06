@@ -184,6 +184,18 @@ func (view *View) mapObject(objPosition Coordinates) *Dot {
 	return &dot
 }
 
+func (view *View) mapLength(objPosition Coordinates, length int) int {
+	myScreen := view.state.screen
+	myPosition := view.state.position
+	diffZ := objPosition.Z - myPosition.Z
+	//fmt.Printf("objPosition=%v length=%v diffZ=%v \n", objPosition, length, diffZ)
+	if diffZ > 0 {
+		return int(length * myScreen.Distance / diffZ)
+	} else {
+		return length * myScreen.Distance
+	}
+}
+
 func (view *View) draw(upMsgs []upMessage) {
 	// Sort Object
 	sort.Slice(upMsgs, func(i, j int) bool {
@@ -216,7 +228,7 @@ func (view *View) draw(upMsgs []upMessage) {
 			case RectanglePart:
 				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), part.getFill())
 			case CirclePart:
-				view.state.screen.printCircle(&dots[0], part.getSize(), part.getColor(), part.getFill())
+				view.state.screen.printCircle(&dots[0], view.mapLength(position, part.getSize()), part.getColor(), part.getFill())
 			default:
 				fmt.Printf("NO TYPE\n")
 			}
