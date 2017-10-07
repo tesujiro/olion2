@@ -158,17 +158,6 @@ func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
 	return distance
 }
 
-type Exister interface {
-	downCh() downChannel
-	upCh() upChannel
-	isBomb() bool
-	run(context.Context, func())
-	explode()
-	getPosition() Coordinates
-	setPosition(Coordinates)
-	getSize() int
-}
-
 /*
 type Mover interface {
 	getTime() time.Time
@@ -189,6 +178,21 @@ type Object struct {
 	upChannel   upChannel
 	bomb        bool
 	explodedAt  time.Time
+	exploding   bool
+}
+
+type Exister interface {
+	downCh() downChannel
+	upCh() upChannel
+	run(context.Context, func())
+	getPosition() Coordinates
+	setPosition(Coordinates)
+	getSize() int
+	setSize(int)
+	isBomb() bool
+	explode()
+	isExploding() bool
+	getExplodedTime() time.Time
 }
 
 func newObject() *Object {
@@ -228,6 +232,10 @@ func (obj *Object) getSize() int {
 	return obj.size
 }
 
+func (obj *Object) setSize(size int) {
+	obj.size = size
+}
+
 func (obj *Object) isBomb() bool {
 	return obj.bomb
 }
@@ -255,6 +263,14 @@ mainloop:
 	}
 }
 
+func (obj *Object) isExploding() bool {
+	return obj.exploding
+}
+
+func (obj *Object) getExplodedTime() time.Time {
+	return obj.explodedAt
+}
+
 func (obj *Object) explode() {
 	obj.parts = []Parter{}
 	circle := newCirclePart(Part{
@@ -267,6 +283,7 @@ func (obj *Object) explode() {
 	})
 	obj.addPart(circle)
 	obj.explodedAt = obj.time
+	obj.exploding = true
 }
 
 type Star struct {
@@ -309,6 +326,7 @@ func newBomb(t time.Time, s int, speed Coordinates) *Bomb {
 	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z - 80}
 	bomb.bomb = true
 	bomb.size = s
+	//fmt.Printf("size=%v \n", bomb.getSize())
 	rectangle1 := newRectanglePart(Part{
 		dots: []Coordinates{
 			Coordinates{X: s, Y: s, Z: 0},

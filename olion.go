@@ -187,17 +187,27 @@ func (spc *Space) judgeExplosion() {
 	for _, obj := range spc.Objects {
 		if obj.isBomb() {
 			bombs = append(bombs, obj)
+		} else if obj.isExploding() {
+			//deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
+			deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
+			//fmt.Printf("delta=%v\n", deltaTime)
+			if deltaTime > float64(1e4) {
+				spc.deleteObj(obj)
+			} else {
+				newSize := int(math.Pow(2.0, float64(deltaTime/1000))) * 1000
+				obj.setSize(newSize)
+			}
 		} else {
 			flyings = append(flyings, obj)
 		}
 	}
+Loop:
 	for _, flying := range flyings {
-	Loop:
 		for _, bomb := range bombs {
 			if distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 				//fmt.Printf("distance=%v size=%v\n", distance(flying.getPosition(), bomb.getPosition()), bomb.getSize())
 				flying.explode()
-				bomb.setPosition(Coordinates{})
+				spc.deleteObj(bomb)
 				break Loop
 			}
 		}
@@ -297,13 +307,13 @@ mainloop:
 				case termbox.KeyEsc:
 					break mainloop // Esc で実行終了
 				case termbox.KeyArrowUp:
-					state.speed.Y--
+					state.speed.Y -= 10
 				case termbox.KeyArrowDown:
-					state.speed.Y++
+					state.speed.Y += 10
 				case termbox.KeyArrowLeft:
-					state.speed.X++
+					state.speed.X += 10
 				case termbox.KeyArrowRight:
-					state.speed.X--
+					state.speed.X -= 10
 				case termbox.KeySpace:
 					state.speed.Z += 10
 				case termbox.KeyTab, termbox.KeyCtrlSpace:
