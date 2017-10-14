@@ -299,7 +299,14 @@ mainloop:
 			view.draw(upMsgs)
 			count++
 			fireBomb = false
-			drawLine(0, 0, fmt.Sprintf("counter=%v move=%v", count, state.speed))
+			//count bombs
+			bombs := 0
+			for _, obj := range state.space.Objects {
+				if obj.isBomb() {
+					bombs++
+				}
+			}
+			drawLine(0, 0, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, bombs))
 			state.screen.flush()
 		case ev := <-TermBoxChan:
 			if ev.Type == termbox.EventKey {
