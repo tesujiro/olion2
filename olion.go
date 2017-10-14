@@ -264,6 +264,27 @@ func New(ctx context.Context, cancel func()) *Olion {
 	}
 }
 
+func (state *Olion) drawConsole(count int) {
+	drawLine(0, 0, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
+	rest_bomb := state.maxBomb - state.curBomb
+	rest_bomb_str := ""
+	for i := 0; i < rest_bomb; i++ {
+		rest_bomb_str += "_"
+	}
+	drawLine(state.screen.Width/2+1, state.screen.Height/2+1, rest_bomb_str)
+}
+
+func (state *Olion) setStatus() {
+	//count bombs
+	bombs := 0
+	for _, obj := range state.space.Objects {
+		if obj.isBomb() {
+			bombs++
+		}
+	}
+	state.curBomb = bombs
+}
+
 func (state *Olion) Loop(view *View, ctx context.Context, cancel func()) error {
 	defer cancel()
 
@@ -273,14 +294,12 @@ func (state *Olion) Loop(view *View, ctx context.Context, cancel func()) error {
 	fireBomb := false
 mainloop:
 	for {
-		//fmt.Printf("[count=%v]\n", count)
 		select {
 		case <-ctx.Done():
 			break mainloop
 		case <-tick:
 			state.screen.clear()
 			//OuterSpace
-			//speed := Coordinates{X: state.speed.X / 10, Y: state.speed.Y / 10, Z: 0}
 			speed := Coordinates{X: state.speed.X, Y: state.speed.Y, Z: 0}
 			upMsgsOuterSpace := state.outerSpace.move(time.Now(), speed, ctx, cancel)
 			view.draw(upMsgsOuterSpace)
@@ -288,7 +307,6 @@ mainloop:
 			now := time.Now()
 			if fireBomb {
 				//fmt.Printf("\nnewBomb\n")
-				//newObj := newBomb(t, 500, spc.state.speed)
 				newObj := newBomb(now, 1000, state.speed)
 				state.space.addObj(newObj)
 				go newObj.run(ctx, cancel)
@@ -299,15 +317,8 @@ mainloop:
 			view.draw(upMsgs)
 			count++
 			fireBomb = false
-			//count bombs
-			bombs := 0
-			for _, obj := range state.space.Objects {
-				if obj.isBomb() {
-					bombs++
-				}
-			}
-			state.curBomb = bombs
-			drawLine(0, 0, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
+			state.setStatus()
+			state.drawConsole(count)
 			state.screen.flush()
 		case ev := <-TermBoxChan:
 			if ev.Type == termbox.EventKey {
