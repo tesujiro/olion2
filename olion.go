@@ -306,7 +306,8 @@ mainloop:
 					bombs++
 				}
 			}
-			drawLine(0, 0, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, bombs))
+			state.curBomb = bombs
+			drawLine(0, 0, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
 			state.screen.flush()
 		case ev := <-TermBoxChan:
 			if ev.Type == termbox.EventKey {
@@ -328,11 +329,11 @@ mainloop:
 						state.speed.Z -= 10
 					}
 				case termbox.KeyEnter:
-					//if state.curBomb < state.maxBomb {
-					state.curBomb++
-					fireBomb = true
-					//}
-					//dafault:
+					if state.curBomb < state.maxBomb {
+						state.curBomb++
+						fireBomb = true
+					}
+				default:
 				}
 			}
 		}
