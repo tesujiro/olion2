@@ -49,7 +49,8 @@ func (sc *Screen) cover2(dot1, dot2 Dot) bool {
 }
 
 func (sc *Screen) printString(dot *Dot, str string) {
-	x, y := dot.X, sc.Height-dot.Y+1
+	//x, y := dot.X, sc.Height-dot.Y+1
+	x, y := dot.X, dot.Y
 	w, h := termbox.Size()
 	for _, r := range []rune(str) {
 		idx := y*w + x
@@ -60,17 +61,8 @@ func (sc *Screen) printString(dot *Dot, str string) {
 		if sc.cover(*dot) {
 			termbox.SetCell(x, y, r, termbox.ColorWhite, c.Bg)
 		}
-		y += 1
+		x += 1
 	}
-	/*
-		d := *dot
-		for key, val := range r {
-			if sc.cover(*d) {
-				termbox.SetCell(d.X, sc.Height-d.Y+1, val, termbox.ColorBlack, termbox.Attribute(ColorDefault))
-			}
-			d = Dot{d.X + 1, d.Y}
-		}
-	*/
 }
 
 func (sc *Screen) printDot(dot *Dot, color Attribute) {

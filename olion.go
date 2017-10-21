@@ -265,11 +265,12 @@ func New(ctx context.Context, cancel func()) *Olion {
 }
 
 func (state *Olion) drawConsole(count int) {
-	drawLine(0, 0, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
+	//drawLine(0, 0, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
+	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
 	x, y := state.screen.Width/2+1, state.screen.Height/2+1
 	for i := 0; i < state.maxBomb-state.curBomb; i++ {
 		state.screen.printString(&Dot{x, y}, "**")
-		state.screen.printString(&Dot{x + 1, y}, "**")
+		state.screen.printString(&Dot{x, y + 1}, "**")
 		x += 3
 	}
 }
