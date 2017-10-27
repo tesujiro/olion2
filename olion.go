@@ -181,7 +181,8 @@ func distance(p1, p2 Coordinates) int {
 	return int(math.Sqrt(float64((p1.X-p2.X)*(p1.X-p2.X) + (p1.Y-p2.Y)*(p1.Y-p2.Y) + (p1.Z-p2.Z)*(p1.Z-p2.Z))))
 }
 
-func (spc *Space) judgeExplosion() {
+func (spc *Space) judgeExplosion() int {
+	score := 0
 	bombs := []Exister{}
 	flyings := []Exister{}
 	for _, obj := range spc.Objects {
@@ -206,12 +207,15 @@ Loop:
 		for _, bomb := range bombs {
 			if distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 				//fmt.Printf("distance=%v size=%v\n", distance(flying.getPosition(), bomb.getPosition()), bomb.getSize())
+				score++
 				flying.explode()
 				spc.deleteObj(bomb)
 				break Loop
 			}
 		}
 	}
+
+	return score
 }
 
 type Olion struct {
@@ -235,6 +239,7 @@ type Olion struct {
 	mobile
 	maxBomb int
 	curBomb int
+	score   int
 
 	// cancelFunc is called for Exit()
 	cancelFunc func()
@@ -260,6 +265,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 		mobile:   mobile{speed: Coordinates{X: 0, Y: 0, Z: 20}, time: time.Now()},
 		maxBomb:  4,
 		curBomb:  0,
+		score:    0,
 		//cancelFunc: func() {},
 	}
 }
@@ -267,6 +273,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 func (state *Olion) drawConsole(count int) {
 	//drawLine(0, 0, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
 	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
+	state.screen.printString(&Dot{0, state.screen.Height - 1}, fmt.Sprintf("score=%v", state.score))
 	x, y := state.screen.Width/2+1, state.screen.Height/2+1
 	for i := 0; i < state.maxBomb-state.curBomb; i++ {
 		state.screen.printString(&Dot{x, y}, "**")
@@ -314,7 +321,7 @@ mainloop:
 			}
 			forward := state.getDistance(now)
 			upMsgs := state.space.move(time.Now(), forward, ctx, cancel)
-			state.space.judgeExplosion()
+			state.score += state.space.judgeExplosion()
 			view.draw(upMsgs)
 			count++
 			fireBomb = false
