@@ -158,15 +158,6 @@ func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
 	return distance
 }
 
-/*
-type Mover interface {
-	getTime() time.Time
-	setTime(time.Time)
-	getSpeed() Coordinates
-	getDistance(time.Time) Coordinates
-}
-*/
-
 type Object struct {
 	parts []Parter
 	size  int
@@ -201,12 +192,6 @@ func newObject() *Object {
 		upChannel:   make(upChannel),
 	}
 }
-
-/*
-func (obj *Object) shape() []Parter {
-	return obj.parts
-}
-*/
 
 func (obj *Object) addPart(p Parter) {
 	obj.parts = append(obj.parts, p)
@@ -336,17 +321,6 @@ func newBomb(t time.Time, s int, speed Coordinates) *Bomb {
 		fill:  false,
 	})
 	bomb.addPart(rectangle1)
-	/*
-		circle := newCirclePart(Part{
-			dots: []Coordinates{
-				Coordinates{X: 0, Y: 0, Z: 0},
-			},
-			fill:  false,
-			color: ColorGreen,
-			size:  s / 10,
-		})
-		bomb.addPart(circle)
-	*/
 	return &bomb
 }
 

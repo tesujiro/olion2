@@ -329,24 +329,36 @@ mainloop:
 			state.drawConsole(count)
 			state.screen.flush()
 		case ev := <-TermBoxChan:
+			upspeed := func(speed int, delta int) int {
+				limit := 80
+				switch {
+				case delta > 0 && speed+delta <= limit:
+					return speed + delta
+				case delta < 0 && speed+delta >= -limit:
+					return speed + delta
+				default:
+					return speed
+				}
+			}
 			if ev.Type == termbox.EventKey {
 				switch ev.Key {
 				case termbox.KeyEsc:
 					break mainloop // Esc で実行終了
 				case termbox.KeyArrowUp:
-					state.speed.Y -= 10
+					state.speed.Y = upspeed(state.speed.Y, -10)
 				case termbox.KeyArrowDown:
-					state.speed.Y += 10
+					state.speed.Y = upspeed(state.speed.Y, 10)
 				case termbox.KeyArrowLeft:
-					state.speed.X += 10
+					state.speed.X = upspeed(state.speed.X, 10)
 				case termbox.KeyArrowRight:
-					state.speed.X -= 10
+					state.speed.X = upspeed(state.speed.X, -10)
 				case termbox.KeySpace:
-					state.speed.Z += 10
+					state.speed.Z = upspeed(state.speed.Z, 10)
 				case termbox.KeyTab, termbox.KeyCtrlSpace:
 					if state.speed.Z > 0 {
 						state.speed.Z -= 10
 					}
+					//state.speed.Z = upspeed(state.speed.Z, -10)
 				case termbox.KeyEnter:
 					if state.curBomb < state.maxBomb {
 						state.curBomb++
