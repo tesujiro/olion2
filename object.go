@@ -94,6 +94,17 @@ func newRectanglePart(p Parter) RectanglePart {
 	}
 }
 
+type PolygonPart struct {
+	Part
+}
+
+func newPolygonPart(p Parter) PolygonPart {
+	// Todo: check len(p.getDots())
+	return PolygonPart{
+		Part: p.(Part),
+	}
+}
+
 type CirclePart struct {
 	Part
 }

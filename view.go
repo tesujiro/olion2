@@ -130,7 +130,7 @@ func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
 	}
 }
 
-func (sc *Screen) printPorigon(dots []Dot, color Attribute, fill bool) {
+func (sc *Screen) printPolygon(dots []Dot, color Attribute, fill bool) {
 	//Todo:fill
 	if len(dots) < 3 {
 		return
@@ -255,6 +255,8 @@ func (view *View) draw(upMsgs []upMessage) {
 				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), part.getFill())
 			case CirclePart:
 				view.state.screen.printCircle(&dots[0], view.mapLength(position, part.getSize()), part.getColor(), part.getFill())
+			case PolygonPart:
+				view.state.screen.printPolygon(dots, part.getColor(), part.getFill())
 			default:
 				fmt.Printf("NO TYPE\n")
 			}
