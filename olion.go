@@ -68,9 +68,11 @@ func (spc *Space) inTheSpace(c Coordinates) bool {
 }
 
 func (spc *Space) genObject(now time.Time) Exister {
-	//num := rand.Intn(100)
+	num := rand.Intn(100)
 	switch {
-	//case num < 10:
+	case num < 30:
+		//Add SpaceShip
+		return newBox(now, 500, spc.randomSpace())
 	default:
 		//Add SpaceShip
 		return newSpaceShip(now, 500, spc.randomSpace())

@@ -363,7 +363,6 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		},
 		color: ColorBlack,
 	})
-
 	ship.addPart(line1)
 	line2 := newLinePart(Part{
 		dots: []Coordinates{
@@ -425,6 +424,79 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 	})
 	ship.addPart(line)
 	//ship.setCreatedTime()
+
+	return &ship
+}
+
+type SpaceBox struct {
+	Object
+}
+
+func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
+	ship := SpaceBox{Object: *newObject()}
+	ship.size = s
+	ship.position = c
+	ship.time = t
+	length := s / 20
+	flont_size := s / 2
+	ship.speed = Coordinates{
+		X: rand.Intn(40) - 20,
+		Y: rand.Intn(40) - 20,
+		Z: rand.Intn(40),
+	}
+	rectangle1 := newRectanglePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+		},
+		color: ColorBlack,
+		fill:  true,
+	})
+	ship.addPart(rectangle1)
+
+	var line LinePart
+	line = newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: flont_size / 2, Y: flont_size / 2, Z: -length},
+		},
+		color: ColorBlack,
+	})
+	ship.addPart(line)
+	line = newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: -flont_size / 2, Y: flont_size / 2, Z: -length},
+		},
+		color: ColorBlack,
+	})
+	ship.addPart(line)
+	line = newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+			Coordinates{X: -flont_size / 2, Y: -flont_size / 2, Z: -length},
+		},
+		color: ColorBlack,
+	})
+	ship.addPart(line)
+	line = newLinePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: s / 2, Y: -s / 2, Z: 0},
+			Coordinates{X: flont_size / 2, Y: -flont_size / 2, Z: -length},
+		},
+		color: ColorBlack,
+	})
+	ship.addPart(line)
+
+	rectangle2 := newRectanglePart(Part{
+		dots: []Coordinates{
+			Coordinates{X: flont_size / 2, Y: flont_size / 2, Z: -length},
+			Coordinates{X: -flont_size / 2, Y: -flont_size / 2, Z: -length},
+		},
+		color: ColorRed,
+		fill:  true,
+	})
+	ship.addPart(rectangle2)
 
 	return &ship
 }
