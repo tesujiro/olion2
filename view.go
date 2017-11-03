@@ -140,6 +140,7 @@ func (sc *Screen) printPorigon(dots []Dot, color Attribute, fill bool) {
 		sc.printLine(&d1, &d2, color)
 		d1 = d2
 	}
+	sc.printLine(&d1, &dots[0], color)
 }
 
 func (sc *Screen) printCircle(d *Dot, r int, color Attribute, fill bool) {
