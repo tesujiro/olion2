@@ -111,7 +111,6 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 }
 
 func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
-	//Todo:fill
 	//fmt.Printf("d1=%v\td2=%v\n", d1, d2)
 	if fill {
 		var diffY int
@@ -131,6 +130,18 @@ func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
 	}
 }
 
+func (sc *Screen) printPorigon(dots []Dot, color Attribute, fill bool) {
+	//Todo:fill
+	if len(dots) < 3 {
+		return
+	}
+	d1 := dots[0]
+	for _, d2 := range dots[1:] {
+		sc.printLine(&d1, &d2, color)
+		d1 = d2
+	}
+}
+
 func (sc *Screen) printCircle(d *Dot, r int, color Attribute, fill bool) {
 	for x := d.X - r; x <= d.X+r; x++ {
 		//h := int(math.Sqrt(float64(r*r - (x-r)*(x-r))))
@@ -144,9 +155,6 @@ func (sc *Screen) printCircle(d *Dot, r int, color Attribute, fill bool) {
 			sc.printDot(&Dot{X: x, Y: d.Y + h}, color)
 		}
 	}
-}
-
-func (sc *Screen) printPentagon(color Attribute, fill bool, dots ...*Dot) {
 }
 
 //https://github.com/sjmudd/ps-top/blob/master/screen/screen.go
