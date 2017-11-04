@@ -511,3 +511,38 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 
 	return &ship
 }
+
+type SpaceBox2 struct {
+	Object
+}
+
+func newBox2(t time.Time, s int, c Coordinates) *SpaceBox2 {
+	ship := SpaceBox2{Object: *newObject()}
+	ship.size = s
+	ship.position = c
+	ship.time = t
+	ship.speed = Coordinates{
+		X: rand.Intn(10) - 5,
+		Y: rand.Intn(10) - 5,
+		Z: rand.Intn(10),
+	}
+
+	layers := 5
+	distance := 30
+	diff_size := -80
+	colors := []Attribute{ColorBlack, ColorRed}
+	for i := 0; i < layers; i++ {
+		edge_size := s + diff_size*i
+		rectangle := newRectanglePart(Part{
+			dots: []Coordinates{
+				Coordinates{X: edge_size / 2, Y: edge_size / 2, Z: -distance * i},
+				Coordinates{X: -edge_size / 2, Y: -edge_size / 2, Z: -distance * i},
+			},
+			color: colors[i%len(colors)],
+			fill:  true,
+		})
+		ship.addPart(rectangle)
+	}
+
+	return &ship
+}

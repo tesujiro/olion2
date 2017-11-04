@@ -73,6 +73,9 @@ func (spc *Space) genObject(now time.Time) Exister {
 	case num < 30:
 		//Add SpaceShip
 		return newBox(now, 500, spc.randomSpace())
+	case num < 60:
+		//Add SpaceShip
+		return newBox2(now, 800, spc.randomSpace())
 	default:
 		//Add SpaceShip
 		return newSpaceShip(now, 500, spc.randomSpace())
