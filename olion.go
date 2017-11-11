@@ -332,6 +332,8 @@ mainloop:
 			fireBomb = false
 			state.setStatus()
 			state.drawConsole(count)
+			//state.screen.printTriangle([]Dot{Dot{X: 10, Y: 10}, Dot{X: 50, Y: 30}, Dot{X: 20, Y: 50}}, ColorBlack)
+			state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 50, Y: 30}, Dot{X: 20, Y: 50}, Dot{X: 0, Y: 40}, Dot{X: 0, Y: 20}}, ColorBlack, true)
 			state.screen.flush()
 		case ev := <-TermBoxChan:
 			upspeed := func(speed int, delta int) int {

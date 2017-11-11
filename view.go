@@ -170,8 +170,9 @@ func (sc *Screen) printTriangle(dots []Dot, color Attribute) {
 		for i := 0; i < len(dots); i++ {
 			d1 := dots[i]
 			d2 := dots[(i+1)%len(dots)]
-			if (d1.X > x && d2.X > x) || (d1.X < x && d2.X < x) {
-				break
+			if (d1.X > x && d2.X > x) || (d1.X < x && d2.X < x) || (d1.X == d2.X) {
+				//fmt.Printf("d1=%v d2=%v x=%v\n", d1, d2, x)
+				continue
 			}
 			if d1.Y == d2.Y {
 				ret = append(ret, d1.Y)
@@ -180,11 +181,17 @@ func (sc *Screen) printTriangle(dots []Dot, color Attribute) {
 				ret = append(ret, y)
 			}
 		}
+		if len(ret) < len(dots)-1 {
+			//fmt.Printf("\nx=%v len(ret)=%v\n", x, len(ret))
+			return 0, 0
+		}
 		return ret[0], ret[1]
 	}
 	minX, maxX := getMinMax(dots)
+	//fmt.Printf("minX=%v maxX=%v\n", minX, maxX)
 	for x := minX; x <= maxX; x++ {
 		y1, y2 := crossPoints(dots, x)
+		//fmt.Printf("x=%v y1=%v y2=%v\n", x, y1, y2)
 		sc.printLine(&Dot{X: x, Y: y1}, &Dot{X: x, Y: y2}, color)
 	}
 }
