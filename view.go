@@ -131,17 +131,77 @@ func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
 }
 
 func (sc *Screen) printPolygon(dots []Dot, color Attribute, fill bool) {
-	//Todo:fill
 	if len(dots) < 3 {
 		return
 	}
-	d1 := dots[0]
-	for _, d2 := range dots[1:] {
-		sc.printLine(&d1, &d2, color)
-		d1 = d2
+	if fill {
+		//Todo:fill
+		for i := 1; i < len(dots)-1; i++ {
+			sc.printTriangle([]Dot{dots[0], dots[i], dots[i+1]}, color)
+		}
+	} else {
+		d1 := dots[0]
+		for _, d2 := range dots[1:] {
+			sc.printLine(&d1, &d2, color)
+			d1 = d2
+		}
+		sc.printLine(&d1, &dots[0], color)
 	}
-	sc.printLine(&d1, &dots[0], color)
 }
+
+func (sc *Screen) printTriangle(dots []Dot, color Attribute) {
+	if len(dots) != 3 {
+		return
+	}
+	getMinMax := func(dots []Dot) (minX, maxX int) {
+		minX = dots[0].X
+		maxX = dots[0].X
+		for i := 1; i < len(dots); i++ {
+			if dots[i].X < minX {
+				minX = dots[i].X
+			} else if dots[i].X > maxX {
+				maxX = dots[i].X
+			}
+		}
+		return minX, maxX
+	}
+	crossPoints := func(dots []Dot, x int) (int, int) {
+		var ret []int
+		for i := 0; i < len(dots); i++ {
+			d1 := dots[i]
+			d2 := dots[(i+1)%len(dots)]
+			if (d1.X > x && d2.X > x) || (d1.X < x && d2.X < x) {
+				break
+			}
+			if d1.Y == d2.Y {
+				ret = append(ret, d1.Y)
+			} else {
+				y := d1.Y + (d2.Y-d1.Y)*(d1.X-x)/(d1.X-d2.X)
+				ret = append(ret, y)
+			}
+		}
+		return ret[0], ret[1]
+	}
+	minX, maxX := getMinMax(dots)
+	for x := minX; x <= maxX; x++ {
+		y1, y2 := crossPoints(dots, x)
+		sc.printLine(&Dot{X: x, Y: y1}, &Dot{X: x, Y: y2}, color)
+	}
+}
+
+/*
+func (sc *Screen) print4Polygon(dots []Dot, color Attribute, fill bool) {
+	if len(dots) != 4 {
+		return
+	}
+	if fill == true {
+		sc.print3Polygon(&[]Dot{dots[0], dots[1], dots[2]}, color, fill)
+		sc.print3Polygon(&[]Dot{dots[0], dots[2], dots[3]}, color, fill)
+	} else {
+		sc.printPolygon(dots, color, fill)
+	}
+}
+*/
 
 func (sc *Screen) printCircle(d *Dot, r int, color Attribute, fill bool) {
 	for x := d.X - r; x <= d.X+r; x++ {
