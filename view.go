@@ -135,7 +135,6 @@ func (sc *Screen) printPolygon(dots []Dot, color Attribute, fill bool) {
 		return
 	}
 	if fill {
-		//Todo:fill
 		for i := 1; i < len(dots)-1; i++ {
 			sc.printTriangle([]Dot{dots[0], dots[i], dots[i+1]}, color)
 		}
@@ -195,20 +194,6 @@ func (sc *Screen) printTriangle(dots []Dot, color Attribute) {
 		sc.printLine(&Dot{X: x, Y: y1}, &Dot{X: x, Y: y2}, color)
 	}
 }
-
-/*
-func (sc *Screen) print4Polygon(dots []Dot, color Attribute, fill bool) {
-	if len(dots) != 4 {
-		return
-	}
-	if fill == true {
-		sc.print3Polygon(&[]Dot{dots[0], dots[1], dots[2]}, color, fill)
-		sc.print3Polygon(&[]Dot{dots[0], dots[2], dots[3]}, color, fill)
-	} else {
-		sc.printPolygon(dots, color, fill)
-	}
-}
-*/
 
 func (sc *Screen) printCircle(d *Dot, r int, color Attribute, fill bool) {
 	for x := d.X - r; x <= d.X+r; x++ {

@@ -2,6 +2,7 @@ package olion
 
 import (
 	"context"
+	"math"
 	"math/rand"
 	"time"
 )
@@ -140,8 +141,10 @@ type upMessage struct {
 }
 
 type mobile struct {
-	speed Coordinates
-	time  time.Time
+	speed  Coordinates
+	spinXY int // XY spin speed in radian
+	spinXZ int // XZ spin speed in radian
+	time   time.Time
 }
 
 func (obj *mobile) setTime(t time.Time) {
@@ -156,6 +159,10 @@ func (obj *mobile) getSpeed() Coordinates {
 	return obj.speed
 }
 
+func (obj *mobile) getSpin() (int, int) {
+	return obj.spinXY, obj.spinXZ
+}
+
 func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
 	prevTime := obj.getTime()
 	speed := obj.getSpeed()
@@ -167,6 +174,39 @@ func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
 		Z: int(float64(speed.Z) * deltaTime / 100),
 	}
 	return distance
+}
+
+func (obj *mobile) getParts(currentTime time.Time) []Parter {
+	prevTime := obj.getTime()
+	spinXY, _ := obj.getSpin() // Todo: spinXZ
+	deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
+	obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Millisecond))
+	if spinXY == 0 {
+		return obj.parts
+	}
+	theta := float64(spinXY) / 360.0 * math.Pi * deltaTime / 100
+	sinTheta := math.Sin(theta)
+	cosTheta := math.Cos(theta)
+	var ret []Parter
+	for _, part := range obj.parts {
+		cs := []Coordinates{}
+		for _, dot := range part.getDots() {
+			c := Coordinates{
+				X: cosTheta*dot.X - sinTheta*dot.Y,
+				Y: sinTheta*dot.X + cosTheta*dot.Y,
+				Z: dot.Z,
+			}
+			cs = append(cs, c)
+		}
+		p := Part{
+			dots:  cs,
+			color: part.color,
+			size:  part.size,
+			fill:  part.fill,
+		}
+		ret = append(ret, p)
+	}
+	return ret
 }
 
 type Object struct {
@@ -253,7 +293,8 @@ mainloop:
 			obj.position = newPosition
 			obj.upChannel <- upMessage{
 				position: newPosition,
-				parts:    obj.parts,
+				//parts:    obj.parts,
+				parts: obj.getParts(downMsg.time),
 			}
 		}
 	}
@@ -349,6 +390,8 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		Y: rand.Intn(40) - 20,
 		Z: rand.Intn(40),
 	}
+	ship.spinXY = 360
+	ship.spinXZ = 0
 	rectangle1 := newRectanglePart(Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
