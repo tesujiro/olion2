@@ -176,7 +176,7 @@ func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
 	return distance
 }
 
-func (obj *mobile) getParts(currentTime time.Time) []Parter {
+func (obj *Object) getParts(currentTime time.Time) []Parter {
 	prevTime := obj.getTime()
 	spinXY, _ := obj.getSpin() // Todo: spinXZ
 	deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
