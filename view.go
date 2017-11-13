@@ -287,7 +287,7 @@ func (view *View) draw(upMsgs []upMessage) {
 			//fmt.Printf("shape OK obj=%v\n", obj)
 			//fmt.Printf("position=%v\n", obj.getPosition())
 			dots := []Dot{}
-			for _, dot := range part.getDots() {
+			for _, dot := range part.getCurDots() {
 				d := view.mapObject(Coordinates{
 					X: position.X + dot.X,
 					Y: position.Y + dot.Y,
@@ -310,7 +310,7 @@ func (view *View) draw(upMsgs []upMessage) {
 			case PolygonPart:
 				view.state.screen.printPolygon(dots, part.getColor(), part.getFill())
 			default:
-				fmt.Printf("NO TYPE\n")
+				fmt.Printf("View.draw -> NO TYPE\n")
 			}
 		}
 	}

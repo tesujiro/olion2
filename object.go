@@ -22,13 +22,16 @@ const (
 )
 
 type Part struct {
-	dots  []Coordinates
-	color Attribute
-	size  int
-	fill  bool
+	curDots []Coordinates
+	dots    []Coordinates
+	color   Attribute
+	size    int
+	fill    bool
 }
 
 type Parter interface {
+	getCurDots() []Coordinates
+	setCurDots([]Coordinates)
 	getDots() []Coordinates
 	getColor() Attribute
 	getSize() int
@@ -39,6 +42,14 @@ type Parter interface {
 
 func (p Part) getDots() []Coordinates {
 	return p.dots
+}
+
+func (p Part) getCurDots() []Coordinates {
+	return p.curDots
+}
+
+func (p Part) setCurDots(cs []Coordinates) {
+	p.curDots = cs
 }
 
 func (p Part) addDot(d Coordinates) {
@@ -181,32 +192,29 @@ func (obj *Object) getParts(currentTime time.Time) []Parter {
 	spinXY, _ := obj.getSpin() // Todo: spinXZ
 	deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
 	obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Millisecond))
-	if spinXY == 0 {
-		return obj.parts
-	}
+	/*
+		if spinXY == 0 {
+			return obj.parts
+		}
+		var ret []Parter
+	*/
 	theta := float64(spinXY) / 360.0 * math.Pi * deltaTime / 100
 	sinTheta := math.Sin(theta)
 	cosTheta := math.Cos(theta)
-	var ret []Parter
 	for _, part := range obj.parts {
 		cs := []Coordinates{}
 		for _, dot := range part.getDots() {
 			c := Coordinates{
-				X: cosTheta*dot.X - sinTheta*dot.Y,
-				Y: sinTheta*dot.X + cosTheta*dot.Y,
+				X: int(cosTheta*float64(dot.X) - sinTheta*float64(dot.Y)),
+				Y: int(sinTheta*float64(dot.X) + cosTheta*float64(dot.Y)),
 				Z: dot.Z,
 			}
 			cs = append(cs, c)
 		}
-		p := Part{
-			dots:  cs,
-			color: part.color,
-			size:  part.size,
-			fill:  part.fill,
-		}
-		ret = append(ret, p)
+		part.setCurDots(cs)
 	}
-	return ret
+	//fmt.Printf("getParts()->%v\n", ret)
+	return obj.parts
 }
 
 type Object struct {
