@@ -2,6 +2,7 @@ package olion
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -45,11 +46,21 @@ func (p Part) getDots() []Coordinates {
 }
 
 func (p Part) getCurDots() []Coordinates {
-	return p.curDots
+	if p.curDots == nil {
+		return p.dots
+	} else {
+		//fmt.Printf("\ncurDots=%v\n", p.curDots)
+		return p.curDots
+	}
 }
 
 func (p Part) setCurDots(cs []Coordinates) {
-	p.curDots = cs
+	//p.curDots = cs
+	p.curDots = []Coordinates{}
+	for _, c := range cs {
+		p.curDots = append(p.curDots, c)
+	}
+	//fmt.Printf("\nsetCurDots=%v\n", p.curDots)
 }
 
 func (p Part) addDot(d Coordinates) {
@@ -191,13 +202,10 @@ func (obj *Object) getParts(currentTime time.Time) []Parter {
 	prevTime := obj.getTime()
 	spinXY, _ := obj.getSpin() // Todo: spinXZ
 	deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
-	obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Millisecond))
-	/*
-		if spinXY == 0 {
-			return obj.parts
-		}
-		var ret []Parter
-	*/
+	//obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Millisecond))
+	if spinXY == 0 {
+		return obj.parts
+	}
 	theta := float64(spinXY) / 360.0 * math.Pi * deltaTime / 100
 	sinTheta := math.Sin(theta)
 	cosTheta := math.Cos(theta)
@@ -211,7 +219,10 @@ func (obj *Object) getParts(currentTime time.Time) []Parter {
 			}
 			cs = append(cs, c)
 		}
+		//fmt.Printf("\npart.setCurDots(%v) spinXY=%v prevTime=%v currentTime=%v deltaTime=%v theta=%v\n", cs, spinXY, prevTime, currentTime, deltaTime, theta)
+		//fmt.Printf("\npart.setCurDots(%v) deltaTime=%v theta=%v\n", cs, deltaTime, theta)
 		part.setCurDots(cs)
+		fmt.Printf("\ncs=%v part.curDots=%v\n", cs, part.getCurDots())
 	}
 	//fmt.Printf("getParts()->%v\n", ret)
 	return obj.parts
@@ -292,6 +303,8 @@ mainloop:
 		case <-ctx.Done():
 			break mainloop
 		case downMsg := <-obj.downChannel:
+			parts := obj.getParts(downMsg.time)
+			//parts:= obj.parts
 			distance := obj.getDistance(downMsg.time)
 			newPosition := Coordinates{
 				X: obj.position.X - downMsg.deltaPosition.X - distance.X,
@@ -301,8 +314,7 @@ mainloop:
 			obj.position = newPosition
 			obj.upChannel <- upMessage{
 				position: newPosition,
-				//parts:    obj.parts,
-				parts: obj.getParts(downMsg.time),
+				parts:    parts,
 			}
 		}
 	}

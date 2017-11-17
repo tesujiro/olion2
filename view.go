@@ -286,6 +286,7 @@ func (view *View) draw(upMsgs []upMessage) {
 		for _, part := range msg.parts {
 			//fmt.Printf("shape OK obj=%v\n", obj)
 			//fmt.Printf("position=%v\n", obj.getPosition())
+			//fmt.Printf("part.getCurDots()=%v\n", part.getCurDots())
 			dots := []Dot{}
 			for _, dot := range part.getCurDots() {
 				d := view.mapObject(Coordinates{
@@ -306,6 +307,7 @@ func (view *View) draw(upMsgs []upMessage) {
 			case RectanglePart:
 				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), part.getFill())
 			case CirclePart:
+				//fmt.Printf("part=%v\n", part)
 				view.state.screen.printCircle(&dots[0], view.mapLength(position, part.getSize()), part.getColor(), part.getFill())
 			case PolygonPart:
 				view.state.screen.printPolygon(dots, part.getColor(), part.getFill())
