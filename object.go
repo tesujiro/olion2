@@ -196,13 +196,15 @@ func (obj *Object) getParts(currentTime time.Time) []Parter {
 	//prevTime := obj.getTime()
 	spinXY, _ := obj.getSpin() // Todo: spinXZ
 	//deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
-	deltaTime := float64(currentTime.Nanosecond() / 1000000)
+	deltaTime := float64(float64(currentTime.Nanosecond()) / 1000000000)
 	//obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Millisecond))
 	//fmt.Printf("\ndeltaTime=%v\n", deltaTime)
 	if spinXY == 0 {
 		return obj.parts
 	}
-	theta := float64(spinXY) / 360.0 * math.Pi * deltaTime / 100
+	//theta := float64(spinXY) / 360.0 * math.Pi * deltaTime / 100
+	theta := float64(spinXY) / 360.0 * math.Pi * deltaTime
+	//fmt.Printf("theta=%v deltaTime=%v\n", theta, deltaTime)
 	sinTheta := math.Sin(theta)
 	cosTheta := math.Cos(theta)
 	for _, part := range obj.parts {
@@ -406,8 +408,8 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		Y: rand.Intn(40) - 20,
 		Z: rand.Intn(40),
 	}
-	//ship.spinXY = 90
-	ship.spinXY = 10
+	ship.spinXY = 180
+	//ship.spinXY =
 	ship.spinXZ = 0
 	rectangle1 := newRectanglePart(&Part{
 		dots: []Coordinates{
