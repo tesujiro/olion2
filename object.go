@@ -2,7 +2,6 @@ package olion
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -41,11 +40,11 @@ type Parter interface {
 	getFill() bool
 }
 
-func (p Part) getDots() []Coordinates {
+func (p *Part) getDots() []Coordinates {
 	return p.dots
 }
 
-func (p Part) getCurDots() []Coordinates {
+func (p *Part) getCurDots() []Coordinates {
 	if p.curDots == nil {
 		return p.dots
 	} else {
@@ -54,88 +53,83 @@ func (p Part) getCurDots() []Coordinates {
 	}
 }
 
-func (p Part) setCurDots(cs []Coordinates) {
-	//p.curDots = cs
-	p.curDots = []Coordinates{}
-	for _, c := range cs {
-		p.curDots = append(p.curDots, c)
-	}
-	//fmt.Printf("\nsetCurDots=%v\n", p.curDots)
+func (p *Part) setCurDots(cs []Coordinates) {
+	p.curDots = cs
 }
 
-func (p Part) addDot(d Coordinates) {
+func (p *Part) addDot(d Coordinates) {
 	p.dots = append(p.dots, d)
 }
 
-func (p Part) getColor() Attribute {
+func (p *Part) getColor() Attribute {
 	return p.color
 }
 
-func (p Part) getSize() int {
+func (p *Part) getSize() int {
 	return p.size
 }
 
-func (p Part) setFill(b bool) {
+func (p *Part) setFill(b bool) {
 	p.fill = b
 }
 
-func (p Part) getFill() bool {
+func (p *Part) getFill() bool {
 	return p.fill
 }
 
 /* one dot part */
 type DotPart struct {
-	Part
+	*Part
 }
 
-func newDotPart(p Parter) DotPart {
+func newDotPart(p *Parter) DotPart {
 	// Todo: check len(p.getDots())
 	return DotPart{
-		Part: p.(Part),
+		Part: (*p).(*Part),
 	}
 }
 
 type LinePart struct {
-	Part
+	*Part
 }
 
 func newLinePart(p Parter) LinePart {
 	// Todo: check len(p.getDots())
 	return LinePart{
-		Part: p.(Part),
+		Part: p.(*Part),
 	}
 }
 
 type RectanglePart struct {
-	Part
+	*Part
 }
 
 func newRectanglePart(p Parter) RectanglePart {
 	// Todo: check len(p.getDots())
 	return RectanglePart{
-		Part: p.(Part),
+		Part: p.(*Part),
 	}
 }
 
 type PolygonPart struct {
-	Part
+	*Part
 }
 
 func newPolygonPart(p Parter) PolygonPart {
 	// Todo: check len(p.getDots())
 	return PolygonPart{
-		Part: p.(Part),
+		Part: p.(*Part),
 	}
 }
 
 type CirclePart struct {
-	Part
+	*Part
 }
 
 func newCirclePart(p Parter) CirclePart {
 	// Todo: check len(p.getDots())
 	return CirclePart{
-		Part: p.(Part),
+		Part: p.(*Part),
 	}
 }
 
@@ -199,10 +193,12 @@ func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
 }
 
 func (obj *Object) getParts(currentTime time.Time) []Parter {
-	prevTime := obj.getTime()
+	//prevTime := obj.getTime()
 	spinXY, _ := obj.getSpin() // Todo: spinXZ
-	deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
+	//deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
+	deltaTime := float64(currentTime.Nanosecond() / 1000000)
 	//obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Millisecond))
+	//fmt.Printf("\ndeltaTime=%v\n", deltaTime)
 	if spinXY == 0 {
 		return obj.parts
 	}
@@ -222,7 +218,7 @@ func (obj *Object) getParts(currentTime time.Time) []Parter {
 		//fmt.Printf("\npart.setCurDots(%v) spinXY=%v prevTime=%v currentTime=%v deltaTime=%v theta=%v\n", cs, spinXY, prevTime, currentTime, deltaTime, theta)
 		//fmt.Printf("\npart.setCurDots(%v) deltaTime=%v theta=%v\n", cs, deltaTime, theta)
 		part.setCurDots(cs)
-		fmt.Printf("\ncs=%v part.curDots=%v\n", cs, part.getCurDots())
+		//fmt.Printf("\ncs=%v part.curDots=%v\n", cs, part.getCurDots())
 	}
 	//fmt.Printf("getParts()->%v\n", ret)
 	return obj.parts
@@ -330,7 +326,7 @@ func (obj *Object) getExplodedTime() time.Time {
 
 func (obj *Object) explode() {
 	obj.parts = []Parter{}
-	circle := newCirclePart(Part{
+	circle := newCirclePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: 0, Y: 0, Z: 0},
 		},
@@ -358,7 +354,7 @@ func newStar(t time.Time, s int, c Coordinates) *Star {
 		Z: 0,
 	}
 	//dot := newDotPart(Part{
-	circle := newCirclePart(Part{
+	circle := newCirclePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: 0, Y: 0, Z: 0},
 		},
@@ -384,7 +380,7 @@ func newBomb(t time.Time, s int, speed Coordinates) *Bomb {
 	bomb.bomb = true
 	bomb.size = s
 	//fmt.Printf("size=%v \n", bomb.getSize())
-	rectangle1 := newRectanglePart(Part{
+	rectangle1 := newRectanglePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s, Y: s, Z: 0},
 			Coordinates{X: -s, Y: -s, Z: 0},
@@ -410,9 +406,10 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		Y: rand.Intn(40) - 20,
 		Z: rand.Intn(40),
 	}
-	ship.spinXY = 360
+	//ship.spinXY = 90
+	ship.spinXY = 10
 	ship.spinXZ = 0
-	rectangle1 := newRectanglePart(Part{
+	rectangle1 := newRectanglePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
@@ -421,7 +418,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		fill:  true,
 	})
 	ship.addPart(rectangle1)
-	rectangle2 := newRectanglePart(Part{
+	rectangle2 := newRectanglePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
@@ -430,7 +427,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		fill:  false,
 	})
 	ship.addPart(rectangle2)
-	line1 := newLinePart(Part{
+	line1 := newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s, Y: 0, Z: 0},
 			Coordinates{X: s / 2, Y: 0, Z: 0},
@@ -438,7 +435,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		color: ColorBlack,
 	})
 	ship.addPart(line1)
-	line2 := newLinePart(Part{
+	line2 := newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: -s, Y: 0, Z: 0},
 			Coordinates{X: -s / 2, Y: 0, Z: 0},
@@ -447,7 +444,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 	})
 	ship.addPart(line2)
 
-	line3 := newLinePart(Part{
+	line3 := newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s, Y: s / 2, Z: 0},
 			Coordinates{X: s, Y: -s / 2, Z: 0},
@@ -455,7 +452,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		color: ColorBlack,
 	})
 	ship.addPart(line3)
-	line4 := newLinePart(Part{
+	line4 := newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: -s, Y: s / 2, Z: 0},
 			Coordinates{X: -s, Y: -s / 2, Z: 0},
@@ -465,7 +462,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 	ship.addPart(line4)
 
 	var line LinePart
-	line = newLinePart(Part{
+	line = newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s, Y: s / 2, Z: 0},
 			Coordinates{X: s / 2, Y: s, Z: 0},
@@ -473,7 +470,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		color: ColorBlack,
 	})
 	ship.addPart(line)
-	line = newLinePart(Part{
+	line = newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s, Y: -s / 2, Z: 0},
 			Coordinates{X: s / 2, Y: -s, Z: 0},
@@ -481,7 +478,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		color: ColorBlack,
 	})
 	ship.addPart(line)
-	line = newLinePart(Part{
+	line = newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: -s, Y: s / 2, Z: 0},
 			Coordinates{X: -s / 2, Y: s, Z: 0},
@@ -489,7 +486,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		color: ColorBlack,
 	})
 	ship.addPart(line)
-	line = newLinePart(Part{
+	line = newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: -s, Y: -s / 2, Z: 0},
 			Coordinates{X: -s / 2, Y: -s, Z: 0},
@@ -518,7 +515,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 		Y: rand.Intn(40) - 20,
 		Z: rand.Intn(40),
 	}
-	rectangle1 := newRectanglePart(Part{
+	rectangle1 := newRectanglePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
@@ -529,7 +526,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 	ship.addPart(rectangle1)
 
 	var line LinePart
-	line = newLinePart(Part{
+	line = newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
 			Coordinates{X: flont_size / 2, Y: flont_size / 2, Z: -length},
@@ -537,7 +534,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 		color: ColorBlack,
 	})
 	ship.addPart(line)
-	line = newLinePart(Part{
+	line = newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
 			Coordinates{X: -flont_size / 2, Y: flont_size / 2, Z: -length},
@@ -545,7 +542,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 		color: ColorBlack,
 	})
 	ship.addPart(line)
-	line = newLinePart(Part{
+	line = newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
 			Coordinates{X: -flont_size / 2, Y: -flont_size / 2, Z: -length},
@@ -553,7 +550,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 		color: ColorBlack,
 	})
 	ship.addPart(line)
-	line = newLinePart(Part{
+	line = newLinePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: -s / 2, Z: 0},
 			Coordinates{X: flont_size / 2, Y: -flont_size / 2, Z: -length},
@@ -562,7 +559,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 	})
 	ship.addPart(line)
 
-	rectangle2 := newRectanglePart(Part{
+	rectangle2 := newRectanglePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: flont_size / 2, Y: flont_size / 2, Z: -length},
 			Coordinates{X: -flont_size / 2, Y: -flont_size / 2, Z: -length},
@@ -596,7 +593,7 @@ func newBox2(t time.Time, s int, c Coordinates) *SpaceBox2 {
 	colors := []Attribute{ColorBlack, ColorRed}
 	for i := 0; i < layers; i++ {
 		edge_size := s + diff_size*i
-		rectangle := newRectanglePart(Part{
+		rectangle := newRectanglePart(&Part{
 			dots: []Coordinates{
 				Coordinates{X: edge_size / 2, Y: edge_size / 2, Z: -distance * i},
 				Coordinates{X: -edge_size / 2, Y: -edge_size / 2, Z: -distance * i},
