@@ -192,34 +192,6 @@ func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
 	return distance
 }
 
-//Todo: getPartsがcurDotsの更新目的になってしまっているので分けるべき。
-func (obj *Object) getParts(currentTime time.Time) []Parter {
-	spinXY, _ := obj.getSpin() // Todo: spinXZ
-	deltaTime := float64(float64(currentTime.Second()) + float64(currentTime.Nanosecond())/1000000000)
-	//fmt.Printf("\ndeltaTime=%v\n", deltaTime)
-	if spinXY == 0 {
-		return obj.parts
-	}
-	theta := float64(spinXY) / 360.0 * math.Pi * deltaTime
-	//fmt.Printf("theta=%v deltaTime=%v\n", theta, deltaTime)
-	sinTheta := math.Sin(theta)
-	cosTheta := math.Cos(theta)
-	for _, part := range obj.parts {
-		cs := []Coordinates{}
-		for _, dot := range part.getDots() {
-			c := Coordinates{
-				X: int(cosTheta*float64(dot.X) - sinTheta*float64(dot.Y)),
-				Y: int(sinTheta*float64(dot.X) + cosTheta*float64(dot.Y)),
-				Z: dot.Z,
-			}
-			cs = append(cs, c)
-		}
-		part.setCurDots(cs)
-		//fmt.Printf("\ncs=%v part.curDots=%v\n", cs, part.getCurDots())
-	}
-	return obj.parts
-}
-
 type Object struct {
 	parts []Parter
 	size  int
@@ -283,6 +255,38 @@ func (obj *Object) setSize(size int) {
 	obj.size = size
 }
 
+//Todo: getPartsがcurDotsの更新目的になってしまっているので分けるべき。
+func (obj *Object) getParts() []Parter {
+	return obj.parts
+}
+
+func (obj *Object) updateCurDots(currentTime time.Time) {
+
+	spinXY, _ := obj.getSpin() // Todo: spinXZ
+	deltaTime := float64(float64(currentTime.Second()) + float64(currentTime.Nanosecond())/1000000000)
+	//fmt.Printf("\ndeltaTime=%v\n", deltaTime)
+	if spinXY == 0 {
+		return
+	}
+	theta := float64(spinXY) / 360.0 * math.Pi * deltaTime
+	//fmt.Printf("theta=%v deltaTime=%v\n", theta, deltaTime)
+	sinTheta := math.Sin(theta)
+	cosTheta := math.Cos(theta)
+	for _, part := range obj.parts {
+		cs := []Coordinates{}
+		for _, dot := range part.getDots() {
+			c := Coordinates{
+				X: int(cosTheta*float64(dot.X) - sinTheta*float64(dot.Y)),
+				Y: int(sinTheta*float64(dot.X) + cosTheta*float64(dot.Y)),
+				Z: dot.Z,
+			}
+			cs = append(cs, c)
+		}
+		part.setCurDots(cs)
+		//fmt.Printf("\ncs=%v part.curDots=%v\n", cs, part.getCurDots())
+	}
+}
+
 func (obj *Object) isBomb() bool {
 	return obj.bomb
 }
@@ -295,7 +299,8 @@ mainloop:
 		case <-ctx.Done():
 			break mainloop
 		case downMsg := <-obj.downChannel:
-			parts := obj.getParts(downMsg.time)
+			obj.updateCurDots(downMsg.time)
+			parts := obj.getParts()
 			//parts:= obj.parts
 			distance := obj.getDistance(downMsg.time)
 			newPosition := Coordinates{
