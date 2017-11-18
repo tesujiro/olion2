@@ -192,17 +192,14 @@ func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
 	return distance
 }
 
+//Todo: getPartsがcurDotsの更新目的になってしまっているので分けるべき。
 func (obj *Object) getParts(currentTime time.Time) []Parter {
-	//prevTime := obj.getTime()
 	spinXY, _ := obj.getSpin() // Todo: spinXZ
-	//deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
-	deltaTime := float64(float64(currentTime.Nanosecond()) / 1000000000)
-	//obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Millisecond))
+	deltaTime := float64(float64(currentTime.Second()) + float64(currentTime.Nanosecond())/1000000000)
 	//fmt.Printf("\ndeltaTime=%v\n", deltaTime)
 	if spinXY == 0 {
 		return obj.parts
 	}
-	//theta := float64(spinXY) / 360.0 * math.Pi * deltaTime / 100
 	theta := float64(spinXY) / 360.0 * math.Pi * deltaTime
 	//fmt.Printf("theta=%v deltaTime=%v\n", theta, deltaTime)
 	sinTheta := math.Sin(theta)
@@ -217,12 +214,9 @@ func (obj *Object) getParts(currentTime time.Time) []Parter {
 			}
 			cs = append(cs, c)
 		}
-		//fmt.Printf("\npart.setCurDots(%v) spinXY=%v prevTime=%v currentTime=%v deltaTime=%v theta=%v\n", cs, spinXY, prevTime, currentTime, deltaTime, theta)
-		//fmt.Printf("\npart.setCurDots(%v) deltaTime=%v theta=%v\n", cs, deltaTime, theta)
 		part.setCurDots(cs)
 		//fmt.Printf("\ncs=%v part.curDots=%v\n", cs, part.getCurDots())
 	}
-	//fmt.Printf("getParts()->%v\n", ret)
 	return obj.parts
 }
 
@@ -408,22 +402,25 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		Y: rand.Intn(40) - 20,
 		Z: rand.Intn(40),
 	}
-	ship.spinXY = 180
-	//ship.spinXY =
+	ship.spinXY = rand.Intn(180) - 90
 	ship.spinXZ = 0
-	rectangle1 := newRectanglePart(&Part{
+	rectangle1 := newPolygonPart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: s / 2, Y: -s / 2, Z: 0},
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
 		},
 		color: ColorRed,
 		fill:  true,
 	})
 	ship.addPart(rectangle1)
-	rectangle2 := newRectanglePart(&Part{
+	rectangle2 := newPolygonPart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: s / 2, Y: -s / 2, Z: 0},
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
 		},
 		color: ColorBlack,
 		fill:  false,
@@ -510,66 +507,40 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 	ship.size = s
 	ship.position = c
 	ship.time = t
-	length := s / 20
-	flont_size := s / 2
 	ship.speed = Coordinates{
 		X: rand.Intn(40) - 20,
 		Y: rand.Intn(40) - 20,
 		Z: rand.Intn(40),
 	}
-	rectangle1 := newRectanglePart(&Part{
+	height := -50
+	ship.addPart(newPolygonPart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: s / 2, Y: -s / 2, Z: 0},
 			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
 		},
 		color: ColorBlack,
 		fill:  true,
-	})
-	ship.addPart(rectangle1)
-
-	var line LinePart
-	line = newLinePart(&Part{
+	}))
+	ship.addPart(newPolygonPart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: s / 2, Z: 0},
-			Coordinates{X: flont_size / 2, Y: flont_size / 2, Z: -length},
-		},
-		color: ColorBlack,
-	})
-	ship.addPart(line)
-	line = newLinePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
-			Coordinates{X: -flont_size / 2, Y: flont_size / 2, Z: -length},
-		},
-		color: ColorBlack,
-	})
-	ship.addPart(line)
-	line = newLinePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
-			Coordinates{X: -flont_size / 2, Y: -flont_size / 2, Z: -length},
-		},
-		color: ColorBlack,
-	})
-	ship.addPart(line)
-	line = newLinePart(&Part{
-		dots: []Coordinates{
 			Coordinates{X: s / 2, Y: -s / 2, Z: 0},
-			Coordinates{X: flont_size / 2, Y: -flont_size / 2, Z: -length},
-		},
-		color: ColorBlack,
-	})
-	ship.addPart(line)
-
-	rectangle2 := newRectanglePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: flont_size / 2, Y: flont_size / 2, Z: -length},
-			Coordinates{X: -flont_size / 2, Y: -flont_size / 2, Z: -length},
+			Coordinates{X: 0, Y: 0, Z: height},
 		},
 		color: ColorRed,
-		fill:  true,
-	})
-	ship.addPart(rectangle2)
+		fill:  false,
+	}))
+	ship.addPart(newPolygonPart(&Part{
+		dots: []Coordinates{
+			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: 0, Y: 0, Z: height},
+		},
+		color: ColorRed,
+		fill:  false,
+	}))
 
 	return &ship
 }
@@ -589,7 +560,7 @@ func newBox2(t time.Time, s int, c Coordinates) *SpaceBox2 {
 		Z: rand.Intn(10),
 	}
 
-	layers := 5
+	layers := rand.Intn(5) + 2
 	distance := 30
 	diff_size := -80
 	colors := []Attribute{ColorBlack, ColorRed}

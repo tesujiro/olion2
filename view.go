@@ -184,7 +184,11 @@ func (sc *Screen) printTriangle(dots []Dot, color Attribute) {
 			//fmt.Printf("\nx=%v len(ret)=%v\n", x, len(ret))
 			return 0, 0
 		}
-		return ret[0], ret[1]
+		if len(ret) == 2 || ret[0] != ret[1] {
+			return ret[0], ret[1]
+		} else {
+			return ret[0], ret[2]
+		}
 	}
 	minX, maxX := getMinMax(dots)
 	//fmt.Printf("minX=%v maxX=%v\n", minX, maxX)

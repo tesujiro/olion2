@@ -70,11 +70,9 @@ func (spc *Space) inTheSpace(c Coordinates) bool {
 func (spc *Space) genObject(now time.Time) Exister {
 	num := rand.Intn(100)
 	switch {
-	case num < 10:
-		//Add SpaceShip
-		return newBox(now, 500, spc.randomSpace())
 	case num < 20:
-		//Add SpaceShip
+		return newBox(now, 500, spc.randomSpace())
+	case num < 40:
 		return newBox2(now, 800, spc.randomSpace())
 	default:
 		//Add SpaceShip
@@ -112,13 +110,12 @@ func NewSpace(ctx context.Context, cancel func()) *Space {
 		Z: depth,
 	}
 	now := time.Now()
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 10; i++ {
 		obj := spc.GenFunc(now)
 		spc.addObj(obj)
 		go obj.run(ctx, cancel)
 	}
 
-	//fmt.Printf("==> %v Objects\n", len(spc.Objects))
 	return spc
 }
 
