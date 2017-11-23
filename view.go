@@ -286,6 +286,19 @@ func (view *View) draw(upMsgs []upMessage) {
 	//fmt.Printf("\n==>drawObjects(%v)\n", len(view.state.space.Objects))
 	for _, msg := range upMsgs {
 		position := msg.position
+		sort.Slice(msg.parts, func(i, j int) bool {
+			avg_dot := func(cs []Coordinates) Coordinates {
+				var tx, ty, tz int
+				for _, c := range cs {
+					tx, ty, tz = tx+position.X+c.X, ty+position.Y+c.Y, tz+position.Z+c.Z
+				}
+				return Coordinates{X: tx / len(cs), Y: ty / len(cs), Z: tz / len(cs)}
+			}
+			avg_di := avg_dot(msg.parts[i].getCurDots())
+			avg_dj := avg_dot(msg.parts[j].getCurDots())
+			//fmt.Printf("avg_di=%v avg_dj=%v\n", avg_di, avg_dj)
+			return avg_di.X*avg_di.X+avg_di.Y*avg_di.Y+avg_di.Z*avg_di.Z > avg_dj.X*avg_dj.X+avg_dj.Y*avg_dj.Y+avg_dj.Z*avg_dj.Z
+		})
 	label1:
 		for _, part := range msg.parts {
 			//fmt.Printf("shape OK obj=%v\n", obj)

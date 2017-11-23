@@ -535,7 +535,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 			Coordinates{X: 0, Y: 0, Z: height},
 		},
 		color: ColorRed,
-		fill:  false,
+		fill:  true,
 	}))
 	ship.addPart(newPolygonPart(&Part{
 		dots: []Coordinates{
@@ -543,8 +543,8 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
 			Coordinates{X: 0, Y: 0, Z: height},
 		},
-		color: ColorRed,
-		fill:  false,
+		color: ColorGreen,
+		fill:  true,
 	}))
 
 	return &ship
