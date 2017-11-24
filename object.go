@@ -34,6 +34,7 @@ type Parter interface {
 	setCurDots([]Coordinates)
 	getDots() []Coordinates
 	getColor() Attribute
+	setColor(Attribute)
 	getSize() int
 	addDot(Coordinates)
 	setFill(bool)
@@ -63,6 +64,10 @@ func (p *Part) addDot(d Coordinates) {
 
 func (p *Part) getColor() Attribute {
 	return p.color
+}
+
+func (p *Part) setColor(a Attribute) {
+	p.color = a
 }
 
 func (p *Part) getSize() int {
@@ -326,16 +331,10 @@ func (obj *Object) getExplodedTime() time.Time {
 }
 
 func (obj *Object) explode() {
-	obj.parts = []Parter{}
-	circle := newCirclePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: 0, Y: 0, Z: 0},
-		},
-		fill:  false,
-		color: ColorRed,
-		size:  100,
-	})
-	obj.addPart(circle)
+	for _, p := range obj.parts {
+		p.setColor(ColorRed)
+	}
+	obj.spinXY = 1715
 	obj.explodedAt = obj.time
 	obj.exploding = true
 }

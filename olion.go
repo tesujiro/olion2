@@ -191,14 +191,16 @@ func (spc *Space) judgeExplosion() int {
 		if obj.isBomb() {
 			bombs = append(bombs, obj)
 		} else if obj.isExploding() {
-			//deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
 			deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
 			//fmt.Printf("delta=%v\n", deltaTime)
+			// 10 sec. after explosion
 			if deltaTime > float64(1e4) {
 				spc.deleteObj(obj)
 			} else {
 				newSize := int(math.Pow(2.0, float64(deltaTime/1000))) * 1000
+				//newSize := obj.getSize() * (int(deltaTime)/1000 + 1)
 				obj.setSize(newSize)
+				//fmt.Printf("newSize=%v\n", newSize)
 			}
 		} else {
 			flyings = append(flyings, obj)
