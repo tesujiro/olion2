@@ -244,6 +244,7 @@ type Olion struct {
 	maxBomb int
 	curBomb int
 	score   int
+	//vibration int
 
 	// cancelFunc is called for Exit()
 	cancelFunc func()
@@ -270,6 +271,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 		maxBomb:  4,
 		curBomb:  0,
 		score:    0,
+		//vibration: 0,
 		//cancelFunc: func() {},
 	}
 }
@@ -369,6 +371,12 @@ mainloop:
 					if state.curBomb < state.maxBomb {
 						state.curBomb++
 						fireBomb = true
+					}
+				case termbox.KeyF1:
+					if state.screen.Vibration == 0 {
+						state.screen.Vibration = 5
+					} else {
+						state.screen.Vibration = 0
 					}
 				default:
 				}

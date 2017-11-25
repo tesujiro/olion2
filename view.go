@@ -14,9 +14,10 @@ type Dot struct {
 }
 
 type Screen struct {
-	Width    int
-	Height   int
-	Distance int
+	Width     int
+	Height    int
+	Distance  int
+	Vibration int
 }
 
 func NewScreen() *Screen {
@@ -67,7 +68,10 @@ func (sc *Screen) printString(dot *Dot, str string) {
 
 func (sc *Screen) printDot(dot *Dot, color Attribute) {
 	if sc.cover(*dot) {
-		termbox.SetCell(dot.X, sc.Height-dot.Y+1, ' ', termbox.ColorDefault, termbox.Attribute(color))
+		termbox.SetCell(dot.X+sc.Vibration, sc.Height-dot.Y+1, ' ', termbox.ColorDefault, termbox.Attribute(color))
+		if sc.Vibration != 0 {
+			sc.Vibration = -sc.Vibration
+		}
 	}
 }
 
@@ -82,7 +86,11 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 	if (d1.X-d2.X)*(d1.X-d2.X) >= (d1.Y-d2.Y)*(d1.Y-d2.Y) {
 		switch {
 		case d1.X == d2.X:
-			sc.printDot(d1, color)
+			for x := d1.X; x <= d2.X; x++ {
+				y := d1.Y
+				sc.printDot(&Dot{X: x, Y: y}, color)
+			}
+			//sc.printDot(d1, color)
 		case d1.X < d2.X:
 			for x := d1.X; x <= d2.X; x++ {
 				y := d1.Y + (d2.Y-d1.Y)*(x-d1.X)/(d2.X-d1.X)
@@ -96,6 +104,11 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 		}
 	} else {
 		switch {
+		case d1.Y == d2.Y:
+			for y := d1.Y; y <= d2.Y; y++ {
+				x := d1.X
+				sc.printDot(&Dot{X: x, Y: y}, color)
+			}
 		case d1.Y < d2.Y:
 			for y := d1.Y; y <= d2.Y; y++ {
 				x := d1.X + (d2.X-d1.X)*(y-d1.Y)/(d2.Y-d1.Y)

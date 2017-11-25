@@ -421,10 +421,10 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 	ship.addPart(rectangle1)
 	rectangle2 := newPolygonPart(&Part{
 		dots: []Coordinates{
-			Coordinates{X: s / 2, Y: s / 2, Z: 0},
-			Coordinates{X: s / 2, Y: -s / 2, Z: 0},
-			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
-			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
+			Coordinates{X: s / 2, Y: s / 2, Z: -1},
+			Coordinates{X: s / 2, Y: -s / 2, Z: -1},
+			Coordinates{X: -s / 2, Y: -s / 2, Z: -1},
+			Coordinates{X: -s / 2, Y: s / 2, Z: -1},
 		},
 		color: ColorBlack,
 		fill:  false,
