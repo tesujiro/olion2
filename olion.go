@@ -334,7 +334,9 @@ mainloop:
 			state.setStatus()
 			state.drawConsole(count)
 			//state.screen.printTriangle([]Dot{Dot{X: 10, Y: 10}, Dot{X: 50, Y: 30}, Dot{X: 20, Y: 50}}, ColorBlack)
-			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 50, Y: 30}, Dot{X: 20, Y: 50}, Dot{X: 0, Y: 40}, Dot{X: 0, Y: 20}}, ColorBlack, true)
+			//state.screen.printLine(&Dot{X: 10, Y: 10}, &Dot{X: 40, Y: 30}, ColorRed)
+			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
+			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
 			state.screen.flush()
 		case ev := <-TermBoxChan:
 			upspeed := func(speed int, delta int) int {
@@ -374,7 +376,7 @@ mainloop:
 					}
 				case termbox.KeyF1:
 					if state.screen.Vibration == 0 {
-						state.screen.Vibration = 5
+						state.screen.Vibration = 1
 					} else {
 						state.screen.Vibration = 0
 					}
@@ -388,6 +390,7 @@ mainloop:
 
 func (state *Olion) Run(ctx context.Context) (err error) {
 
+	InitColor()
 	var _cancelOnce sync.Once
 	var _cancel func()
 	ctx, _cancel = context.WithCancel(ctx)
