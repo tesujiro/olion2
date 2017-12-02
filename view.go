@@ -83,42 +83,61 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 		return
 	}
 
-	if (d1.X-d2.X)*(d1.X-d2.X) >= (d1.Y-d2.Y)*(d1.Y-d2.Y) {
-		switch {
-		case d1.X == d2.X:
-			for x := d1.X; x <= d2.X; x++ {
-				y := d1.Y
-				sc.printDot(&Dot{X: x, Y: y}, color)
+	if d1.X == d2.X {
+		x := d1.X
+		for y := d1.Y; ; {
+			sc.printDot(&Dot{X: x, Y: y}, color)
+			if y == d2.Y {
+				break
 			}
-			//sc.printDot(d1, color)
-		case d1.X < d2.X:
-			for x := d1.X; x <= d2.X; x++ {
-				y := d1.Y + (d2.Y-d1.Y)*(x-d1.X)/(d2.X-d1.X)
-				sc.printDot(&Dot{X: x, Y: y}, color)
-			}
-		case d1.X > d2.X:
-			for x := d2.X; x <= d1.X; x++ {
-				y := d2.Y + (d1.Y-d2.Y)*(x-d2.X)/(d1.X-d2.X)
-				sc.printDot(&Dot{X: x, Y: y}, color)
+			if d1.Y < d2.Y {
+				y++
+			} else {
+				y--
 			}
 		}
-	} else {
-		switch {
-		case d1.Y == d2.Y:
-			for y := d1.Y; y <= d2.Y; y++ {
-				x := d1.X
+		return
+	}
+
+	for x := d1.X; ; {
+		if d1.X < d2.X {
+			y1 := d1.Y + (d2.Y-d1.Y)*(x-d1.X)/(d2.X-d1.X)
+			y2 := d1.Y + (d2.Y-d1.Y)*(x+1-d1.X)/(d2.X-d1.X)
+			if y1 == y2 {
+				y := y1
 				sc.printDot(&Dot{X: x, Y: y}, color)
 			}
-		case d1.Y < d2.Y:
-			for y := d1.Y; y <= d2.Y; y++ {
-				x := d1.X + (d2.X-d1.X)*(y-d1.Y)/(d2.Y-d1.Y)
+			for y := y1; y != y2; {
+				sc.printDot(&Dot{X: x, Y: y}, color)
+				if y1 < y2 {
+					y++
+				} else {
+					y--
+				}
+			}
+			if x == d2.X {
+				break
+			}
+			x++
+		} else {
+			y1 := d1.Y + (d2.Y-d1.Y)*(x-d1.X)/(d2.X-d1.X)
+			y2 := d1.Y + (d2.Y-d1.Y)*(x-1-d1.X)/(d2.X-d1.X)
+			if y1 == y2 {
+				y := y1
 				sc.printDot(&Dot{X: x, Y: y}, color)
 			}
-		case d1.Y > d2.Y:
-			for y := d2.Y; y <= d1.Y; y++ {
-				x := d2.X + (d1.X-d2.X)*(y-d2.Y)/(d1.Y-d2.Y)
+			for y := y1; y != y2; {
 				sc.printDot(&Dot{X: x, Y: y}, color)
+				if y1 < y2 {
+					y++
+				} else {
+					y--
+				}
 			}
+			if x == d2.X {
+				break
+			}
+			x--
 		}
 	}
 }
@@ -337,7 +356,6 @@ func (view *View) draw(upMsgs []upMessage) {
 			case RectanglePart:
 				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), part.getFill())
 			case CirclePart:
-				//fmt.Printf("part=%v\n", part)
 				view.state.screen.printCircle(&dots[0], view.mapLength(position, part.getSize()), part.getColor(), part.getFill())
 			case PolygonPart:
 				view.state.screen.printPolygon(dots, part.getColor(), part.getFill())
