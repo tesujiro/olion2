@@ -85,12 +85,12 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 
 	if d1.X == d2.X {
 		x := d1.X
-		for y := d1.Y; ; {
+		for y := d1.Y; y != d2.Y; {
 			sc.printDot(&Dot{X: x, Y: y}, color)
 			//sc.printDot(&Dot{X: x, Y: y}, ColorCyan)
-			if y == d2.Y {
-				break
-			}
+			//if y == d2.Y {
+			//break
+			//}
 			if d1.Y < d2.Y {
 				y++
 			} else {
