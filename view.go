@@ -87,10 +87,6 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 		x := d1.X
 		for y := d1.Y; y != d2.Y; {
 			sc.printDot(&Dot{X: x, Y: y}, color)
-			//sc.printDot(&Dot{X: x, Y: y}, ColorCyan)
-			//if y == d2.Y {
-			//break
-			//}
 			if d1.Y < d2.Y {
 				y++
 			} else {
@@ -100,33 +96,62 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 		return
 	}
 
-	var nextX, nextY int
-	for x := d1.X; ; {
-		if d1.X < d2.X {
-			nextX = x + 1
+	orderByX := func(d1, d2 *Dot) (*Dot, *Dot) {
+		if d1.X >= d2.X {
+			return d2, d1
 		} else {
-			nextX = x - 1
+			return d1, d2
 		}
-		y1 := d1.Y + (d2.Y-d1.Y)*(x-d1.X)/(d2.X-d1.X)
-		y2 := d1.Y + (d2.Y-d1.Y)*(nextX-d1.X)/(d2.X-d1.X)
-		if y1 == y2 {
+	}
+	dx1, dx2 := orderByX(d1, d2)
+	for x := dx1.X; x <= dx2.X; x++ {
+		y1 := dx1.Y + (dx2.Y-dx1.Y)*(x-dx1.X)/(dx2.X-dx1.X)
+		y2 := dx1.Y + (dx2.Y-dx1.Y)*(x+1-dx1.X)/(dx2.X-dx1.X)
+		if y1 == y2 || x == dx2.X {
 			y := y1
 			sc.printDot(&Dot{X: x, Y: y}, color)
-		}
-		for y := y1; y != y2 && y != d2.Y; {
-			if y1 < y2 {
-				nextY = y + 1
-			} else {
-				nextY = y - 1
+		} else if y1 < y2 {
+			//for y := y1; y < y2 && y != dx1.Y && y != dx2.Y; y++ {
+			for y := y1; y < y2; y++ {
+				sc.printDot(&Dot{X: x, Y: y}, color)
 			}
-			sc.printDot(&Dot{X: x, Y: y}, color)
-			y = nextY
+		} else {
+			//for y := y2; y < y1 && y != dx1.Y && y != dx2.Y; y++ {
+			for y := y1; y > y2; y-- {
+				sc.printDot(&Dot{X: x, Y: y}, color)
+			}
 		}
-		if x == d2.X {
-			break
-		}
-		x = nextX
 	}
+
+	/*
+		var nextX, nextY int
+		for x := d1.X; ; {
+			if d1.X < d2.X {
+				nextX = x + 1
+			} else {
+				nextX = x - 1
+			}
+			y1 := d1.Y + (d2.Y-d1.Y)*(x-d1.X)/(d2.X-d1.X)
+			y2 := d1.Y + (d2.Y-d1.Y)*(nextX-d1.X)/(d2.X-d1.X)
+			if y1 == y2 {
+				y := y1
+				sc.printDot(&Dot{X: x, Y: y}, color)
+			}
+			for y := y1; y != y2 && y != d2.Y; {
+				if y1 < y2 {
+					nextY = y + 1
+				} else {
+					nextY = y - 1
+				}
+				sc.printDot(&Dot{X: x, Y: y}, color)
+				y = nextY
+			}
+			if x == d2.X {
+				break
+			}
+			x = nextX
+		}
+	*/
 }
 
 func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
