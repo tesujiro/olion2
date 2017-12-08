@@ -2,6 +2,7 @@ package olion
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"math"
@@ -227,6 +228,7 @@ type Olion struct {
 	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
+	Debug  bool
 	//hub    MessageHub
 
 	//bufferSize int
@@ -254,12 +256,15 @@ type Olion struct {
 
 func New(ctx context.Context, cancel func()) *Olion {
 	rand.Seed(time.Now().UnixNano())
+	debug := flag.Bool("d", false, "Debug Mode")
+	flag.Parse()
 
 	return &Olion{
 		Argv:   os.Args,
 		Stderr: os.Stderr,
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
+		Debug:  *debug,
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
 		readyCh:    make(chan struct{}),
 		screen:     NewScreen(),
@@ -286,6 +291,9 @@ func (state *Olion) drawConsole(count int) {
 		state.screen.printString(&Dot{x, y + 1}, "**")
 		x += 3
 	}
+}
+
+func (state *Olion) drawDebugInfo() {
 }
 
 func (state *Olion) setStatus() {
@@ -333,12 +341,15 @@ mainloop:
 			fireBomb = false
 			state.setStatus()
 			state.drawConsole(count)
-			state.screen.printTriangle([]Dot{Dot{X: 10, Y: 10}, Dot{X: 20, Y: 15}, Dot{X: 20, Y: 10}}, ColorBlack)
-			state.screen.printLine(&Dot{X: 10, Y: 12}, &Dot{X: 20, Y: 17}, ColorRed)
+			//state.screen.printTriangle([]Dot{Dot{X: 10, Y: 10}, Dot{X: 20, Y: 15}, Dot{X: 20, Y: 10}}, ColorBlack)
+			//state.screen.printLine(&Dot{X: 10, Y: 12}, &Dot{X: 20, Y: 17}, ColorRed)
 			//state.screen.printTriangle([]Dot{Dot{X: 10, Y: 30}, Dot{X: 15, Y: 40}, Dot{X: 20, Y: 30}}, ColorBlack)
 			//state.screen.printLine(&Dot{X: 10, Y: 32}, &Dot{X: 15, Y: 42}, ColorRed)
 			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
 			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
+			if state.Debug == true {
+				state.drawDebugInfo()
+			}
 			state.screen.flush()
 		case ev := <-TermBoxChan:
 			upspeed := func(speed int, delta int) int {
