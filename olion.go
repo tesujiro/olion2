@@ -224,11 +224,12 @@ Loop:
 }
 
 type Olion struct {
-	Argv   []string
-	Stdin  io.Reader
-	Stdout io.Writer
-	Stderr io.Writer
-	Debug  bool
+	Argv        []string
+	Stdin       io.Reader
+	Stdout      io.Writer
+	Stderr      io.Writer
+	Debug       bool
+	debugWriter *debugWriter
 	//hub    MessageHub
 
 	//bufferSize int
@@ -258,6 +259,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 	rand.Seed(time.Now().UnixNano())
 	debug := flag.Bool("d", false, "Debug Mode")
 	flag.Parse()
+	screen := NewScreen()
 
 	return &Olion{
 		Argv:   os.Args,
@@ -265,9 +267,18 @@ func New(ctx context.Context, cancel func()) *Olion {
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Debug:  *debug,
+		debugWriter: &debugWriter{
+			width:  70,
+			height: 10,
+			screen: screen,
+			StartX: 5,
+			StartY: 5,
+			X:      1,
+			Y:      1,
+		},
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
 		readyCh:    make(chan struct{}),
-		screen:     NewScreen(),
+		screen:     screen,
 		space:      NewSpace(ctx, cancel),
 		outerSpace: NewOuterSpace(ctx, cancel),
 		//maxScanBufferSize: bufio.MaxScanTokenSize,
@@ -293,7 +304,45 @@ func (state *Olion) drawConsole(count int) {
 	}
 }
 
+type debugWriter struct {
+	w      io.Writer
+	screen *Screen
+	width  int
+	height int
+	StartX int
+	StartY int
+	X      int
+	Y      int
+	buff   []byte
+}
+
+func (w *debugWriter) Write(p []byte) (int, error) {
+	//w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y}, string(p))
+	//w.buff = append(w.buff, p...)
+	w.buff = p
+	return len(p), nil
+}
+
+func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
+	w := state.debugWriter
+	return fmt.Fprintln(w, format, a)
+}
+
 func (state *Olion) drawDebugInfo() {
+	w := state.debugWriter
+	//draw debug window frame
+	for x := w.StartX; x <= w.StartX+w.width; x++ {
+		w.screen.printString(&Dot{x, w.StartY}, "+")
+		w.screen.printString(&Dot{x, w.StartY + w.height}, "+")
+	}
+	for y := w.StartY + 1; y < w.StartX+w.height; y++ {
+		w.screen.printString(&Dot{w.StartX, y}, "+")
+		w.screen.printString(&Dot{w.StartX + w.width, y}, "+")
+	}
+
+	//fmt.Fprintln(w, "Hello Debug Info")
+	//fmt.Fprintln(w, string(w.buff))
+	w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y}, string(w.buff))
 }
 
 func (state *Olion) setStatus() {
@@ -348,6 +397,7 @@ mainloop:
 			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
 			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
 			if state.Debug == true {
+				state.Printf("Hello World!")
 				state.drawDebugInfo()
 			}
 			state.screen.flush()
