@@ -346,19 +346,19 @@ func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
 func (state *Olion) drawDebugInfo() {
 	w := state.debugWriter
 	//draw debug window frame
-	for x := w.StartX - 1; x <= w.StartX+w.width+1; x++ {
+	for x := w.StartX - 1; x <= w.StartX+w.width; x++ {
 		w.screen.printString(&Dot{x, w.StartY - 1}, "+")
-		w.screen.printString(&Dot{x, w.StartY + w.height + 1}, "+")
+		w.screen.printString(&Dot{x, w.StartY + w.height}, "+")
 	}
-	for y := w.StartY; y <= w.StartX+w.height; y++ {
+	for y := w.StartY; y < w.StartX+w.height; y++ {
 		w.screen.printString(&Dot{w.StartX - 1, y}, "+")
-		w.screen.printString(&Dot{w.StartX + w.width + 1, y}, "+")
+		w.screen.printString(&Dot{w.StartX + w.width, y}, "+")
 	}
 
 	//fmt.Fprintln(w, string(w.buff))
 	//fmt.Print(string(w.buff))
 	for i := 0; i < w.height; i++ {
-		w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y + i}, string(w.buff[i]))
+		w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y + i}, string(w.buff[(w.curLine+i)%w.height]))
 	}
 }
 
