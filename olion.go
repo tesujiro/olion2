@@ -273,8 +273,9 @@ func New(ctx context.Context, cancel func()) *Olion {
 			screen: screen,
 			StartX: 5,
 			StartY: 5,
-			X:      1,
-			Y:      1,
+			X:      0,
+			Y:      0,
+			buff:   make([]string, 10),
 		},
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
 		readyCh:    make(chan struct{}),
@@ -313,38 +314,52 @@ type debugWriter struct {
 	StartY int
 	X      int
 	Y      int
-	buff   []byte
+	//buff    [][]rune
+	buff    []string
+	curLine int
+	curChar int
 }
 
 func (w *debugWriter) Write(p []byte) (int, error) {
-	//w.buff = append(w.buff, p...)
-	w.buff = p
-	//fmt.Print(string(p))
+	for _, v := range string(p) {
+		if v == '\n' {
+			w.curLine = (w.curLine + 1) % w.height
+			w.buff[w.curLine] = ""
+			w.curChar = 0
+		} else if w.curChar > w.width {
+			w.curLine = (w.curLine + 1) % w.height
+			w.curChar = 0
+			w.buff[w.curLine] = string(v) //Todo: bad performance
+		} else {
+			w.buff[w.curLine] += string(v) //Todo: bad performance
+			w.curChar++
+		}
+	}
 	return len(p), nil
 }
 
 func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
 	w := state.debugWriter
-	str := fmt.Sprintln(format, a)
-	//fmt.Print(str)
-	return fmt.Fprint(w, str)
+	return fmt.Fprintf(w, format, a)
 }
 
 func (state *Olion) drawDebugInfo() {
 	w := state.debugWriter
 	//draw debug window frame
-	for x := w.StartX; x <= w.StartX+w.width; x++ {
-		w.screen.printString(&Dot{x, w.StartY}, "+")
-		w.screen.printString(&Dot{x, w.StartY + w.height}, "+")
+	for x := w.StartX - 1; x <= w.StartX+w.width+1; x++ {
+		w.screen.printString(&Dot{x, w.StartY - 1}, "+")
+		w.screen.printString(&Dot{x, w.StartY + w.height + 1}, "+")
 	}
-	for y := w.StartY + 1; y < w.StartX+w.height; y++ {
-		w.screen.printString(&Dot{w.StartX, y}, "+")
-		w.screen.printString(&Dot{w.StartX + w.width, y}, "+")
+	for y := w.StartY; y <= w.StartX+w.height; y++ {
+		w.screen.printString(&Dot{w.StartX - 1, y}, "+")
+		w.screen.printString(&Dot{w.StartX + w.width + 1, y}, "+")
 	}
 
 	//fmt.Fprintln(w, string(w.buff))
 	//fmt.Print(string(w.buff))
-	w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y}, string(w.buff))
+	for i := 0; i < w.height; i++ {
+		w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y + i}, string(w.buff[i]))
+	}
 }
 
 func (state *Olion) setStatus() {
@@ -399,7 +414,7 @@ mainloop:
 			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
 			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
 			if state.Debug == true {
-				state.Printf("Hello World!\naaa\nbbb\nccc\nddd\n")
+				state.Printf("Hello World! count=%v\n", count)
 				state.drawDebugInfo()
 			}
 			state.screen.flush()

@@ -62,7 +62,7 @@ func (sc *Screen) printString(dot *Dot, str string) {
 		if sc.cover(*dot) {
 			if r == '\n' {
 				y = y + 1
-				x = dot.X
+				x = dot.X - 1
 			} else {
 				termbox.SetCell(x, y, r, termbox.ColorWhite, c.Bg)
 			}
