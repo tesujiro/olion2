@@ -127,36 +127,6 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 			}
 		}
 	}
-
-	/*
-		var nextX, nextY int
-		for x := d1.X; ; {
-			if d1.X < d2.X {
-				nextX = x + 1
-			} else {
-				nextX = x - 1
-			}
-			y1 := d1.Y + (d2.Y-d1.Y)*(x-d1.X)/(d2.X-d1.X)
-			y2 := d1.Y + (d2.Y-d1.Y)*(nextX-d1.X)/(d2.X-d1.X)
-			if y1 == y2 {
-				y := y1
-				sc.printDot(&Dot{X: x, Y: y}, color)
-			}
-			for y := y1; y != y2 && y != d2.Y; {
-				if y1 < y2 {
-					nextY = y + 1
-				} else {
-					nextY = y - 1
-				}
-				sc.printDot(&Dot{X: x, Y: y}, color)
-				y = nextY
-			}
-			if x == d2.X {
-				break
-			}
-			x = nextX
-		}
-	*/
 }
 
 func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {

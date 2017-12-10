@@ -268,7 +268,8 @@ func New(ctx context.Context, cancel func()) *Olion {
 		Stdout: os.Stdout,
 		Debug:  *debug,
 		debugWriter: &debugWriter{
-			width:  70,
+			width: 80,
+			//width:  10,
 			height: 10,
 			screen: screen,
 			StartX: 5,
@@ -322,11 +323,13 @@ type debugWriter struct {
 
 func (w *debugWriter) Write(p []byte) (int, error) {
 	for _, v := range string(p) {
+		if w.curChar == 0 {
+			w.buff[w.curLine] = ""
+		}
 		if v == '\n' {
 			w.curLine = (w.curLine + 1) % w.height
-			w.buff[w.curLine] = ""
 			w.curChar = 0
-		} else if w.curChar > w.width {
+		} else if w.curChar >= w.width {
 			w.curLine = (w.curLine + 1) % w.height
 			w.curChar = 0
 			w.buff[w.curLine] = string(v) //Todo: bad performance
@@ -340,7 +343,7 @@ func (w *debugWriter) Write(p []byte) (int, error) {
 
 func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
 	w := state.debugWriter
-	return fmt.Fprintf(w, format, a)
+	return fmt.Fprintf(w, format, a...)
 }
 
 func (state *Olion) drawDebugInfo() {
@@ -358,7 +361,9 @@ func (state *Olion) drawDebugInfo() {
 	//fmt.Fprintln(w, string(w.buff))
 	//fmt.Print(string(w.buff))
 	for i := 0; i < w.height; i++ {
-		w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y + i}, string(w.buff[(w.curLine+i)%w.height]))
+		//w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y + i}, string(w.buff[(w.curLine+i)%w.height]))
+		//w.screen.printString(&Dot{w.StartX, w.StartY + i}, string(w.buff[(w.curLine+i)%w.height]))
+		w.screen.printString(&Dot{w.StartX, w.StartY + i}, w.buff[(w.curLine+i)%w.height])
 	}
 }
 
@@ -414,7 +419,9 @@ mainloop:
 			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
 			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
 			if state.Debug == true {
-				state.Printf("Hello World! count=%v\n", count)
+				if count%47 == 0 {
+					state.Printf("Hello World! count=%d curLine=%d \n", count, state.debugWriter.curLine)
+				}
 				state.drawDebugInfo()
 			}
 			state.screen.flush()
