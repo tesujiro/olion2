@@ -317,15 +317,17 @@ type debugWriter struct {
 }
 
 func (w *debugWriter) Write(p []byte) (int, error) {
-	//w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y}, string(p))
 	//w.buff = append(w.buff, p...)
 	w.buff = p
+	//fmt.Print(string(p))
 	return len(p), nil
 }
 
 func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
 	w := state.debugWriter
-	return fmt.Fprintln(w, format, a)
+	str := fmt.Sprintln(format, a)
+	//fmt.Print(str)
+	return fmt.Fprint(w, str)
 }
 
 func (state *Olion) drawDebugInfo() {
@@ -340,8 +342,8 @@ func (state *Olion) drawDebugInfo() {
 		w.screen.printString(&Dot{w.StartX + w.width, y}, "+")
 	}
 
-	//fmt.Fprintln(w, "Hello Debug Info")
 	//fmt.Fprintln(w, string(w.buff))
+	//fmt.Print(string(w.buff))
 	w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y}, string(w.buff))
 }
 
@@ -397,7 +399,7 @@ mainloop:
 			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
 			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
 			if state.Debug == true {
-				state.Printf("Hello World!")
+				state.Printf("Hello World!\naaa\nbbb\nccc\nddd\n")
 				state.drawDebugInfo()
 			}
 			state.screen.flush()

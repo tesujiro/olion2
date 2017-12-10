@@ -60,7 +60,12 @@ func (sc *Screen) printString(dot *Dot, str string) {
 		}
 		c := &termbox.CellBuffer()[idx]
 		if sc.cover(*dot) {
-			termbox.SetCell(x, y, r, termbox.ColorWhite, c.Bg)
+			if r == '\n' {
+				y = y + 1
+				x = dot.X
+			} else {
+				termbox.SetCell(x, y, r, termbox.ColorWhite, c.Bg)
+			}
 		}
 		x += 1
 	}
