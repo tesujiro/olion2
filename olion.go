@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -230,6 +231,7 @@ type Olion struct {
 	Stderr      io.Writer
 	Debug       bool
 	debugWriter *debugWriter
+	debugWindow *Window
 	//hub    MessageHub
 
 	//bufferSize int
@@ -268,15 +270,16 @@ func New(ctx context.Context, cancel func()) *Olion {
 		Stdout: os.Stdout,
 		Debug:  *debug,
 		debugWriter: &debugWriter{
+			maxLine: 1000,
+			buff:    make([]string, 1000), //Todo: constructer
+		},
+		debugWindow: &Window{
 			width: 80,
 			//width:  10,
 			height: 10,
 			screen: screen,
 			StartX: 5,
 			StartY: 5,
-			X:      0,
-			Y:      0,
-			buff:   make([]string, 10),
 		},
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
 		readyCh:    make(chan struct{}),
@@ -307,38 +310,48 @@ func (state *Olion) drawConsole(count int) {
 }
 
 type debugWriter struct {
-	w      io.Writer
-	screen *Screen
-	width  int
-	height int
-	StartX int
-	StartY int
-	X      int
-	Y      int
-	//buff    [][]rune
+	//w      io.Writer
+	//buff    [][]byte
 	buff    []string
+	maxLine int
 	curLine int
 	curChar int
 }
 
 func (w *debugWriter) Write(p []byte) (int, error) {
-	for _, v := range string(p) {
-		if w.curChar == 0 {
-			w.buff[w.curLine] = ""
+	w.buff[w.curLine] = string(p) //Todo: bad performance
+	w.curLine = (w.curLine + 1) % len(w.buff)
+	/*
+		for _, r := range string(p) {
+			//if w.curChar == 0 {
+			//w.buff[w.curLine] = ""
+			//}
+			//ToDo: use string.Split()
+
+				if r == '\n' {
+					w.curLine = (w.curLine + 1) % w.maxLine
+					w.buff[w.curLine] = "aaaa"
+					//w.curChar = 0
+					//} else if w.curChar >= w.width {
+					//w.curLine = (w.curLine + 1) % w.maxLine
+					//w.curChar = 0
+					//w.buff[w.curLine] = string(r) //Todo: bad performance
+				} else {
+					w.buff[w.curLine] += string(r) //Todo: bad performance
+					//w.curChar++
+				}
 		}
-		if v == '\n' {
-			w.curLine = (w.curLine + 1) % w.height
-			w.curChar = 0
-		} else if w.curChar >= w.width {
-			w.curLine = (w.curLine + 1) % w.height
-			w.curChar = 0
-			w.buff[w.curLine] = string(v) //Todo: bad performance
-		} else {
-			w.buff[w.curLine] += string(v) //Todo: bad performance
-			w.curChar++
-		}
-	}
+	*/
 	return len(p), nil
+}
+
+type Window struct {
+	screen *Screen
+	width  int
+	height int
+	StartX int
+	StartY int
+	cursor int
 }
 
 func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
@@ -347,7 +360,9 @@ func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
 }
 
 func (state *Olion) drawDebugInfo() {
-	w := state.debugWriter
+	d := state.debugWriter
+	w := state.debugWindow
+
 	//draw debug window frame
 	for x := w.StartX - 1; x <= w.StartX+w.width; x++ {
 		w.screen.printString(&Dot{x, w.StartY - 1}, "+")
@@ -358,12 +373,15 @@ func (state *Olion) drawDebugInfo() {
 		w.screen.printString(&Dot{w.StartX + w.width, y}, "+")
 	}
 
-	//fmt.Fprintln(w, string(w.buff))
-	//fmt.Print(string(w.buff))
+	//print debug buffer
 	for i := 0; i < w.height; i++ {
-		//w.screen.printString(&Dot{w.StartX + w.X, w.StartY + w.Y + i}, string(w.buff[(w.curLine+i)%w.height]))
-		//w.screen.printString(&Dot{w.StartX, w.StartY + i}, string(w.buff[(w.curLine+i)%w.height]))
-		w.screen.printString(&Dot{w.StartX, w.StartY + i}, w.buff[(w.curLine+i)%w.height])
+		w.screen.printString(&Dot{w.StartX, w.StartY + i}, d.buff[(w.cursor+i)%len(d.buff)])
+		//s:=d.buff[(w.cursor+i)%len(d.buff)]
+	}
+	if d.curLine-w.height >= 0 {
+		w.cursor = (d.curLine - w.height) % len(d.buff)
+	} else {
+		w.cursor = (d.curLine - w.height + len(d.buff)) % len(d.buff)
 	}
 }
 
@@ -420,7 +438,8 @@ mainloop:
 			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
 			if state.Debug == true {
 				if count%47 == 0 {
-					state.Printf("Hello World! count=%d curLine=%d \n", count, state.debugWriter.curLine)
+					//if count%5 == 0 {
+					state.Printf("Hello World! count=%d curLine=%d %v\n", count, state.debugWriter.curLine, strings.Repeat("a", 100))
 				}
 				state.drawDebugInfo()
 			}
