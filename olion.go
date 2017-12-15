@@ -327,8 +327,10 @@ func newDebugWindow(screen *Screen) *Window {
 }
 
 func (w *debugWriter) Write(p []byte) (int, error) {
-	w.buff[w.curLine] = string(p) //Todo: bad performance
-	w.curLine = (w.curLine + 1) % len(w.buff)
+	for line := range strings.Split(string(p), "\n") {
+		w.buff[w.curLine] = line //Todo: bad performance
+		w.curLine = (w.curLine + 1) % len(w.buff)
+	}
 	/*
 		for _, r := range string(p) {
 			//if w.curChar == 0 {
