@@ -303,16 +303,30 @@ type debugWriter struct {
 	//w      io.Writer
 	//buff    [][]byte
 	buff    []string
-	maxLine int
 	curLine int
-	curChar int
+
+	// Goroutine Implementation
+	writeChan chan string
+	writeDone chan struct{}
+	readReq   chan int
+	readChan  chan string
+	readDone  chan struct{}
 }
 
 func newDebugWriter() *debugWriter {
 	size := 1000
+	writeChan := make(chan string)
+	writeDone := make(chan struct{})
+	readReq := make(chan int)
+	readChan := make(chan string)
+	readDone := make(chan struct{})
 	return &debugWriter{
-		maxLine: size,
-		buff:    make([]string, size),
+		buff:      make([]string, size),
+		writeChan: writeChan,
+		writeDone: writeDone,
+		readReq:   readReq,
+		readChan:  readChan,
+		readDone:  readDone,
 	}
 }
 
@@ -337,6 +351,7 @@ func (w *debugWriter) Write(p []byte) (int, error) {
 			pline = line
 		}
 	}
+	//w.readChane <- string(p)
 	return len(p), nil
 }
 
@@ -352,10 +367,6 @@ type Window struct {
 func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
 	w := state.debugWriter
 	return fmt.Fprintf(w, format, a...)
-}
-
-func (state *Olion) initDebugInfo() {
-
 }
 
 func (state *Olion) drawDebugInfo() {
@@ -441,8 +452,7 @@ mainloop:
 			if state.Debug == true {
 				//if count%47 == 0 {
 				if count%5 == 0 {
-					state.Printf("Hello World! count=%d curLine=%d %v\n", count, state.debugWriter.curLine, strings.Repeat("a", 100))
-					state.Printf("Hello World! count=%d curLine=%d %v\n", count, state.debugWriter.curLine, strings.Repeat("a", 100))
+					state.Printf("Hello World! \ncount=%d curLine=%d %v\n", count, state.debugWriter.curLine, strings.Repeat("a", 100))
 				}
 				state.drawDebugInfo()
 			}
