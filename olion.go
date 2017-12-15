@@ -327,31 +327,16 @@ func newDebugWindow(screen *Screen) *Window {
 }
 
 func (w *debugWriter) Write(p []byte) (int, error) {
-	for line := range strings.Split(string(p), "\n") {
-		w.buff[w.curLine] = line //Todo: bad performance
-		w.curLine = (w.curLine + 1) % len(w.buff)
-	}
-	/*
-		for _, r := range string(p) {
-			//if w.curChar == 0 {
-			//w.buff[w.curLine] = ""
-			//}
-			//ToDo: use string.Split()
-
-				if r == '\n' {
-					w.curLine = (w.curLine + 1) % w.maxLine
-					w.buff[w.curLine] = "aaaa"
-					//w.curChar = 0
-					//} else if w.curChar >= w.width {
-					//w.curLine = (w.curLine + 1) % w.maxLine
-					//w.curChar = 0
-					//w.buff[w.curLine] = string(r) //Todo: bad performance
-				} else {
-					w.buff[w.curLine] += string(r) //Todo: bad performance
-					//w.curChar++
-				}
+	pline := ""
+	for idx, line := range strings.Split(string(p), "\n") {
+		if idx == 0 {
+			pline = line
+		} else {
+			w.buff[w.curLine] = pline //Todo: bad performance
+			w.curLine = (w.curLine + 1) % len(w.buff)
+			pline = line
 		}
-	*/
+	}
 	return len(p), nil
 }
 
@@ -454,8 +439,9 @@ mainloop:
 			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
 			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
 			if state.Debug == true {
-				if count%47 == 0 {
-					//if count%5 == 0 {
+				//if count%47 == 0 {
+				if count%5 == 0 {
+					state.Printf("Hello World! count=%d curLine=%d %v\n", count, state.debugWriter.curLine, strings.Repeat("a", 100))
 					state.Printf("Hello World! count=%d curLine=%d %v\n", count, state.debugWriter.curLine, strings.Repeat("a", 100))
 				}
 				state.drawDebugInfo()
