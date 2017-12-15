@@ -264,23 +264,13 @@ func New(ctx context.Context, cancel func()) *Olion {
 	screen := NewScreen()
 
 	return &Olion{
-		Argv:   os.Args,
-		Stderr: os.Stderr,
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Debug:  *debug,
-		debugWriter: &debugWriter{
-			maxLine: 1000,
-			buff:    make([]string, 1000), //Todo: constructer
-		},
-		debugWindow: &Window{
-			width: 80,
-			//width:  10,
-			height: 10,
-			screen: screen,
-			StartX: 5,
-			StartY: 5,
-		},
+		Argv:        os.Args,
+		Stderr:      os.Stderr,
+		Stdin:       os.Stdin,
+		Stdout:      os.Stdout,
+		Debug:       *debug,
+		debugWriter: newDebugWriter(),
+		debugWindow: newDebugWindow(screen),
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
 		readyCh:    make(chan struct{}),
 		screen:     screen,
@@ -316,6 +306,24 @@ type debugWriter struct {
 	maxLine int
 	curLine int
 	curChar int
+}
+
+func newDebugWriter() *debugWriter {
+	size := 1000
+	return &debugWriter{
+		maxLine: size,
+		buff:    make([]string, size),
+	}
+}
+
+func newDebugWindow(screen *Screen) *Window {
+	return &Window{
+		width:  80,
+		height: 10,
+		screen: screen,
+		StartX: 5,
+		StartY: 5,
+	}
 }
 
 func (w *debugWriter) Write(p []byte) (int, error) {
@@ -359,6 +367,10 @@ func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
 	return fmt.Fprintf(w, format, a...)
 }
 
+func (state *Olion) initDebugInfo() {
+
+}
+
 func (state *Olion) drawDebugInfo() {
 	d := state.debugWriter
 	w := state.debugWindow
@@ -375,8 +387,11 @@ func (state *Olion) drawDebugInfo() {
 
 	//print debug buffer
 	for i := 0; i < w.height; i++ {
-		w.screen.printString(&Dot{w.StartX, w.StartY + i}, d.buff[(w.cursor+i)%len(d.buff)])
-		//s:=d.buff[(w.cursor+i)%len(d.buff)]
+		msg := d.buff[(w.cursor+i)%len(d.buff)]
+		if len(msg) > w.width {
+			msg = msg[:w.width]
+		}
+		w.screen.printString(&Dot{w.StartX, w.StartY + i}, msg)
 	}
 	if d.curLine-w.height >= 0 {
 		w.cursor = (d.curLine - w.height) % len(d.buff)
