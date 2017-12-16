@@ -269,7 +269,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 		Stdin:       os.Stdin,
 		Stdout:      os.Stdout,
 		Debug:       *debug,
-		debugWriter: newDebugWriter(),
+		debugWriter: newDebugWriter(ctx),
 		debugWindow: newDebugWindow(screen),
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
 		readyCh:    make(chan struct{}),
@@ -310,24 +310,53 @@ type debugWriter struct {
 	writeDone chan struct{}
 	readReq   chan int
 	readChan  chan string
-	readDone  chan struct{}
+	//readDone  chan struct{}
 }
 
-func newDebugWriter() *debugWriter {
+func newDebugWriter(ctx context.Context) *debugWriter {
 	size := 1000
-	writeChan := make(chan string)
-	writeDone := make(chan struct{})
-	readReq := make(chan int)
-	readChan := make(chan string)
-	readDone := make(chan struct{})
-	return &debugWriter{
+	d := &debugWriter{
 		buff:      make([]string, size),
-		writeChan: writeChan,
-		writeDone: writeDone,
-		readReq:   readReq,
-		readChan:  readChan,
-		readDone:  readDone,
+		curLine:   0,
+		writeChan: make(chan string),
+		writeDone: make(chan struct{}),
+		readReq:   make(chan int),
+		readChan:  make(chan string),
+		//readDone:  make(chan struct{}),
 	}
+
+	go func() {
+	L:
+		for {
+			select {
+			case str := <-d.writeChan:
+				pline := ""
+				//fmt.Printf("str=%v\n", str)
+				for idx, line := range strings.Split(str, "\n") {
+					if idx == 0 {
+						pline = line
+					} else {
+						d.buff[d.curLine] = pline //Todo: bad performance
+						d.curLine = (d.curLine + 1) % len(d.buff)
+						pline = line
+					}
+				}
+				d.writeDone <- struct{}{}
+			case size := <-d.readReq:
+				firstLine := (d.curLine + len(d.buff) - size) % len(d.buff)
+				for i := 0; i < size; i++ {
+					idx := (firstLine + i) % len(d.buff)
+					msg := d.buff[idx]
+					//msg := strconv.Itoa(idx) + ":" + msg
+					d.readChan <- msg
+				}
+			case <-ctx.Done():
+				break L
+			}
+		}
+	}()
+
+	return d
 }
 
 func newDebugWindow(screen *Screen) *Window {
@@ -340,18 +369,9 @@ func newDebugWindow(screen *Screen) *Window {
 	}
 }
 
-func (w *debugWriter) Write(p []byte) (int, error) {
-	pline := ""
-	for idx, line := range strings.Split(string(p), "\n") {
-		if idx == 0 {
-			pline = line
-		} else {
-			w.buff[w.curLine] = pline //Todo: bad performance
-			w.curLine = (w.curLine + 1) % len(w.buff)
-			pline = line
-		}
-	}
-	//w.readChane <- string(p)
+func (d *debugWriter) Write(p []byte) (int, error) {
+	d.writeChan <- string(p)
+	<-d.writeDone
 	return len(p), nil
 }
 
@@ -365,8 +385,8 @@ type Window struct {
 }
 
 func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
-	w := state.debugWriter
-	return fmt.Fprintf(w, format, a...)
+	d := state.debugWriter
+	return fmt.Fprintf(d, format, a...)
 }
 
 func (state *Olion) drawDebugInfo() {
@@ -384,18 +404,22 @@ func (state *Olion) drawDebugInfo() {
 	}
 
 	//print debug buffer
+	d.readReq <- w.height
 	for i := 0; i < w.height; i++ {
-		msg := d.buff[(w.cursor+i)%len(d.buff)]
+		msg := <-d.readChan
+		//msg = strconv.Itoa(i) + ":" + msg
 		if len(msg) > w.width {
 			msg = msg[:w.width]
 		}
 		w.screen.printString(&Dot{w.StartX, w.StartY + i}, msg)
 	}
-	if d.curLine-w.height >= 0 {
-		w.cursor = (d.curLine - w.height) % len(d.buff)
-	} else {
-		w.cursor = (d.curLine - w.height + len(d.buff)) % len(d.buff)
-	}
+	/*
+		if d.curLine-w.height >= 0 {
+			w.cursor = (d.curLine - w.height) % len(d.buff)
+		} else {
+			w.cursor = (d.curLine - w.height + len(d.buff)) % len(d.buff)
+		}
+	*/
 }
 
 func (state *Olion) setStatus() {
@@ -452,7 +476,7 @@ mainloop:
 			if state.Debug == true {
 				//if count%47 == 0 {
 				if count%5 == 0 {
-					state.Printf("Hello World! \ncount=%d curLine=%d %v\n", count, state.debugWriter.curLine, strings.Repeat("a", 100))
+					state.Printf("Hello World! count=%d curLine=%d %v\n", count, state.debugWriter.curLine, strings.Repeat("a", 100))
 				}
 				state.drawDebugInfo()
 			}
