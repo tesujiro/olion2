@@ -210,7 +210,7 @@ func (sc *Screen) printTriangle(dots []Dot, color Attribute) {
 		}
 	}
 	minX, maxX := getMinMax(dots)
-	//fmt.Printf("minX=%v maxX=%v\n", minX, maxX)
+	debug.Printf("minX=%v maxX=%v\n", minX, maxX)
 	for x := minX; x <= maxX; x++ {
 		y1, y2 := crossPoints(dots, x)
 		//fmt.Printf("x=%v y1=%v y2=%v\n", x, y1, y2)

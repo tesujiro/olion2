@@ -231,7 +231,6 @@ type Olion struct {
 	Stderr      io.Writer
 	Debug       bool
 	Pause       bool
-	debugWriter *debugWriter
 	debugWindow *Window
 	//hub    MessageHub
 
@@ -263,6 +262,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 	debug := flag.Bool("d", false, "Debug Mode")
 	flag.Parse()
 	screen := NewScreen()
+	newDebugWriter(ctx)
 
 	return &Olion{
 		Argv:        os.Args,
@@ -271,7 +271,6 @@ func New(ctx context.Context, cancel func()) *Olion {
 		Stdout:      os.Stdout,
 		Debug:       *debug,
 		Pause:       false,
-		debugWriter: newDebugWriter(ctx),
 		debugWindow: newDebugWindow(screen),
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
 		readyCh:    make(chan struct{}),
@@ -315,7 +314,9 @@ type debugWriter struct {
 	//readDone  chan struct{}
 }
 
-func newDebugWriter(ctx context.Context) *debugWriter {
+var debug *debugWriter
+
+func newDebugWriter(ctx context.Context) {
 	size := 1000
 	d := &debugWriter{
 		buff:      make([]string, size),
@@ -358,7 +359,26 @@ func newDebugWriter(ctx context.Context) *debugWriter {
 		}
 	}()
 
-	return d
+	debug = d
+}
+
+func (d *debugWriter) Write(p []byte) (int, error) {
+	d.writeChan <- string(p)
+	<-d.writeDone
+	return len(p), nil
+}
+
+func (d *debugWriter) Printf(format string, a ...interface{}) (n int, err error) {
+	return fmt.Fprintf(d, format, a...)
+}
+
+type Window struct {
+	screen *Screen
+	width  int
+	height int
+	StartX int
+	StartY int
+	cursor int
 }
 
 func newDebugWindow(screen *Screen) *Window {
@@ -371,28 +391,16 @@ func newDebugWindow(screen *Screen) *Window {
 	}
 }
 
-func (d *debugWriter) Write(p []byte) (int, error) {
-	d.writeChan <- string(p)
-	<-d.writeDone
-	return len(p), nil
-}
-
-type Window struct {
-	screen *Screen
-	width  int
-	height int
-	StartX int
-	StartY int
-	cursor int
-}
-
+/*
 func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
 	d := state.debugWriter
 	return fmt.Fprintf(d, format, a...)
 }
+*/
 
 func (state *Olion) drawDebugInfo() {
-	d := state.debugWriter
+	//d := state.debugWriter
+	d := debug
 	w := state.debugWindow
 
 	//draw debug window frame
@@ -467,15 +475,19 @@ mainloop:
 			state.drawConsole(count)
 			//state.screen.printTriangle([]Dot{Dot{X: 10, Y: 10}, Dot{X: 20, Y: 15}, Dot{X: 20, Y: 10}}, ColorBlack)
 			//state.screen.printLine(&Dot{X: 10, Y: 12}, &Dot{X: 20, Y: 17}, ColorRed)
-			//state.screen.printTriangle([]Dot{Dot{X: 10, Y: 30}, Dot{X: 15, Y: 40}, Dot{X: 20, Y: 30}}, ColorBlack)
+			//state.screen.printTriangle([]Dot{Dot{X: 15, Y: 40}, Dot{X: 20, Y: 30}, Dot{X: 30, Y: 30}}, ColorWhite)
+			state.screen.printTriangle([]Dot{Dot{X: 10, Y: 30}, Dot{X: 15, Y: 40}, Dot{X: 20, Y: 30}}, ColorBlack)
+			state.screen.printTriangle([]Dot{Dot{X: 35, Y: 40}, Dot{X: 40, Y: 30}, Dot{X: 30, Y: 30}}, ColorBlack)
 			//state.screen.printLine(&Dot{X: 10, Y: 32}, &Dot{X: 15, Y: 42}, ColorRed)
 			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
 			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
 			if state.Debug == true {
 				//if count%47 == 0 {
-				if count%5 == 0 {
-					state.Printf("Hello World! count=%d curLine=%d %v\n", count, state.debugWriter.curLine, strings.Repeat("a", 100))
-				}
+				/*
+					if count%5 == 0 {
+						debug.Printf("Hello World! count=%d curLine=%d %v\n", count, debug.curLine, strings.Repeat("a", 100))
+					}
+				*/
 				state.drawDebugInfo()
 			}
 			state.screen.flush()
