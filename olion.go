@@ -208,7 +208,7 @@ func (spc *Space) judgeExplosion() int {
 			flyings = append(flyings, obj)
 		}
 	}
-Loop:
+L:
 	for _, flying := range flyings {
 		for _, bomb := range bombs {
 			if distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
@@ -216,7 +216,7 @@ Loop:
 				score++
 				flying.explode()
 				spc.deleteObj(bomb)
-				break Loop
+				break L
 			}
 		}
 	}
@@ -230,6 +230,7 @@ type Olion struct {
 	Stdout      io.Writer
 	Stderr      io.Writer
 	Debug       bool
+	Pause       bool
 	debugWriter *debugWriter
 	debugWindow *Window
 	//hub    MessageHub
@@ -269,6 +270,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 		Stdin:       os.Stdin,
 		Stdout:      os.Stdout,
 		Debug:       *debug,
+		Pause:       false,
 		debugWriter: newDebugWriter(ctx),
 		debugWindow: newDebugWindow(screen),
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
@@ -413,13 +415,6 @@ func (state *Olion) drawDebugInfo() {
 		}
 		w.screen.printString(&Dot{w.StartX, w.StartY + i}, msg)
 	}
-	/*
-		if d.curLine-w.height >= 0 {
-			w.cursor = (d.curLine - w.height) % len(d.buff)
-		} else {
-			w.cursor = (d.curLine - w.height + len(d.buff)) % len(d.buff)
-		}
-	*/
 }
 
 func (state *Olion) setStatus() {
@@ -446,6 +441,9 @@ mainloop:
 		case <-ctx.Done():
 			break mainloop
 		case <-tick:
+			if state.Pause {
+				continue mainloop
+			}
 			state.screen.clear()
 			//OuterSpace
 			speed := Coordinates{X: state.speed.X, Y: state.speed.Y, Z: 0}
@@ -522,6 +520,12 @@ mainloop:
 						state.screen.Vibration = 1
 					} else {
 						state.screen.Vibration = 0
+					}
+				case termbox.KeyF2:
+					if state.Pause == true {
+						state.Pause = false
+					} else {
+						state.Pause = true
 					}
 				default:
 				}
