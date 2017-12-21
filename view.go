@@ -90,12 +90,13 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 
 	if d1.X == d2.X {
 		x := d1.X
-		for y := d1.Y; y != d2.Y; {
-			sc.printDot(&Dot{X: x, Y: y}, color)
-			if d1.Y < d2.Y {
-				y++
-			} else {
-				y--
+		if d1.Y < d2.Y {
+			for y := d1.Y; y <= d2.Y; y++ {
+				sc.printDot(&Dot{X: x, Y: y}, color)
+			}
+		} else {
+			for y := d2.Y; y <= d1.Y; y++ {
+				sc.printDot(&Dot{X: x, Y: y}, color)
 			}
 		}
 		return
@@ -192,10 +193,14 @@ func (sc *Screen) printTriangle(dots []Dot, color Attribute) {
 				//fmt.Printf("d1=%v d2=%v x=%v\n", d1, d2, x)
 				continue
 			}
-			if d1.Y == d2.Y {
+			switch {
+			case d1.Y == d2.Y:
 				ret = append(ret, d1.Y)
-			} else {
+			case d1.Y < d2.Y:
 				y := d1.Y + (d2.Y-d1.Y)*(d1.X-x)/(d1.X-d2.X)
+				ret = append(ret, y)
+			case d1.Y > d2.Y:
+				y := d2.Y + (d1.Y-d2.Y)*(d2.X-x)/(d2.X-d1.X)
 				ret = append(ret, y)
 			}
 		}
@@ -213,7 +218,7 @@ func (sc *Screen) printTriangle(dots []Dot, color Attribute) {
 	debug.Printf("minX=%v maxX=%v\n", minX, maxX)
 	for x := minX; x <= maxX; x++ {
 		y1, y2 := crossPoints(dots, x)
-		//fmt.Printf("x=%v y1=%v y2=%v\n", x, y1, y2)
+		debug.Printf("x=%v y1=%v y2=%v\n", x, y1, y2)
 		sc.printLine(&Dot{X: x, Y: y1}, &Dot{X: x, Y: y2}, color)
 	}
 }

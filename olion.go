@@ -384,7 +384,7 @@ type Window struct {
 func newDebugWindow(screen *Screen) *Window {
 	return &Window{
 		width:  80,
-		height: 10,
+		height: 30,
 		screen: screen,
 		StartX: 5,
 		StartY: 5,
@@ -476,17 +476,19 @@ mainloop:
 			//state.screen.printTriangle([]Dot{Dot{X: 10, Y: 10}, Dot{X: 20, Y: 15}, Dot{X: 20, Y: 10}}, ColorBlack)
 			//state.screen.printLine(&Dot{X: 10, Y: 12}, &Dot{X: 20, Y: 17}, ColorRed)
 			//state.screen.printTriangle([]Dot{Dot{X: 15, Y: 40}, Dot{X: 20, Y: 30}, Dot{X: 30, Y: 30}}, ColorWhite)
-			var d1, d2, d3 Dot
-			d1, d2, d3 = Dot{X: 10, Y: 30}, Dot{X: 15, Y: 40}, Dot{X: 20, Y: 30}
-			debug.Printf("d1=%v d2=%v d3=%v\n", d1, d2, d3)
-			state.screen.printTriangle([]Dot{d1, d2, d3}, ColorBlack)
 			//state.screen.printTriangle([]Dot{Dot{X: 10, Y: 30}, Dot{X: 15, Y: 40}, Dot{X: 20, Y: 30}}, ColorBlack)
-			d1, d2, d3 = Dot{X: 35, Y: 40}, Dot{X: 40, Y: 30}, Dot{X: 30, Y: 30}
-			debug.Printf("d1=%v d2=%v d3=%v\n", d1, d2, d3)
-			state.screen.printTriangle([]Dot{d1, d2, d3}, ColorBlack)
 			//state.screen.printLine(&Dot{X: 10, Y: 32}, &Dot{X: 15, Y: 42}, ColorRed)
 			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
 			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
+			/*
+				var d1, d2, d3 Dot
+				d1, d2, d3 = Dot{X: 10, Y: 10}, Dot{X: 15, Y: 20}, Dot{X: 20, Y: 10}
+				debug.Printf("d1=%v d2=%v d3=%v\n", d1, d2, d3)
+				state.screen.printTriangle([]Dot{d1, d2, d3}, ColorBlack)
+				d1, d2, d3 = Dot{X: 35, Y: 20}, Dot{X: 40, Y: 10}, Dot{X: 30, Y: 10}
+				debug.Printf("d1=%v d2=%v d3=%v\n", d1, d2, d3)
+				state.screen.printTriangle([]Dot{d1, d2, d3}, ColorBlack)
+			*/
 			if state.Debug == true {
 				//if count%47 == 0 {
 				/*
