@@ -76,6 +76,8 @@ func (spc *Space) genObject(now time.Time) Exister {
 		return newBox(now, 500, spc.randomSpace())
 	case num < 40:
 		return newBox2(now, 800, spc.randomSpace())
+	case num < 60:
+		return newBox3(now, 800, spc.randomSpace())
 	default:
 		//Add SpaceShip
 		return newSpaceShip(now, 500, spc.randomSpace())
@@ -473,13 +475,9 @@ mainloop:
 			fireBomb = false
 			state.setStatus()
 			state.drawConsole(count)
-			//state.screen.printTriangle([]Dot{Dot{X: 10, Y: 10}, Dot{X: 20, Y: 15}, Dot{X: 20, Y: 10}}, ColorBlack)
 			//state.screen.printLine(&Dot{X: 10, Y: 12}, &Dot{X: 20, Y: 17}, ColorRed)
-			//state.screen.printTriangle([]Dot{Dot{X: 15, Y: 40}, Dot{X: 20, Y: 30}, Dot{X: 30, Y: 30}}, ColorWhite)
-			//state.screen.printTriangle([]Dot{Dot{X: 10, Y: 30}, Dot{X: 15, Y: 40}, Dot{X: 20, Y: 30}}, ColorBlack)
 			//state.screen.printLine(&Dot{X: 10, Y: 32}, &Dot{X: 15, Y: 42}, ColorRed)
 			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
-			//state.screen.printLine(&Dot{X: 32, Y: 30}, &Dot{X: 62, Y: 100}, ColorRed)
 			/*
 				var d1, d2, d3 Dot
 				d1, d2, d3 = Dot{X: 10, Y: 10}, Dot{X: 15, Y: 20}, Dot{X: 20, Y: 10}
@@ -490,12 +488,6 @@ mainloop:
 				state.screen.printTriangle([]Dot{d1, d2, d3}, ColorBlack)
 			*/
 			if state.Debug == true {
-				//if count%47 == 0 {
-				/*
-					if count%5 == 0 {
-						debug.Printf("Hello World! count=%d curLine=%d %v\n", count, debug.curLine, strings.Repeat("a", 100))
-					}
-				*/
 				state.drawDebugInfo()
 			}
 			state.screen.flush()

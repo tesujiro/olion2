@@ -339,6 +339,46 @@ func (obj *Object) explode() {
 	obj.exploding = true
 }
 
+func (obj *Object) newRectangular(start Coordinates, width int, height int, depth int, cols []Attribute) {
+	debug.Printf("newRectangular\n")
+	var colors []Attribute
+	var m []int
+	switch len(cols) {
+	case 2:
+		m = []int{0, 1, 0, 1, 0, 1}
+	case 3:
+		m = []int{0, 1, 2, 1, 2, 0}
+	case 4:
+		m = []int{0, 1, 2, 1, 2, 3}
+	default:
+		m = make([]int, 6)
+		for i := 0; i < len(m); i++ {
+			m[i] = i % len(cols)
+		}
+	}
+	colors = make([]Attribute, len(m))
+	for i := 0; i < len(m); i++ {
+		colors[i] = cols[m[i]]
+	}
+
+	addRectangular := func(c1 Coordinates, c2 Coordinates, color Attribute, fill bool) {
+		r := newRectanglePart(&Part{
+			dots:  []Coordinates{c1, c2},
+			color: color,
+			fill:  fill,
+		})
+		obj.addPart(r)
+	}
+	addRectangular(
+		Coordinates{X: start.X, Y: start.Y, Z: start.Z},
+		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z},
+		colors[0], false)
+	addRectangular(
+		Coordinates{X: start.X, Y: start.Y, Z: start.Z + depth},
+		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
+		colors[5], true)
+}
+
 type Star struct {
 	Object
 }
@@ -582,4 +622,23 @@ func newBox2(t time.Time, s int, c Coordinates) *SpaceBox2 {
 	}
 
 	return &ship
+}
+
+type SpaceBox3 struct {
+	Object
+}
+
+func newBox3(t time.Time, s int, c Coordinates) *SpaceBox3 {
+	box := SpaceBox3{Object: *newObject()}
+	box.size = s
+	box.position = c
+	box.time = t
+	box.speed = Coordinates{
+		X: rand.Intn(10) - 5,
+		Y: rand.Intn(10) - 5,
+		Z: rand.Intn(10),
+	}
+	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, []Attribute{ColorBlack, ColorRed})
+
+	return &box
 }
