@@ -105,14 +105,37 @@ func newLinePart(p Parter) LinePart {
 	}
 }
 
+/*
 type RectanglePart struct {
 	*Part
 }
+*/
 
-func newRectanglePart(p Parter) RectanglePart {
+func newRectanglePart(p Parter) PolygonPart {
+	ds := p.getDots()
 	// Todo: check len(p.getDots())
-	return RectanglePart{
-		Part: p.(*Part),
+	c0 := ds[0]
+	c2 := ds[1]
+	var c1, c3 Coordinates
+	switch {
+	case c0.X == c2.X:
+		c1 = Coordinates{X: c0.X, Y: c0.Y, Z: c2.Z}
+		c3 = Coordinates{X: c0.X, Y: c2.Y, Z: c0.Z}
+	case c0.Y == c2.Y:
+		c1 = Coordinates{X: c0.X, Y: c0.Y, Z: c2.Z}
+		c3 = Coordinates{X: c2.X, Y: c0.Y, Z: c0.Z}
+	case c0.Z == c2.Z:
+		c1 = Coordinates{X: c0.X, Y: c2.Y, Z: c0.Z}
+		c3 = Coordinates{X: c2.X, Y: c0.Y, Z: c0.Z}
+	}
+
+	return PolygonPart{
+		Part: &Part{
+			dots:  []Coordinates{c0, c1, c2, c3},
+			color: p.getColor(),
+			size:  p.getSize(),
+			fill:  p.getFill(),
+		},
 	}
 }
 
@@ -128,22 +151,16 @@ func newPolygonPart(p Parter) PolygonPart {
 }
 
 type CirclePart struct {
-	*Part
+	//*Part
+	Part
 }
 
+/*
 func newCirclePart(p Parter) CirclePart {
 	// Todo: check len(p.getDots())
 	return CirclePart{
 		Part: p.(*Part),
 	}
-}
-
-/*
-type Shaper interface {
-	shape() []Parter
-	addPart(Parter)
-	getPosition() Coordinates
-	setPosition(Coordinates)
 }
 */
 
@@ -344,8 +361,6 @@ func (obj *Object) newRectangular(start Coordinates, width int, height int, dept
 	var colors []Attribute
 	var m []int
 	switch len(cols) {
-	case 2:
-		m = []int{0, 1, 0, 1, 0, 1}
 	case 3:
 		m = []int{0, 1, 2, 1, 2, 0}
 	case 4:
@@ -361,9 +376,9 @@ func (obj *Object) newRectangular(start Coordinates, width int, height int, dept
 		colors[i] = cols[m[i]]
 	}
 
-	addRectangular := func(c1 Coordinates, c2 Coordinates, color Attribute, fill bool) {
+	addRectangular := func(c0 Coordinates, c1 Coordinates, color Attribute, fill bool) {
 		r := newRectanglePart(&Part{
-			dots:  []Coordinates{c1, c2},
+			dots:  []Coordinates{c0, c1},
 			color: color,
 			fill:  fill,
 		})
@@ -372,7 +387,23 @@ func (obj *Object) newRectangular(start Coordinates, width int, height int, dept
 	addRectangular(
 		Coordinates{X: start.X, Y: start.Y, Z: start.Z},
 		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z},
-		colors[0], false)
+		colors[0], true)
+	addRectangular(
+		Coordinates{X: start.X, Y: start.Y + height, Z: start.Z},
+		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
+		colors[1], true)
+	addRectangular(
+		Coordinates{X: start.X + width, Y: start.Y, Z: start.Z},
+		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
+		colors[2], true)
+	addRectangular(
+		Coordinates{X: start.X + width, Y: start.Y, Z: start.Z},
+		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
+		colors[3], true)
+	addRectangular(
+		Coordinates{X: start.X, Y: start.Y, Z: start.Z},
+		Coordinates{X: start.X, Y: start.Y + height, Z: start.Z + depth},
+		colors[4], true)
 	addRectangular(
 		Coordinates{X: start.X, Y: start.Y, Z: start.Z + depth},
 		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
@@ -394,15 +425,16 @@ func newStar(t time.Time, s int, c Coordinates) *Star {
 		Z: 0,
 	}
 	//dot := newDotPart(Part{
-	circle := newCirclePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: 0, Y: 0, Z: 0},
+	//circle := newCirclePart(&Part{
+	circle := &CirclePart{
+		Part: Part{dots: []Coordinates{Coordinates{X: 0, Y: 0, Z: 0}},
+			color: ColorWhite,
+			//color: ColorYellow,
+			fill: true,
+			size: rand.Intn(2),
 		},
-		color: ColorWhite,
-		//color: ColorYellow,
-		fill: true,
-		size: rand.Intn(2),
-	})
+	}
+	//})
 	star.addPart(circle)
 	return &star
 }
@@ -638,7 +670,7 @@ func newBox3(t time.Time, s int, c Coordinates) *SpaceBox3 {
 		Y: rand.Intn(10) - 5,
 		Z: rand.Intn(10),
 	}
-	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, []Attribute{ColorBlack, ColorRed})
+	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, []Attribute{ColorBlack, ColorRed, ColorWhite, ColorGreen, ColorYellow})
 
 	return &box
 }

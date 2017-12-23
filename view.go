@@ -345,9 +345,7 @@ func (view *View) draw(upMsgs []upMessage) {
 				view.state.screen.printDot(&dots[0], part.getColor())
 			case LinePart:
 				view.state.screen.printLine(&dots[0], &dots[1], part.getColor())
-			case RectanglePart:
-				view.state.screen.printRectangle(&dots[0], &dots[1], part.getColor(), part.getFill())
-			case CirclePart:
+			case *CirclePart: //CirclePartは*Part出なく、Partの埋め込みにしたため型が異なる。
 				view.state.screen.printCircle(&dots[0], view.mapLength(position, part.getSize()), part.getColor(), part.getFill())
 			case PolygonPart:
 				view.state.screen.printPolygon(dots, part.getColor(), part.getFill())
