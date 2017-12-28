@@ -341,13 +341,13 @@ func (view *View) draw(upMsgs []upMessage) {
 				dots = append(dots, *d)
 			}
 			switch part.(type) {
-			case DotPart:
+			case *DotPart:
 				view.state.screen.printDot(&dots[0], part.getColor())
-			case LinePart:
+			case *LinePart:
 				view.state.screen.printLine(&dots[0], &dots[1], part.getColor())
 			case *CirclePart: //CirclePartは*Part出なく、Partの埋め込みにしたため型が異なる。
 				view.state.screen.printCircle(&dots[0], view.mapLength(position, part.getSize()), part.getColor(), part.getFill())
-			case PolygonPart:
+			case *PolygonPart:
 				view.state.screen.printPolygon(dots, part.getColor(), part.getFill())
 			default:
 				fmt.Printf("View.draw -> NO TYPE\n")

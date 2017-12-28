@@ -477,7 +477,8 @@ mainloop:
 			state.drawConsole(count)
 			//state.screen.printLine(&Dot{X: 10, Y: 12}, &Dot{X: 20, Y: 17}, ColorRed)
 			//state.screen.printLine(&Dot{X: 10, Y: 32}, &Dot{X: 15, Y: 42}, ColorRed)
-			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 30}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
+			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 50}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
+			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 50}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorBlack, false)
 			/*
 				var d1, d2, d3 Dot
 				d1, d2, d3 = Dot{X: 10, Y: 10}, Dot{X: 15, Y: 20}, Dot{X: 20, Y: 10}

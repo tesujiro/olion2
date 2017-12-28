@@ -84,26 +84,21 @@ func (p *Part) getFill() bool {
 
 /* one dot part */
 type DotPart struct {
-	*Part
-}
-
-func newDotPart(p *Parter) DotPart {
-	// Todo: check len(p.getDots())
-	return DotPart{
-		Part: (*p).(*Part),
-	}
+	Part
 }
 
 type LinePart struct {
-	*Part
+	Part
 }
 
+/*
 func newLinePart(p Parter) LinePart {
 	// Todo: check len(p.getDots())
 	return LinePart{
 		Part: p.(*Part),
 	}
 }
+*/
 
 /*
 type RectanglePart struct {
@@ -111,7 +106,7 @@ type RectanglePart struct {
 }
 */
 
-func newRectanglePart(p Parter) PolygonPart {
+func newRectanglePart(p Parter) *PolygonPart {
 	ds := p.getDots()
 	// Todo: check len(p.getDots())
 	c0 := ds[0]
@@ -129,8 +124,8 @@ func newRectanglePart(p Parter) PolygonPart {
 		c3 = Coordinates{X: c2.X, Y: c0.Y, Z: c0.Z}
 	}
 
-	return PolygonPart{
-		Part: &Part{
+	return &PolygonPart{
+		Part{
 			dots:  []Coordinates{c0, c1, c2, c3},
 			color: p.getColor(),
 			size:  p.getSize(),
@@ -140,29 +135,14 @@ func newRectanglePart(p Parter) PolygonPart {
 }
 
 type PolygonPart struct {
-	*Part
-}
-
-func newPolygonPart(p Parter) PolygonPart {
-	// Todo: check len(p.getDots())
-	return PolygonPart{
-		Part: p.(*Part),
-	}
-}
-
-type CirclePart struct {
-	//*Part
 	Part
 }
 
-/*
-func newCirclePart(p Parter) CirclePart {
-	// Todo: check len(p.getDots())
-	return CirclePart{
-		Part: p.(*Part),
-	}
+// CirclePartはPartを埋め込むことでコンストラクタ関数が不要になったが、利用元でPartの埋め込みを意識する必要がある。
+// また、view.draw()関数でオブジェクト型チェックする場合にポインタ型になる。
+type CirclePart struct {
+	Part
 }
-*/
 
 type downChannel chan downMessage // Read from Main Loop
 
@@ -427,7 +407,7 @@ func newStar(t time.Time, s int, c Coordinates) *Star {
 	//dot := newDotPart(Part{
 	//circle := newCirclePart(&Part{
 	circle := &CirclePart{
-		Part: Part{dots: []Coordinates{Coordinates{X: 0, Y: 0, Z: 0}},
+		Part{dots: []Coordinates{Coordinates{X: 0, Y: 0, Z: 0}},
 			color: ColorWhite,
 			//color: ColorYellow,
 			fill: true,
@@ -480,94 +460,104 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 	}
 	ship.spinXY = rand.Intn(180) - 90
 	ship.spinXZ = 0
-	rectangle1 := newPolygonPart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: s / 2, Y: s / 2, Z: 0},
-			Coordinates{X: s / 2, Y: -s / 2, Z: 0},
-			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
-			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
-		},
-		color: ColorRed,
-		fill:  true,
-	})
+	rectangle1 := &PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: s / 2, Y: s / 2, Z: 0},
+				Coordinates{X: s / 2, Y: -s / 2, Z: 0},
+				Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+				Coordinates{X: -s / 2, Y: s / 2, Z: 0},
+			},
+			color: ColorRed,
+			fill:  true,
+		}}
 	ship.addPart(rectangle1)
-	rectangle2 := newPolygonPart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: s / 2, Y: s / 2, Z: -1},
-			Coordinates{X: s / 2, Y: -s / 2, Z: -1},
-			Coordinates{X: -s / 2, Y: -s / 2, Z: -1},
-			Coordinates{X: -s / 2, Y: s / 2, Z: -1},
-		},
-		color: ColorBlack,
-		fill:  false,
-	})
+	rectangle2 := &PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: s / 2, Y: s / 2, Z: -1},
+				Coordinates{X: s / 2, Y: -s / 2, Z: -1},
+				Coordinates{X: -s / 2, Y: -s / 2, Z: -1},
+				Coordinates{X: -s / 2, Y: s / 2, Z: -1},
+			},
+			color: ColorBlack,
+			fill:  false,
+		}}
 	ship.addPart(rectangle2)
-	line1 := newLinePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: s, Y: 0, Z: 0},
-			Coordinates{X: s / 2, Y: 0, Z: 0},
-		},
-		color: ColorBlack,
-	})
+	line1 := &LinePart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: s, Y: 0, Z: 0},
+				Coordinates{X: s / 2, Y: 0, Z: 0},
+			},
+			color: ColorBlack,
+		}}
 	ship.addPart(line1)
-	line2 := newLinePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: -s, Y: 0, Z: 0},
-			Coordinates{X: -s / 2, Y: 0, Z: 0},
-		},
-		color: ColorBlack,
-	})
+	line2 := &LinePart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: -s, Y: 0, Z: 0},
+				Coordinates{X: -s / 2, Y: 0, Z: 0},
+			},
+			color: ColorBlack,
+		}}
 	ship.addPart(line2)
 
-	line3 := newLinePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: s, Y: s / 2, Z: 0},
-			Coordinates{X: s, Y: -s / 2, Z: 0},
-		},
-		color: ColorBlack,
-	})
+	line3 := &LinePart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: s, Y: s / 2, Z: 0},
+				Coordinates{X: s, Y: -s / 2, Z: 0},
+			},
+			color: ColorBlack,
+		}}
 	ship.addPart(line3)
-	line4 := newLinePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: -s, Y: s / 2, Z: 0},
-			Coordinates{X: -s, Y: -s / 2, Z: 0},
-		},
-		color: ColorBlack,
-	})
+	line4 := &LinePart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: -s, Y: s / 2, Z: 0},
+				Coordinates{X: -s, Y: -s / 2, Z: 0},
+			},
+			color: ColorBlack,
+		}}
 	ship.addPart(line4)
 
-	var line LinePart
-	line = newLinePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: s, Y: s / 2, Z: 0},
-			Coordinates{X: s / 2, Y: s, Z: 0},
-		},
-		color: ColorBlack,
-	})
+	var line *LinePart
+	line = &LinePart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: s, Y: s / 2, Z: 0},
+				Coordinates{X: s / 2, Y: s, Z: 0},
+			},
+			color: ColorBlack,
+		}}
 	ship.addPart(line)
-	line = newLinePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: s, Y: -s / 2, Z: 0},
-			Coordinates{X: s / 2, Y: -s, Z: 0},
-		},
-		color: ColorBlack,
-	})
+	line = &LinePart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: s, Y: -s / 2, Z: 0},
+				Coordinates{X: s / 2, Y: -s, Z: 0},
+			},
+			color: ColorBlack,
+		}}
 	ship.addPart(line)
-	line = newLinePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: -s, Y: s / 2, Z: 0},
-			Coordinates{X: -s / 2, Y: s, Z: 0},
-		},
-		color: ColorBlack,
-	})
+	line = &LinePart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: -s, Y: s / 2, Z: 0},
+				Coordinates{X: -s / 2, Y: s, Z: 0},
+			},
+			color: ColorBlack,
+		}}
 	ship.addPart(line)
-	line = newLinePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: -s, Y: -s / 2, Z: 0},
-			Coordinates{X: -s / 2, Y: -s, Z: 0},
-		},
-		color: ColorBlack,
-	})
+	line = &LinePart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: -s, Y: -s / 2, Z: 0},
+				Coordinates{X: -s / 2, Y: -s, Z: 0},
+			},
+			color: ColorBlack,
+		}}
 	ship.addPart(line)
 	//ship.setCreatedTime()
 
@@ -589,34 +579,37 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 		Z: rand.Intn(40),
 	}
 	height := -50
-	ship.addPart(newPolygonPart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: s / 2, Y: s / 2, Z: 0},
-			Coordinates{X: s / 2, Y: -s / 2, Z: 0},
-			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
-			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
-		},
-		color: ColorBlack,
-		fill:  true,
-	}))
-	ship.addPart(newPolygonPart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: s / 2, Y: s / 2, Z: 0},
-			Coordinates{X: s / 2, Y: -s / 2, Z: 0},
-			Coordinates{X: 0, Y: 0, Z: height},
-		},
-		color: ColorRed,
-		fill:  true,
-	}))
-	ship.addPart(newPolygonPart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
-			Coordinates{X: -s / 2, Y: s / 2, Z: 0},
-			Coordinates{X: 0, Y: 0, Z: height},
-		},
-		color: ColorGreen,
-		fill:  true,
-	}))
+	ship.addPart(&PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: s / 2, Y: s / 2, Z: 0},
+				Coordinates{X: s / 2, Y: -s / 2, Z: 0},
+				Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+				Coordinates{X: -s / 2, Y: s / 2, Z: 0},
+			},
+			color: ColorBlack,
+			fill:  true,
+		}})
+	ship.addPart(&PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: s / 2, Y: s / 2, Z: 0},
+				Coordinates{X: s / 2, Y: -s / 2, Z: 0},
+				Coordinates{X: 0, Y: 0, Z: height},
+			},
+			color: ColorRed,
+			fill:  true,
+		}})
+	ship.addPart(&PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
+				Coordinates{X: -s / 2, Y: s / 2, Z: 0},
+				Coordinates{X: 0, Y: 0, Z: height},
+			},
+			color: ColorGreen,
+			fill:  true,
+		}})
 
 	return &ship
 }
