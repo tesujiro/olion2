@@ -138,8 +138,6 @@ type PolygonPart struct {
 	Part
 }
 
-// CirclePartはPartを埋め込むことでコンストラクタ関数が不要になったが、利用元でPartの埋め込みを意識する必要がある。
-// また、view.draw()関数でオブジェクト型チェックする場合にポインタ型になる。
 type CirclePart struct {
 	Part
 }
@@ -303,7 +301,6 @@ mainloop:
 		case downMsg := <-obj.downChannel:
 			obj.updateCurDots(downMsg.time)
 			parts := obj.getParts()
-			//parts:= obj.parts
 			distance := obj.getDistance(downMsg.time)
 			newPosition := Coordinates{
 				X: obj.position.X - downMsg.deltaPosition.X - distance.X,
@@ -404,17 +401,13 @@ func newStar(t time.Time, s int, c Coordinates) *Star {
 		Y: 0,
 		Z: 0,
 	}
-	//dot := newDotPart(Part{
-	//circle := newCirclePart(&Part{
 	circle := &CirclePart{
 		Part{dots: []Coordinates{Coordinates{X: 0, Y: 0, Z: 0}},
-			color: ColorWhite,
-			//color: ColorYellow,
-			fill: true,
-			size: rand.Intn(2),
+			color: colors.name("White").Attribute(),
+			fill:  true,
+			size:  rand.Intn(2),
 		},
 	}
-	//})
 	star.addPart(circle)
 	return &star
 }
@@ -425,13 +418,11 @@ type Bomb struct {
 
 func newBomb(t time.Time, s int, speed Coordinates) *Bomb {
 	bomb := Bomb{Object: *newObject()}
-	//bomb.position = Coordinates{X: 0, Y: 0, Z: 0}
 	bomb.position = speed
 	bomb.time = t
 	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z - 80}
 	bomb.bomb = true
 	bomb.size = s
-	//fmt.Printf("size=%v \n", bomb.getSize())
 	rectangle1 := newRectanglePart(&Part{
 		dots: []Coordinates{
 			Coordinates{X: s, Y: s, Z: 0},
@@ -468,7 +459,8 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
 				Coordinates{X: -s / 2, Y: s / 2, Z: 0},
 			},
-			color: ColorRed,
+			//color: ColorRed,
+			color: colors.name("Red").Attribute(),
 			fill:  true,
 		}}
 	ship.addPart(rectangle1)

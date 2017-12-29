@@ -265,6 +265,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 	flag.Parse()
 	screen := NewScreen()
 	newDebugWriter(ctx)
+	InitColor()
 
 	return &Olion{
 		Argv:        os.Args,
@@ -488,6 +489,9 @@ mainloop:
 				debug.Printf("d1=%v d2=%v d3=%v\n", d1, d2, d3)
 				state.screen.printTriangle([]Dot{d1, d2, d3}, ColorBlack)
 			*/
+			//debug.Printf("len(colors)=%v color.red=%v id=%v ColorRed=%v\n", len(colors), colors.name("Red"), colors.name("Red").ColorId, ColorRed)
+			//debug.Printf("len(colors)=%v color.black=%v id=%v ColorBlack=%v\n", len(colors), colors.name("Black"), colors.name("Black").ColorId, ColorBlack)
+			//debug.Printf("typeOf(ColorId)=%v typeOf(ColorBlack)=%v\n", reflect.TypeOf(colors.name("Black").ColorId), reflect.TypeOf(ColorBlack))
 			if state.Debug == true {
 				state.drawDebugInfo()
 			}
@@ -550,7 +554,7 @@ mainloop:
 
 func (state *Olion) Run(ctx context.Context) (err error) {
 
-	InitColor()
+	//InitColor()
 	var _cancelOnce sync.Once
 	var _cancel func()
 	ctx, _cancel = context.WithCancel(ctx)
