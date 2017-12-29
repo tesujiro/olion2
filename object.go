@@ -326,7 +326,7 @@ func (obj *Object) getExplodedTime() time.Time {
 
 func (obj *Object) explode() {
 	for _, p := range obj.parts {
-		p.setColor(ColorRed)
+		p.setColor(colors.name("Red").Attribute())
 	}
 	obj.spinXY = 1715
 	obj.explodedAt = obj.time
@@ -428,7 +428,7 @@ func newBomb(t time.Time, s int, speed Coordinates) *Bomb {
 			Coordinates{X: s, Y: s, Z: 0},
 			Coordinates{X: -s, Y: -s, Z: 0},
 		},
-		color: ColorGreen,
+		color: colors.name("Green").Attribute(),
 		fill:  false,
 	})
 	bomb.addPart(rectangle1)
@@ -459,7 +459,6 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
 				Coordinates{X: -s / 2, Y: s / 2, Z: 0},
 			},
-			//color: ColorRed,
 			color: colors.name("Red").Attribute(),
 			fill:  true,
 		}}
@@ -472,7 +471,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: -s / 2, Y: -s / 2, Z: -1},
 				Coordinates{X: -s / 2, Y: s / 2, Z: -1},
 			},
-			color: ColorBlack,
+			color: colors.name("Black").Attribute(),
 			fill:  false,
 		}}
 	ship.addPart(rectangle2)
@@ -482,7 +481,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: s, Y: 0, Z: 0},
 				Coordinates{X: s / 2, Y: 0, Z: 0},
 			},
-			color: ColorBlack,
+			color: colors.name("Black").Attribute(),
 		}}
 	ship.addPart(line1)
 	line2 := &LinePart{
@@ -491,7 +490,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: -s, Y: 0, Z: 0},
 				Coordinates{X: -s / 2, Y: 0, Z: 0},
 			},
-			color: ColorBlack,
+			color: colors.name("Black").Attribute(),
 		}}
 	ship.addPart(line2)
 
@@ -501,7 +500,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: s, Y: s / 2, Z: 0},
 				Coordinates{X: s, Y: -s / 2, Z: 0},
 			},
-			color: ColorBlack,
+			color: colors.name("Black").Attribute(),
 		}}
 	ship.addPart(line3)
 	line4 := &LinePart{
@@ -510,7 +509,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: -s, Y: s / 2, Z: 0},
 				Coordinates{X: -s, Y: -s / 2, Z: 0},
 			},
-			color: ColorBlack,
+			color: colors.name("Black").Attribute(),
 		}}
 	ship.addPart(line4)
 
@@ -521,7 +520,6 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: s, Y: s / 2, Z: 0},
 				Coordinates{X: s / 2, Y: s, Z: 0},
 			},
-			color: ColorBlack,
 		}}
 	ship.addPart(line)
 	line = &LinePart{
@@ -530,7 +528,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: s, Y: -s / 2, Z: 0},
 				Coordinates{X: s / 2, Y: -s, Z: 0},
 			},
-			color: ColorBlack,
+			color: colors.name("Black").Attribute(),
 		}}
 	ship.addPart(line)
 	line = &LinePart{
@@ -539,7 +537,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: -s, Y: s / 2, Z: 0},
 				Coordinates{X: -s / 2, Y: s, Z: 0},
 			},
-			color: ColorBlack,
+			color: colors.name("Black").Attribute(),
 		}}
 	ship.addPart(line)
 	line = &LinePart{
@@ -548,7 +546,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: -s, Y: -s / 2, Z: 0},
 				Coordinates{X: -s / 2, Y: -s, Z: 0},
 			},
-			color: ColorBlack,
+			color: colors.name("Black").Attribute(),
 		}}
 	ship.addPart(line)
 	//ship.setCreatedTime()
@@ -579,7 +577,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 				Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
 				Coordinates{X: -s / 2, Y: s / 2, Z: 0},
 			},
-			color: ColorBlack,
+			color: colors.name("Black").Attribute(),
 			fill:  true,
 		}})
 	ship.addPart(&PolygonPart{
@@ -589,7 +587,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 				Coordinates{X: s / 2, Y: -s / 2, Z: 0},
 				Coordinates{X: 0, Y: 0, Z: height},
 			},
-			color: ColorRed,
+			color: colors.name("Red").Attribute(),
 			fill:  true,
 		}})
 	ship.addPart(&PolygonPart{
@@ -599,7 +597,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 				Coordinates{X: -s / 2, Y: s / 2, Z: 0},
 				Coordinates{X: 0, Y: 0, Z: height},
 			},
-			color: ColorGreen,
+			color: colors.name("Green").Attribute(),
 			fill:  true,
 		}})
 
@@ -624,7 +622,7 @@ func newBox2(t time.Time, s int, c Coordinates) *SpaceBox2 {
 	layers := rand.Intn(5) + 2
 	distance := 30
 	diff_size := -80
-	colors := []Attribute{ColorBlack, ColorRed}
+	colors := []Attribute{colors.name("Black").Attribute(), colors.name("Red").Attribute()}
 	for i := 0; i < layers; i++ {
 		edge_size := s + diff_size*i
 		rectangle := newRectanglePart(&Part{
@@ -655,7 +653,14 @@ func newBox3(t time.Time, s int, c Coordinates) *SpaceBox3 {
 		Y: rand.Intn(10) - 5,
 		Z: rand.Intn(10),
 	}
-	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, []Attribute{ColorBlack, ColorRed, ColorWhite, ColorGreen, ColorYellow})
+	cs := []Attribute{
+		colors.name("Black").Attribute(),
+		colors.name("Red").Attribute(),
+		colors.name("White").Attribute(),
+		colors.name("Green").Attribute(),
+		colors.name("Yellow").Attribute(),
+	}
+	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, cs)
 
 	return &box
 }

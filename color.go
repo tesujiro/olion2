@@ -56,12 +56,4 @@ func InitColor() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-
-	//for _, c := range colors {
-	//fmt.Printf("color=%v\n", c)
-	//}
-	//fmt.Printf("%v\n", colors.name("Black"))
-	//fmt.Printf("%v\n", colors.name("White"))
-	//fmt.Printf("%v\n", colors.name("Grey"))
-	//fmt.Printf("ColorId=%v\n", colors.name("Grey").ColorId)
 }
