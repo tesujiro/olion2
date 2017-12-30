@@ -139,54 +139,9 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 	if !sc.cover2(*d1, *d2) {
 		return
 	}
-
 	for _, d := range sc.getLinedDots(d1, d2) {
 		sc.printDot(d, color)
 	}
-
-	/*
-		if d1.X == d2.X {
-			x := d1.X
-			if d1.Y < d2.Y {
-				for y := d1.Y; y <= d2.Y; y++ {
-					sc.printDot(&Dot{X: x, Y: y}, color)
-				}
-			} else {
-				for y := d2.Y; y <= d1.Y; y++ {
-					sc.printDot(&Dot{X: x, Y: y}, color)
-				}
-			}
-			return
-		}
-
-		//debug.Printf("printLine d1=%v d2=%v color=%v\n", d1, d2, color)
-		orderByX := func(d1, d2 *Dot) (*Dot, *Dot) {
-			if d1.X >= d2.X {
-				return d2, d1
-			} else {
-				return d1, d2
-			}
-		}
-		dx1, dx2 := orderByX(d1, d2)
-		for x := dx1.X; x <= dx2.X; x++ {
-			y1 := dx1.Y + (dx2.Y-dx1.Y)*(x-dx1.X)/(dx2.X-dx1.X)
-			y2 := dx1.Y + (dx2.Y-dx1.Y)*(x+1-dx1.X)/(dx2.X-dx1.X)
-			if y1 == y2 || x == dx2.X {
-				y := y1
-				sc.printDot(&Dot{X: x, Y: y}, color)
-			} else if y1 < y2 {
-				//for y := y1; y < y2 && y != dx1.Y && y != dx2.Y; y++ {
-				for y := y1; y < y2; y++ {
-					sc.printDot(&Dot{X: x, Y: y}, color)
-				}
-			} else {
-				//for y := y2; y < y1 && y != dx1.Y && y != dx2.Y; y++ {
-				for y := y1; y > y2; y-- {
-					sc.printDot(&Dot{X: x, Y: y}, color)
-				}
-			}
-		}
-	*/
 }
 
 func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
@@ -242,13 +197,21 @@ func (sc *Screen) printTriangle(dots []Dot, color Attribute) {
 		})
 		return result
 	}
+	// Todo: performance of loop
 	dotsOrderedByX := getLongLineByX(dots)
 	for _, d1 := range sc.getLinedDots(&dotsOrderedByX[0], &dotsOrderedByX[2]) {
-		for _, d2 := range sc.getLinedDots(&dotsOrderedByX[0], &dotsOrderedByX[1]) {
-			sc.printLine(d1, d2, color)
-		}
-		for _, d2 := range sc.getLinedDots(&dotsOrderedByX[1], &dotsOrderedByX[2]) {
-			sc.printLine(d1, d2, color)
+		if d1.X <= dotsOrderedByX[1].X {
+			for _, d2 := range sc.getLinedDots(&dotsOrderedByX[0], &dotsOrderedByX[1]) {
+				if d1.X == d2.X {
+					sc.printLine(d1, d2, color)
+				}
+			}
+		} else {
+			for _, d2 := range sc.getLinedDots(&dotsOrderedByX[1], &dotsOrderedByX[2]) {
+				if d1.X == d2.X {
+					sc.printLine(d1, d2, color)
+				}
+			}
 		}
 	}
 }

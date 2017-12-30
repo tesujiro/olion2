@@ -72,8 +72,8 @@ func (spc *Space) inTheSpace(c Coordinates) bool {
 func (spc *Space) genObject(now time.Time) Exister {
 	num := rand.Intn(100)
 	switch {
-	case true:
-		return newFramedRectangle(now, 1000, spc.randomSpace())
+	//case true:
+	//return newFramedRectangle(now, 1000, spc.randomSpace())
 	case num < 20:
 		return newBox(now, 500, spc.randomSpace())
 	case num < 40:
@@ -116,11 +116,11 @@ func NewSpace(ctx context.Context, cancel func()) *Space {
 		Z: depth,
 	}
 	now := time.Now()
-	//for i := 0; i < 10; i++ {
-	obj := spc.GenFunc(now)
-	spc.addObj(obj)
-	go obj.run(ctx, cancel)
-	//}
+	for i := 0; i < 10; i++ {
+		obj := spc.GenFunc(now)
+		spc.addObj(obj)
+		go obj.run(ctx, cancel)
+	}
 
 	return spc
 }
