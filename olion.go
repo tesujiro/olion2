@@ -83,7 +83,6 @@ func (spc *Space) genObject(now time.Time) Exister {
 	default:
 		//Add SpaceShip
 		return newSpaceShip(now, 500, spc.randomSpace())
-		//return newStar(now, 1, spc.randomSpace())
 	}
 }
 

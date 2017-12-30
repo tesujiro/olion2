@@ -111,21 +111,25 @@ func (sc *Screen) getLinedDots(d1, d2 *Dot) []*Dot {
 		}
 	}
 	dx1, dx2 := orderByX(d1, d2)
+	result = make([]*Dot, dx2.X-dx1.X+1)
 	for x := dx1.X; x <= dx2.X; x++ {
 		y1 := dx1.Y + (dx2.Y-dx1.Y)*(x-dx1.X)/(dx2.X-dx1.X)
 		y2 := dx1.Y + (dx2.Y-dx1.Y)*(x+1-dx1.X)/(dx2.X-dx1.X)
 		if y1 == y2 || x == dx2.X {
 			y := y1
-			result = append(result, &Dot{X: x, Y: y})
+			//result = append(result, &Dot{X: x, Y: y})
+			result[x-dx1.X] = &Dot{X: x, Y: y}
 		} else if y1 < y2 {
 			//for y := y1; y < y2 && y != dx1.Y && y != dx2.Y; y++ {
 			for y := y1; y < y2; y++ {
-				result = append(result, &Dot{X: x, Y: y})
+				//result = append(result, &Dot{X: x, Y: y})
+				result[x-dx1.X] = &Dot{X: x, Y: y}
 			}
 		} else {
 			//for y := y2; y < y1 && y != dx1.Y && y != dx2.Y; y++ {
 			for y := y1; y > y2; y-- {
-				result = append(result, &Dot{X: x, Y: y})
+				//result = append(result, &Dot{X: x, Y: y})
+				result[x-dx1.X] = &Dot{X: x, Y: y}
 			}
 		}
 	}
@@ -136,9 +140,11 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 	if d1 == nil || d2 == nil {
 		return
 	}
-	if !sc.cover2(*d1, *d2) {
-		return
-	}
+	/*
+		if !sc.cover2(*d1, *d2) {
+			return
+		}
+	*/
 	for _, d := range sc.getLinedDots(d1, d2) {
 		sc.printDot(d, color)
 	}
