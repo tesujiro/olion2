@@ -72,6 +72,8 @@ func (spc *Space) inTheSpace(c Coordinates) bool {
 func (spc *Space) genObject(now time.Time) Exister {
 	num := rand.Intn(100)
 	switch {
+	case true:
+		return newFramedRectangle(now, 1000, spc.randomSpace())
 	case num < 20:
 		return newBox(now, 500, spc.randomSpace())
 	case num < 40:
@@ -114,11 +116,11 @@ func NewSpace(ctx context.Context, cancel func()) *Space {
 		Z: depth,
 	}
 	now := time.Now()
-	for i := 0; i < 10; i++ {
-		obj := spc.GenFunc(now)
-		spc.addObj(obj)
-		go obj.run(ctx, cancel)
-	}
+	//for i := 0; i < 10; i++ {
+	obj := spc.GenFunc(now)
+	spc.addObj(obj)
+	go obj.run(ctx, cancel)
+	//}
 
 	return spc
 }
@@ -387,7 +389,7 @@ type Window struct {
 func newDebugWindow(screen *Screen) *Window {
 	return &Window{
 		width:  80,
-		height: 30,
+		height: 50,
 		screen: screen,
 		StartX: 5,
 		StartY: 5,
@@ -478,8 +480,8 @@ mainloop:
 			state.drawConsole(count)
 			//state.screen.printLine(&Dot{X: 10, Y: 12}, &Dot{X: 20, Y: 17}, ColorRed)
 			//state.screen.printLine(&Dot{X: 10, Y: 32}, &Dot{X: 15, Y: 42}, ColorRed)
-			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 50}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorWhite, true)
-			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 50}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, ColorBlack, false)
+			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 50}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, colors.name("White").Attribute(), true)
+			//state.screen.printPolygon([]Dot{Dot{X: 10, Y: 10}, Dot{X: 40, Y: 50}, Dot{X: 60, Y: 100}, Dot{X: 10, Y: 40}}, colors.name("Black").Attribute(), false)
 			/*
 				var d1, d2, d3 Dot
 				d1, d2, d3 = Dot{X: 10, Y: 10}, Dot{X: 15, Y: 20}, Dot{X: 20, Y: 10}

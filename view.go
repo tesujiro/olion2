@@ -80,26 +80,27 @@ func (sc *Screen) printDot(dot *Dot, color Attribute) {
 	}
 }
 
-func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
+func (sc *Screen) getLinedDots(d1, d2 *Dot) []*Dot {
+	var result []*Dot
 	if d1 == nil || d2 == nil {
-		return
+		return result
 	}
 	if !sc.cover2(*d1, *d2) {
-		return
+		return result
 	}
 
 	if d1.X == d2.X {
 		x := d1.X
 		if d1.Y < d2.Y {
 			for y := d1.Y; y <= d2.Y; y++ {
-				sc.printDot(&Dot{X: x, Y: y}, color)
+				result = append(result, &Dot{X: x, Y: y})
 			}
 		} else {
 			for y := d2.Y; y <= d1.Y; y++ {
-				sc.printDot(&Dot{X: x, Y: y}, color)
+				result = append(result, &Dot{X: x, Y: y})
 			}
 		}
-		return
+		return result
 	}
 
 	orderByX := func(d1, d2 *Dot) (*Dot, *Dot) {
@@ -115,23 +116,81 @@ func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
 		y2 := dx1.Y + (dx2.Y-dx1.Y)*(x+1-dx1.X)/(dx2.X-dx1.X)
 		if y1 == y2 || x == dx2.X {
 			y := y1
-			sc.printDot(&Dot{X: x, Y: y}, color)
+			result = append(result, &Dot{X: x, Y: y})
 		} else if y1 < y2 {
 			//for y := y1; y < y2 && y != dx1.Y && y != dx2.Y; y++ {
 			for y := y1; y < y2; y++ {
-				sc.printDot(&Dot{X: x, Y: y}, color)
+				result = append(result, &Dot{X: x, Y: y})
 			}
 		} else {
 			//for y := y2; y < y1 && y != dx1.Y && y != dx2.Y; y++ {
 			for y := y1; y > y2; y-- {
-				sc.printDot(&Dot{X: x, Y: y}, color)
+				result = append(result, &Dot{X: x, Y: y})
 			}
 		}
 	}
+	return result
+}
+
+func (sc *Screen) printLine(d1, d2 *Dot, color Attribute) {
+	if d1 == nil || d2 == nil {
+		return
+	}
+	if !sc.cover2(*d1, *d2) {
+		return
+	}
+
+	for _, d := range sc.getLinedDots(d1, d2) {
+		sc.printDot(d, color)
+	}
+
+	/*
+		if d1.X == d2.X {
+			x := d1.X
+			if d1.Y < d2.Y {
+				for y := d1.Y; y <= d2.Y; y++ {
+					sc.printDot(&Dot{X: x, Y: y}, color)
+				}
+			} else {
+				for y := d2.Y; y <= d1.Y; y++ {
+					sc.printDot(&Dot{X: x, Y: y}, color)
+				}
+			}
+			return
+		}
+
+		//debug.Printf("printLine d1=%v d2=%v color=%v\n", d1, d2, color)
+		orderByX := func(d1, d2 *Dot) (*Dot, *Dot) {
+			if d1.X >= d2.X {
+				return d2, d1
+			} else {
+				return d1, d2
+			}
+		}
+		dx1, dx2 := orderByX(d1, d2)
+		for x := dx1.X; x <= dx2.X; x++ {
+			y1 := dx1.Y + (dx2.Y-dx1.Y)*(x-dx1.X)/(dx2.X-dx1.X)
+			y2 := dx1.Y + (dx2.Y-dx1.Y)*(x+1-dx1.X)/(dx2.X-dx1.X)
+			if y1 == y2 || x == dx2.X {
+				y := y1
+				sc.printDot(&Dot{X: x, Y: y}, color)
+			} else if y1 < y2 {
+				//for y := y1; y < y2 && y != dx1.Y && y != dx2.Y; y++ {
+				for y := y1; y < y2; y++ {
+					sc.printDot(&Dot{X: x, Y: y}, color)
+				}
+			} else {
+				//for y := y2; y < y1 && y != dx1.Y && y != dx2.Y; y++ {
+				for y := y1; y > y2; y-- {
+					sc.printDot(&Dot{X: x, Y: y}, color)
+				}
+			}
+		}
+	*/
 }
 
 func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
-	//fmt.Printf("d1=%v\td2=%v\n", d1, d2)
+	//debug.Printf("printRectangle fill=%v\td1=%v\td2=%v\t\n", fill, d1, d2)
 	if fill {
 		var diffY int
 		if d1.Y < d2.Y {
@@ -151,20 +210,24 @@ func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
 }
 
 func (sc *Screen) printPolygon(dots []Dot, color Attribute, fill bool) {
+	debug.Printf("printPolygon fill=%v\tdots=%v\n", fill, dots)
 	if len(dots) < 3 {
 		return
 	}
 	if fill {
 		for i := 1; i < len(dots)-1; i++ {
+			debug.Printf("printPolygon -> printTriangle\td1=%v\td2=%v\td3=%v\n", dots[0], dots[i], dots[i+1])
 			sc.printTriangle([]Dot{dots[0], dots[i], dots[i+1]}, color)
 		}
 	} else {
 		d1 := dots[0]
 		for _, d2 := range dots[1:] {
 			sc.printLine(&d1, &d2, color)
+			//debug.Printf("printPolygon -> printLine\td1=%v\td2=%v\n", d1, d2)
 			d1 = d2
 		}
 		sc.printLine(&d1, &dots[0], color)
+		//debug.Printf("printPolygon -> printLine\td1=%v\td2=%v\n", d1, dots[0])
 	}
 }
 
@@ -172,54 +235,21 @@ func (sc *Screen) printTriangle(dots []Dot, color Attribute) {
 	if len(dots) != 3 {
 		return
 	}
-	getMinMax := func(dots []Dot) (minX, maxX int) {
-		minX = dots[0].X
-		maxX = dots[0].X
-		for i := 1; i < len(dots); i++ {
-			if dots[i].X < minX {
-				minX = dots[i].X
-			} else if dots[i].X > maxX {
-				maxX = dots[i].X
-			}
-		}
-		return minX, maxX
+	getLongLineByX := func(dots []Dot) []Dot {
+		result := []Dot{dots[0], dots[1], dots[2]}
+		sort.Slice(result, func(i, j int) bool {
+			return result[i].X <= result[j].X
+		})
+		return result
 	}
-	crossPoints := func(dots []Dot, x int) (int, int) {
-		var ret []int
-		for i := 0; i < len(dots); i++ {
-			d1 := dots[i]
-			d2 := dots[(i+1)%len(dots)]
-			if (d1.X > x && d2.X > x) || (d1.X < x && d2.X < x) || (d1.X == d2.X) {
-				//fmt.Printf("d1=%v d2=%v x=%v\n", d1, d2, x)
-				continue
-			}
-			switch {
-			case d1.Y == d2.Y:
-				ret = append(ret, d1.Y)
-			case d1.Y < d2.Y:
-				y := d1.Y + (d2.Y-d1.Y)*(d1.X-x)/(d1.X-d2.X)
-				ret = append(ret, y)
-			case d1.Y > d2.Y:
-				y := d2.Y + (d1.Y-d2.Y)*(d2.X-x)/(d2.X-d1.X)
-				ret = append(ret, y)
-			}
+	dotsOrderedByX := getLongLineByX(dots)
+	for _, d1 := range sc.getLinedDots(&dotsOrderedByX[0], &dotsOrderedByX[2]) {
+		for _, d2 := range sc.getLinedDots(&dotsOrderedByX[0], &dotsOrderedByX[1]) {
+			sc.printLine(d1, d2, color)
 		}
-		if len(ret) < len(dots)-1 {
-			//fmt.Printf("\nx=%v len(ret)=%v\n", x, len(ret))
-			return 0, 0
+		for _, d2 := range sc.getLinedDots(&dotsOrderedByX[1], &dotsOrderedByX[2]) {
+			sc.printLine(d1, d2, color)
 		}
-		if len(ret) == 2 || ret[0] != ret[1] {
-			return ret[0], ret[1]
-		} else {
-			return ret[0], ret[2]
-		}
-	}
-	minX, maxX := getMinMax(dots)
-	//debug.Printf("minX=%v maxX=%v\n", minX, maxX)
-	for x := minX; x <= maxX; x++ {
-		y1, y2 := crossPoints(dots, x)
-		//debug.Printf("x=%v y1=%v y2=%v\n", x, y1, y2)
-		sc.printLine(&Dot{X: x, Y: y1}, &Dot{X: x, Y: y2}, color)
 	}
 }
 

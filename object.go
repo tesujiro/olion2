@@ -9,6 +9,7 @@ import (
 
 type Attribute uint16
 
+/*
 const (
 	ColorDefault Attribute = iota
 	ColorBlack
@@ -20,6 +21,7 @@ const (
 	ColorCyan
 	ColorWhite
 )
+*/
 
 type Part struct {
 	curDots []Coordinates
@@ -334,7 +336,7 @@ func (obj *Object) explode() {
 }
 
 func (obj *Object) newRectangular(start Coordinates, width int, height int, depth int, cols []Attribute) {
-	debug.Printf("newRectangular\n")
+	//debug.Printf("newRectangular\n")
 	var colors []Attribute
 	var m []int
 	switch len(cols) {
@@ -435,6 +437,40 @@ func newBomb(t time.Time, s int, speed Coordinates) *Bomb {
 	return &bomb
 }
 
+type FramedRectangle struct {
+	Object
+}
+
+func newFramedRectangle(t time.Time, s int, c Coordinates) *FramedRectangle {
+	fr := FramedRectangle{Object: *newObject()}
+	fr.position = c
+	fr.time = t
+	fr.speed = Coordinates{X: 0, Y: 0, Z: 0}
+	fr.bomb = false
+	fr.size = s
+	fr.spinXY = 180
+	fr.spinXZ = 0
+	rectangle1 := newRectanglePart(&Part{
+		dots: []Coordinates{
+			Coordinates{X: s, Y: s, Z: 0},
+			Coordinates{X: -s, Y: -s, Z: 0},
+		},
+		color: colors.name("Red").Attribute(),
+		fill:  true,
+	})
+	fr.addPart(rectangle1)
+	rectangle1 = newRectanglePart(&Part{
+		dots: []Coordinates{
+			Coordinates{X: s, Y: s, Z: 0},
+			Coordinates{X: -s, Y: -s, Z: 0},
+		},
+		color: colors.name("Black").Attribute(),
+		fill:  false,
+	})
+	fr.addPart(rectangle1)
+	return &fr
+}
+
 type SpaceShip struct {
 	Object
 }
@@ -520,6 +556,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 				Coordinates{X: s, Y: s / 2, Z: 0},
 				Coordinates{X: s / 2, Y: s, Z: 0},
 			},
+			color: colors.name("Black").Attribute(),
 		}}
 	ship.addPart(line)
 	line = &LinePart{
