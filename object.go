@@ -201,11 +201,13 @@ type Object struct {
 	mobile
 	position Coordinates //位置
 
-	downChannel downChannel
-	upChannel   upChannel
-	bomb        bool
-	explodedAt  time.Time
-	exploding   bool
+	downChannel       downChannel
+	upChannel         upChannel
+	bomb              bool
+	bombable          bool
+	throwBombDistance int
+	explodedAt        time.Time
+	exploding         bool
 }
 
 type Exister interface {
@@ -214,9 +216,13 @@ type Exister interface {
 	run(context.Context, func())
 	getPosition() Coordinates
 	setPosition(Coordinates)
+	getSpeed() Coordinates
 	getSize() int
 	setSize(int)
 	isBomb() bool
+	hasBomb() bool
+	removeBomb()
+	getThrowBombDistance() int
 	explode()
 	isExploding() bool
 	getExplodedTime() time.Time
@@ -292,6 +298,24 @@ func (obj *Object) updateCurDots(currentTime time.Time) {
 func (obj *Object) isBomb() bool {
 	return obj.bomb
 }
+
+func (obj *Object) hasBomb() bool {
+	return obj.bombable
+}
+
+func (obj *Object) removeBomb() {
+	obj.bombable = false
+	return
+}
+
+func (obj *Object) getThrowBombDistance() int {
+	return obj.throwBombDistance
+}
+
+//func (obj *Object) throwBomb() {
+//	obj.hasBomb = false
+//	return
+//}
 
 func (obj *Object) run(ctx context.Context, cancel func()) {
 	defer cancel()
@@ -418,17 +442,17 @@ type Bomb struct {
 	Object
 }
 
-func newBomb(t time.Time, s int, speed Coordinates) *Bomb {
+func newBomb(t time.Time, s int, position Coordinates, speed Coordinates) *Bomb {
 	bomb := Bomb{Object: *newObject()}
 	bomb.position = speed
 	bomb.time = t
-	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z - 80}
+	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z}
 	bomb.bomb = true
 	bomb.size = s
 	rectangle1 := newRectanglePart(&Part{
 		dots: []Coordinates{
-			Coordinates{X: s, Y: s, Z: 0},
-			Coordinates{X: -s, Y: -s, Z: 0},
+			Coordinates{X: s + position.X, Y: s + position.Y, Z: position.Z},
+			Coordinates{X: -s + position.X, Y: -s + position.Y, Z: position.Z},
 		},
 		color: colors.name("Green").Attribute(),
 		fill:  false,
@@ -485,6 +509,8 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		Y: rand.Intn(40) - 20,
 		Z: rand.Intn(40),
 	}
+	ship.bombable = true
+	ship.throwBombDistance = 2000
 	ship.spinXY = rand.Intn(180) - 90
 	ship.spinXZ = 0
 	rectangle1 := &PolygonPart{

@@ -188,7 +188,8 @@ func distance(p1, p2 Coordinates) int {
 	return int(math.Sqrt(float64((p1.X-p2.X)*(p1.X-p2.X) + (p1.Y-p2.Y)*(p1.Y-p2.Y) + (p1.Z-p2.Z)*(p1.Z-p2.Z))))
 }
 
-func (spc *Space) judgeExplosion() int {
+func (state *Olion) judgeExplosion(now time.Time, ctx context.Context, cancel func()) int {
+	spc := state.space
 	score := 0
 	bombs := []Exister{}
 	flyings := []Exister{}
@@ -197,15 +198,14 @@ func (spc *Space) judgeExplosion() int {
 			bombs = append(bombs, obj)
 		} else if obj.isExploding() {
 			deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
-			//fmt.Printf("delta=%v\n", deltaTime)
-			// 10 sec. after explosion
 			if deltaTime > float64(1e4) {
+				// Delete 10 sec. after explosion.
 				spc.deleteObj(obj)
 			} else {
+				// Set new size while exploding.
 				newSize := int(math.Pow(2.0, float64(deltaTime/1000))) * 1000
 				//newSize := obj.getSize() * (int(deltaTime)/1000 + 1)
 				obj.setSize(newSize)
-				//fmt.Printf("newSize=%v\n", newSize)
 			}
 		} else {
 			flyings = append(flyings, obj)
@@ -214,6 +214,7 @@ func (spc *Space) judgeExplosion() int {
 L:
 	for _, flying := range flyings {
 		for _, bomb := range bombs {
+			// Judge explosion.
 			if distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 				//fmt.Printf("distance=%v size=%v\n", distance(flying.getPosition(), bomb.getPosition()), bomb.getSize())
 				score++
@@ -222,6 +223,26 @@ L:
 				break L
 			}
 		}
+		// Throw a bomb from enemy.
+		if flying.hasBomb() && distance(flying.getPosition(), Coordinates{}) < flying.getThrowBombDistance() {
+			sp1 := state.speed
+			sp2 := flying.getSpeed()
+			relative_speed := Coordinates{X: -sp1.X + sp2.X, Y: -sp1.Y + sp2.Y, Z: -sp1.Z + sp2.Z}
+			position := flying.getPosition()
+			d1 := distance(relative_speed, Coordinates{}) + 80
+			d2 := distance(position, Coordinates{})
+			speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
+			newObj := newBomb(now, 1000, position, speed)
+			state.space.addObj(newObj)
+			flying.removeBomb()
+			debug.Printf("Bomb!!\n", speed)
+			debug.Printf("sp1=%v\n", sp1)
+			debug.Printf("sp2=%v\n", sp2)
+			debug.Printf("position=%v\n", position)
+			debug.Printf("speed=%v\n", speed)
+			go newObj.run(ctx, cancel)
+		}
+		// Todo:敵同士の攻撃
 	}
 
 	return score
@@ -465,13 +486,15 @@ mainloop:
 			now := time.Now()
 			if fireBomb {
 				//fmt.Printf("\nnewBomb\n")
-				newObj := newBomb(now, 1000, state.speed)
+				speed := Coordinates{state.speed.X, state.speed.Y, state.speed.Z + 80}
+				newObj := newBomb(now, 1000, Coordinates{}, speed)
 				state.space.addObj(newObj)
 				go newObj.run(ctx, cancel)
 			}
 			forward := state.getDistance(now)
-			upMsgs := state.space.move(time.Now(), forward, ctx, cancel)
-			state.score += state.space.judgeExplosion()
+			//upMsgs := state.space.move(time.Now(), forward, ctx, cancel)
+			upMsgs := state.space.move(now, forward, ctx, cancel)
+			state.score += state.judgeExplosion(now, ctx, cancel)
 			view.draw(upMsgs)
 			count++
 			fireBomb = false

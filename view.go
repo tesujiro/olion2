@@ -171,13 +171,13 @@ func (sc *Screen) printRectangle(d1, d2 *Dot, color Attribute, fill bool) {
 }
 
 func (sc *Screen) printPolygon(dots []Dot, color Attribute, fill bool) {
-	debug.Printf("printPolygon fill=%v\tdots=%v\n", fill, dots)
+	//debug.Printf("printPolygon fill=%v\tdots=%v\n", fill, dots)
 	if len(dots) < 3 {
 		return
 	}
 	if fill {
 		for i := 1; i < len(dots)-1; i++ {
-			debug.Printf("printPolygon -> printTriangle\td1=%v\td2=%v\td3=%v\n", dots[0], dots[i], dots[i+1])
+			//debug.Printf("printPolygon -> printTriangle\td1=%v\td2=%v\td3=%v\n", dots[0], dots[i], dots[i+1])
 			sc.printTriangle([]Dot{dots[0], dots[i], dots[i+1]}, color)
 		}
 	} else {
