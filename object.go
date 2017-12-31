@@ -444,7 +444,8 @@ type Bomb struct {
 
 func newBomb(t time.Time, s int, position Coordinates, speed Coordinates) *Bomb {
 	bomb := Bomb{Object: *newObject()}
-	bomb.position = speed
+	//bomb.position = position
+	bomb.position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
 	bomb.time = t
 	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z}
 	bomb.bomb = true

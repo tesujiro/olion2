@@ -184,10 +184,6 @@ func (spc *Space) move(t time.Time, dp Coordinates, ctx context.Context, cancel 
 	return upMsgs
 }
 
-func distance(p1, p2 Coordinates) int {
-	return int(math.Sqrt(float64((p1.X-p2.X)*(p1.X-p2.X) + (p1.Y-p2.Y)*(p1.Y-p2.Y) + (p1.Z-p2.Z)*(p1.Z-p2.Z))))
-}
-
 func (state *Olion) judgeExplosion(now time.Time, ctx context.Context, cancel func()) int {
 	spc := state.space
 	score := 0
@@ -215,7 +211,7 @@ L:
 	for _, flying := range flyings {
 		for _, bomb := range bombs {
 			// Judge explosion.
-			if distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
+			if state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 				//fmt.Printf("distance=%v size=%v\n", distance(flying.getPosition(), bomb.getPosition()), bomb.getSize())
 				score++
 				flying.explode()
@@ -224,22 +220,25 @@ L:
 			}
 		}
 		// Throw a bomb from enemy.
-		if flying.hasBomb() && distance(flying.getPosition(), Coordinates{}) < flying.getThrowBombDistance() {
+		if flying.hasBomb() && state.screen.distance(flying.getPosition(), Coordinates{}) < flying.getThrowBombDistance() {
+			debug.Printf("Bomb!!\n")
 			sp1 := state.speed
 			sp2 := flying.getSpeed()
-			relative_speed := Coordinates{X: -sp1.X + sp2.X, Y: -sp1.Y + sp2.Y, Z: -sp1.Z + sp2.Z}
+			debug.Printf("sp1=%v\n", sp1)
+			debug.Printf("sp2=%v\n", sp2)
+			//relative_speed := Coordinates{X: -sp1.X + sp2.X, Y: -sp1.Y + sp2.Y, Z: -sp1.Z + sp2.Z}
 			position := flying.getPosition()
-			d1 := distance(relative_speed, Coordinates{}) + 80
-			d2 := distance(position, Coordinates{})
-			speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
+			debug.Printf("position=%v\n", position)
+			//d1 := distance(relative_speed, Coordinates{}) + 80
+			d2 := state.screen.distance(position, Coordinates{})
+			speed := Coordinates{X: -position.X * 160 / d2, Y: -position.Y * 160 / d2, Z: -position.Z * 160 / d2}
+			//speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
+			//speed := Coordinates{X: position.X * d1 / d2, Y: position.Y * d1 / d2, Z: position.Z * d1 / d2}
+			//speed := Coordinates{X: -sp2.X, Y: -sp2.Y, Z: -sp2.Z - 80}
+			debug.Printf("speed=%v\n", speed)
 			newObj := newBomb(now, 1000, position, speed)
 			state.space.addObj(newObj)
 			flying.removeBomb()
-			debug.Printf("Bomb!!\n", speed)
-			debug.Printf("sp1=%v\n", sp1)
-			debug.Printf("sp2=%v\n", sp2)
-			debug.Printf("position=%v\n", position)
-			debug.Printf("speed=%v\n", speed)
 			go newObj.run(ctx, cancel)
 		}
 		// Todo:敵同士の攻撃

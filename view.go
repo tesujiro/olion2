@@ -49,6 +49,10 @@ func (sc *Screen) cover2(dot1, dot2 Dot) bool {
 	return true
 }
 
+func (sc *Screen) distance(p1, p2 Coordinates) int {
+	return int(math.Sqrt(float64((p1.X-p2.X)*(p1.X-p2.X) + (p1.Y-p2.Y)*(p1.Y-p2.Y) + (p1.Z-p2.Z)*(p1.Z-p2.Z)/(sc.Width*sc.Width))))
+}
+
 func (sc *Screen) printString(dot *Dot, str string) {
 	//x, y := dot.X, sc.Height-dot.Y+1
 	x, y := dot.X, dot.Y
