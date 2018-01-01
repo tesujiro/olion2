@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"math"
 	"math/rand"
 	"os"
 	"strings"
@@ -197,18 +196,18 @@ func (state *Olion) judgeExplosion(now time.Time, ctx context.Context, cancel fu
 			if deltaTime > float64(1e4) {
 				// Delete 10 sec. after explosion.
 				spc.deleteObj(obj)
-			} else {
-				// Set new size while exploding.
-				newSize := int(math.Pow(2.0, float64(deltaTime/1000))) * 1000
-				//newSize := obj.getSize() * (int(deltaTime)/1000 + 1)
-				obj.setSize(newSize)
+				//} else {
+				//	// Set new size while exploding.
+				//	newSize := int(math.Pow(2.0, float64(deltaTime/1000))) * 1000
+				//	//newSize := obj.getSize() * (int(deltaTime)/1000 + 1)
+				//	obj.setSize(newSize)
 			}
 		} else {
 			flyings = append(flyings, obj)
 		}
 	}
-L:
 	for _, flying := range flyings {
+	L:
 		for _, bomb := range bombs {
 			// Judge explosion.
 			if state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
@@ -235,6 +234,7 @@ L:
 			//speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
 			//speed := Coordinates{X: position.X * d1 / d2, Y: position.Y * d1 / d2, Z: position.Z * d1 / d2}
 			//speed := Coordinates{X: -sp2.X, Y: -sp2.Y, Z: -sp2.Z - 80}
+			position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
 			debug.Printf("speed=%v\n", speed)
 			newObj := newBomb(now, 1000, position, speed)
 			state.space.addObj(newObj)
@@ -484,11 +484,12 @@ mainloop:
 			//Space
 			now := time.Now()
 			if fireBomb {
-				//fmt.Printf("\nnewBomb\n")
+				//debug.Printf("newBomb\n")
 				speed := Coordinates{state.speed.X, state.speed.Y, state.speed.Z + 80}
 				newObj := newBomb(now, 1000, Coordinates{}, speed)
 				state.space.addObj(newObj)
 				go newObj.run(ctx, cancel)
+				fireBomb = false
 			}
 			forward := state.getDistance(now)
 			//upMsgs := state.space.move(time.Now(), forward, ctx, cancel)
@@ -496,7 +497,6 @@ mainloop:
 			state.score += state.judgeExplosion(now, ctx, cancel)
 			view.draw(upMsgs)
 			count++
-			fireBomb = false
 			state.setStatus()
 			state.drawConsole(count)
 			//state.screen.printLine(&Dot{X: 10, Y: 12}, &Dot{X: 20, Y: 17}, ColorRed)
