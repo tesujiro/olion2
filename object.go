@@ -199,7 +199,8 @@ type Object struct {
 	size  int
 	//weight
 	mobile
-	position Coordinates //位置
+	position     Coordinates //位置
+	prevPosition Coordinates //異動前の位置
 
 	downChannel       downChannel
 	upChannel         upChannel
@@ -216,6 +217,8 @@ type Exister interface {
 	run(context.Context, func())
 	getPosition() Coordinates
 	setPosition(Coordinates)
+	getPrevPosition() Coordinates
+	setPrevPosition(Coordinates)
 	getSpeed() Coordinates
 	getSize() int
 	setSize(int)
@@ -253,6 +256,14 @@ func (obj *Object) getPosition() Coordinates {
 
 func (obj *Object) setPosition(p Coordinates) {
 	obj.position = p
+}
+
+func (obj *Object) getPrevPosition() Coordinates {
+	return obj.prevPosition
+}
+
+func (obj *Object) setPrevPosition(p Coordinates) {
+	obj.prevPosition = p
 }
 
 func (obj *Object) getSize() int {
@@ -333,6 +344,7 @@ mainloop:
 				Y: obj.position.Y - downMsg.deltaPosition.Y - distance.Y,
 				Z: obj.position.Z - downMsg.deltaPosition.Z - distance.Z,
 			}
+			obj.prevPosition = obj.position
 			obj.position = newPosition
 			obj.upChannel <- upMessage{
 				position: newPosition,

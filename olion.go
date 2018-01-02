@@ -154,32 +154,103 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 	return spc
 }
 
-func (spc *Space) move(t time.Time, dp Coordinates, ctx context.Context, cancel func()) []upMessage {
+func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Context, cancel func()) []upMessage {
 	downMsg := downMessage{
 		time:          t,
 		deltaPosition: dp,
 	}
 	upMsgs := []upMessage{}
+	now := time.Now()
+	flyings := []Exister{}
+	bombs := []Exister{}
+	debug.Printf("loop1\n")
 	for _, obj := range spc.Objects {
 		ch := obj.downCh()
 		ch <- downMsg
+		// Not Bomb
+		if !obj.isBomb() {
+			if obj.isExploding() {
+				deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
+				if deltaTime > float64(1e4) {
+					// Delete 10 sec. after explosion.
+					spc.deleteObj(obj)
+				}
+			}
+			flyings = append(flyings, obj)
+		} else {
+			bombs = append(bombs, obj)
+		}
 	}
-	now := time.Now()
+	debug.Printf("loop2\n")
+	// get msg from flying objects
+	for _, flying := range flyings {
+		upMsg := <-flying.upCh()
+		upMsgs = append(upMsgs, upMsg)
+		// Throw a bomb from enemy.
+		if flying.hasBomb() && state.screen.distance(flying.getPosition(), Coordinates{}) < flying.getThrowBombDistance() {
+			debug.Printf("Bomb!!\n")
+			sp1 := state.speed
+			sp2 := flying.getSpeed()
+			debug.Printf("sp1=%v\n", sp1)
+			debug.Printf("sp2=%v\n", sp2)
+			//relative_speed := Coordinates{X: -sp1.X + sp2.X, Y: -sp1.Y + sp2.Y, Z: -sp1.Z + sp2.Z}
+			position := flying.getPosition()
+			debug.Printf("position=%v\n", position)
+			//d1 := distance(relative_speed, Coordinates{}) + 80
+			d2 := state.screen.distance(position, Coordinates{})
+			speed := Coordinates{X: -position.X * 160 / d2, Y: -position.Y * 160 / d2, Z: -position.Z * 160 / d2}
+			//speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
+			//speed := Coordinates{X: position.X * d1 / d2, Y: position.Y * d1 / d2, Z: position.Z * d1 / d2}
+			//speed := Coordinates{X: -sp2.X, Y: -sp2.Y, Z: -sp2.Z - 80}
+			//position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
+			debug.Printf("speed=%v\n", speed)
+			newObj := newBomb(now, 500, position, speed)
+			state.space.addObj(newObj)
+			flying.removeBomb()
+			go newObj.run(ctx, cancel)
+		}
+		// Todo:敵同士の攻撃
+	}
+	debug.Printf("loop3\n")
+	// get msg from bombs and judge explosion
+	for _, bomb := range bombs {
+		upMsg := <-bomb.upCh()
+		upMsgs = append(upMsgs, upMsg)
+		bombAt := bomb.getPosition()
+		bombPrevAt := bomb.getPrevPosition()
+		between := func(a, b, c int) bool {
+			return (a <= b && b <= c) || (a >= b && b >= c)
+		}
+	L:
+		for _, flying := range flyings {
+			debug.Printf("flying.getPosition()=%v bomb.getPosition()=%v bomb.getPrevPosition=%v\n", flying.getPosition(), bomb.getPosition(), bomb.getPrevPosition())
+			flyingAt := flying.getPosition()
+			if between(bombPrevAt.Z, flyingAt.Z, bombAt.Z) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
+				//fmt.Printf("distance=%v size=%v\n", distance(flying.getPosition(), bomb.getPosition()), bomb.getSize())
+				state.score++
+				flying.explode()
+				spc.deleteObj(bomb)
+				break L
+			}
+		}
+	}
+
+	debug.Printf("loop4\n")
+	// if objct is out of the Space , remove and create new one
 	for _, obj := range spc.Objects {
-		upMsg := <-obj.upCh()
-		//if objct is out of the Space , remove and create new one
-		if !spc.inTheSpace(upMsg.position) {
+		if !spc.inTheSpace(obj.getPosition()) {
 			spc.deleteObj(obj)
 			if !obj.isBomb() {
 				newObj := spc.GenFunc(now)
 				spc.addObj(newObj)
 				go newObj.run(ctx, cancel)
 				newObj.downCh() <- downMsg
-				upMsg = <-newObj.upCh()
+				upMsg := <-newObj.upCh()
+				upMsgs = append(upMsgs, upMsg)
 			}
 		}
-		upMsgs = append(upMsgs, upMsg)
 	}
+
 	return upMsgs
 }
 
@@ -464,7 +535,8 @@ func (state *Olion) Loop(view *View, ctx context.Context, cancel func()) error {
 	defer cancel()
 
 	TermBoxChan := state.screen.TermBoxChan()
-	tick := time.NewTicker(time.Millisecond * time.Duration(5)).C
+	//tick := time.NewTicker(time.Millisecond * time.Duration(5)).C
+	tick := time.NewTicker(time.Millisecond * time.Duration(20)).C
 	count := 0
 	fireBomb := false
 mainloop:
@@ -473,28 +545,29 @@ mainloop:
 		case <-ctx.Done():
 			break mainloop
 		case <-tick:
+			debug.Printf("tick\n")
 			if state.Pause {
 				continue mainloop
 			}
 			state.screen.clear()
 			//OuterSpace
 			speed := Coordinates{X: state.speed.X, Y: state.speed.Y, Z: 0}
-			upMsgsOuterSpace := state.outerSpace.move(time.Now(), speed, ctx, cancel)
+			upMsgsOuterSpace := state.move(state.outerSpace, time.Now(), speed, ctx, cancel)
 			view.draw(upMsgsOuterSpace)
 			//Space
 			now := time.Now()
 			if fireBomb {
-				//debug.Printf("newBomb\n")
+				debug.Printf("newBomb\n")
 				speed := Coordinates{state.speed.X, state.speed.Y, state.speed.Z + 80}
-				newObj := newBomb(now, 1000, Coordinates{}, speed)
+				newObj := newBomb(now, 500, Coordinates{}, speed)
 				state.space.addObj(newObj)
 				go newObj.run(ctx, cancel)
 				fireBomb = false
 			}
 			forward := state.getDistance(now)
 			//upMsgs := state.space.move(time.Now(), forward, ctx, cancel)
-			upMsgs := state.space.move(now, forward, ctx, cancel)
-			state.score += state.judgeExplosion(now, ctx, cancel)
+			upMsgs := state.move(state.space, now, forward, ctx, cancel)
+			//state.score += state.judgeExplosion(now, ctx, cancel)
 			view.draw(upMsgs)
 			count++
 			state.setStatus()
@@ -515,11 +588,13 @@ mainloop:
 			//debug.Printf("len(colors)=%v color.red=%v id=%v ColorRed=%v\n", len(colors), colors.name("Red"), colors.name("Red").ColorId, ColorRed)
 			//debug.Printf("len(colors)=%v color.black=%v id=%v ColorBlack=%v\n", len(colors), colors.name("Black"), colors.name("Black").ColorId, ColorBlack)
 			//debug.Printf("typeOf(ColorId)=%v typeOf(ColorBlack)=%v\n", reflect.TypeOf(colors.name("Black").ColorId), reflect.TypeOf(ColorBlack))
+			debug.Printf("tick ->End\n\n")
 			if state.Debug == true {
 				state.drawDebugInfo()
 			}
 			state.screen.flush()
 		case ev := <-TermBoxChan:
+			debug.Printf("TermBoxChan\n")
 			upspeed := func(speed int, delta int) int {
 				limit := 80
 				switch {
@@ -570,6 +645,7 @@ mainloop:
 				default:
 				}
 			}
+			debug.Printf("TermBoxChan ->End\n")
 		}
 	}
 	return nil
