@@ -195,23 +195,22 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			debug.Printf("Bomb!!\n")
 			sp1 := state.speed
 			sp2 := flying.getSpeed()
-			debug.Printf("sp1=%v\n", sp1)
-			debug.Printf("sp2=%v\n", sp2)
+			debug.Printf("self speed=%v\n", sp1)
+			debug.Printf("enemy speed=%v\n", sp2)
 			//relative_speed := Coordinates{X: sp1.X + sp2.X, Y: sp1.Y + sp2.Y, Z: sp1.Z + sp2.Z}
 			position := flying.getPosition()
 			//d1 := state.screen.distance(relative_speed, Coordinates{})
 			//d2 := state.screen.distance(position, Coordinates{})
 			distance := state.screen.distance(position, Coordinates{})
 			debug.Printf("position=%v distance=%v\n", position, distance)
-			k := distance * 80 / position.Z
-			speed := Coordinates{X: -position.X * k / distance, Y: -position.Y * k / distance, Z: -position.Z * k / distance}
+			k := distance * 80 * 1000 / position.Z
+			speed := Coordinates{X: -position.X*k/distance/1000 + sp1.X, Y: -position.Y*k/distance/1000 + sp1.Y, Z: -position.Z*k/distance/1000 + sp1.Z}
+			//speed := Coordinates{X: -position.X * k / distance / 1000, Y: -position.Y * k / distance / 1000, Z: -position.Z * k / distance / 1000}
 			//speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
-			//speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: position.Z * d1 / d2}
-			//speed := Coordinates{X: -sp2.X, Y: -sp2.Y, Z: -sp2.Z - 80}
 			//position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
 			//debug.Printf("d1=%v d2=%v speed=%v\n", d1, d2, speed)
 			debug.Printf("speed=%v\n", speed)
-			newObj := newBomb(now, 1000, position, speed)
+			newObj := newBomb(now, 2000, position, speed)
 			state.space.addObj(newObj)
 			flying.removeBomb()
 			go newObj.run(ctx, cancel)
@@ -224,6 +223,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		upMsg := <-bomb.upCh()
 		upMsgs = append(upMsgs, upMsg)
 		bombAt := bomb.getPosition()
+		debug.Printf("Bomb At %v Distance %v\n", bombAt, state.screen.distance(bombAt, Coordinates{}))
 		bombPrevAt := bomb.getPrevPosition()
 		between := func(a, b, c int) bool {
 			return (a <= b && b <= c) || (a >= b && b >= c)
