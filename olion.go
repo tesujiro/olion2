@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/rand"
 	"os"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -196,18 +197,21 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			sp2 := flying.getSpeed()
 			debug.Printf("sp1=%v\n", sp1)
 			debug.Printf("sp2=%v\n", sp2)
-			relative_speed := Coordinates{X: -sp1.X + sp2.X, Y: -sp1.Y + sp2.Y, Z: -sp1.Z + sp2.Z}
+			//relative_speed := Coordinates{X: sp1.X + sp2.X, Y: sp1.Y + sp2.Y, Z: sp1.Z + sp2.Z}
 			position := flying.getPosition()
-			debug.Printf("position=%v\n", position)
-			d1 := state.screen.distance(relative_speed, Coordinates{}) + 80
-			d2 := state.screen.distance(position, Coordinates{})
-			//speed := Coordinates{X: -position.X * 160 / d2, Y: -position.Y * 160 / d2, Z: -position.Z * 160 / d2}
-			speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
-			//speed := Coordinates{X: position.X * d1 / d2, Y: position.Y * d1 / d2, Z: position.Z * d1 / d2}
+			//d1 := state.screen.distance(relative_speed, Coordinates{})
+			//d2 := state.screen.distance(position, Coordinates{})
+			distance := state.screen.distance(position, Coordinates{})
+			debug.Printf("position=%v distance=%v\n", position, distance)
+			k := distance * 80 / position.Z
+			speed := Coordinates{X: -position.X * k / distance, Y: -position.Y * k / distance, Z: -position.Z * k / distance}
+			//speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
+			//speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: position.Z * d1 / d2}
 			//speed := Coordinates{X: -sp2.X, Y: -sp2.Y, Z: -sp2.Z - 80}
 			//position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
+			//debug.Printf("d1=%v d2=%v speed=%v\n", d1, d2, speed)
 			debug.Printf("speed=%v\n", speed)
-			newObj := newBomb(now, 500, position, speed)
+			newObj := newBomb(now, 1000, position, speed)
 			state.space.addObj(newObj)
 			flying.removeBomb()
 			go newObj.run(ctx, cancel)
@@ -243,10 +247,12 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 	// if objct is out of the Space , remove and create new one
 	for _, obj := range spc.Objects {
 		if !spc.inTheSpace(obj.getPosition()) {
-			debug.Printf("if objct is out of the Space , remove and create new one\n")
+			if fmt.Sprintf("%v", reflect.TypeOf(obj)) != "*olion.Star" {
+				debug.Printf("objct(%v) is out of the Space (%v), remove and create new one\n", reflect.TypeOf(obj), obj.getPosition())
+			}
 			spc.deleteObj(obj)
 			if !obj.isBomb() {
-				debug.Printf("objct is not a bomb\n")
+				//debug.Printf("objct is not a bomb\n")
 				newObj := spc.GenFunc(now)
 				spc.addObj(newObj)
 				go newObj.run(ctx, cancel)
