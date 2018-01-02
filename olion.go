@@ -166,11 +166,10 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 	now := time.Now()
 	flyings := []Exister{}
 	bombs := []Exister{}
-	//debug.Printf("loop1\n")
+
 	for _, obj := range spc.Objects {
 		ch := obj.downCh()
 		ch <- downMsg
-		// Not Bomb
 		if !obj.isBomb() {
 			if obj.isExploding() {
 				deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
@@ -185,7 +184,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			bombs = append(bombs, obj)
 		}
 	}
-	//debug.Printf("loop2\n")
+
 	// get msg from flying objects
 	for _, flying := range flyings {
 		upMsg := <-flying.upCh()
@@ -197,18 +196,11 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			sp2 := flying.getSpeed()
 			debug.Printf("self speed=%v\n", sp1)
 			debug.Printf("enemy speed=%v\n", sp2)
-			//relative_speed := Coordinates{X: sp1.X + sp2.X, Y: sp1.Y + sp2.Y, Z: sp1.Z + sp2.Z}
 			position := flying.getPosition()
-			//d1 := state.screen.distance(relative_speed, Coordinates{})
-			//d2 := state.screen.distance(position, Coordinates{})
 			distance := state.screen.distance(position, Coordinates{})
 			debug.Printf("position=%v distance=%v\n", position, distance)
 			k := distance * 80 * 1000 / position.Z
 			speed := Coordinates{X: -position.X*k/distance/1000 + sp1.X, Y: -position.Y*k/distance/1000 + sp1.Y, Z: -position.Z*k/distance/1000 + sp1.Z}
-			//speed := Coordinates{X: -position.X * k / distance / 1000, Y: -position.Y * k / distance / 1000, Z: -position.Z * k / distance / 1000}
-			//speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
-			//position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
-			//debug.Printf("d1=%v d2=%v speed=%v\n", d1, d2, speed)
 			debug.Printf("speed=%v\n", speed)
 			newObj := newBomb(now, 2000, position, speed)
 			state.space.addObj(newObj)
@@ -217,7 +209,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		}
 		// Todo:敵同士の攻撃
 	}
-	//debug.Printf("loop3\n")
+
 	// get msg from bombs and judge explosion
 	for _, bomb := range bombs {
 		upMsg := <-bomb.upCh()
@@ -243,7 +235,6 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		}
 	}
 
-	//debug.Printf("loop4\n")
 	// if objct is out of the Space , remove and create new one
 	for _, obj := range spc.Objects {
 		if !spc.inTheSpace(obj.getPosition()) {
@@ -265,72 +256,6 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 
 	return upMsgs
 }
-
-/*
-func (state *Olion) judgeExplosion(now time.Time, ctx context.Context, cancel func()) int {
-	spc := state.space
-	score := 0
-	bombs := []Exister{}
-	flyings := []Exister{}
-	for _, obj := range spc.Objects {
-		if obj.isBomb() {
-			bombs = append(bombs, obj)
-		} else if obj.isExploding() {
-			deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
-			if deltaTime > float64(1e4) {
-				// Delete 10 sec. after explosion.
-				spc.deleteObj(obj)
-				//} else {
-				//	// Set new size while exploding.
-				//	newSize := int(math.Pow(2.0, float64(deltaTime/1000))) * 1000
-				//	//newSize := obj.getSize() * (int(deltaTime)/1000 + 1)
-				//	obj.setSize(newSize)
-			}
-		} else {
-			flyings = append(flyings, obj)
-		}
-	}
-	for _, flying := range flyings {
-	L:
-		for _, bomb := range bombs {
-			// Judge explosion.
-			if state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
-				//fmt.Printf("distance=%v size=%v\n", distance(flying.getPosition(), bomb.getPosition()), bomb.getSize())
-				score++
-				flying.explode()
-				spc.deleteObj(bomb)
-				break L
-			}
-		}
-		// Throw a bomb from enemy.
-		if flying.hasBomb() && state.screen.distance(flying.getPosition(), Coordinates{}) < flying.getThrowBombDistance() {
-			debug.Printf("Bomb!!\n")
-			sp1 := state.speed
-			sp2 := flying.getSpeed()
-			debug.Printf("sp1=%v\n", sp1)
-			debug.Printf("sp2=%v\n", sp2)
-			//relative_speed := Coordinates{X: -sp1.X + sp2.X, Y: -sp1.Y + sp2.Y, Z: -sp1.Z + sp2.Z}
-			position := flying.getPosition()
-			debug.Printf("position=%v\n", position)
-			//d1 := distance(relative_speed, Coordinates{}) + 80
-			d2 := state.screen.distance(position, Coordinates{})
-			speed := Coordinates{X: -position.X * 160 / d2, Y: -position.Y * 160 / d2, Z: -position.Z * 160 / d2}
-			//speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
-			//speed := Coordinates{X: position.X * d1 / d2, Y: position.Y * d1 / d2, Z: position.Z * d1 / d2}
-			//speed := Coordinates{X: -sp2.X, Y: -sp2.Y, Z: -sp2.Z - 80}
-			position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
-			debug.Printf("speed=%v\n", speed)
-			newObj := newBomb(now, 1000, position, speed)
-			state.space.addObj(newObj)
-			flying.removeBomb()
-			go newObj.run(ctx, cancel)
-		}
-		// Todo:敵同士の攻撃
-	}
-
-	return score
-}
-*/
 
 type Olion struct {
 	Argv        []string
