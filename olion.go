@@ -71,7 +71,8 @@ func (spc *Space) inTheSpace(c Coordinates) bool {
 func (spc *Space) genObject(now time.Time) Exister {
 	num := rand.Intn(100)
 	switch {
-	//case true:
+	case true:
+		return newSpaceShip(now, 500, spc.randomSpace())
 	//return newFramedRectangle(now, 1000, spc.randomSpace())
 	case num < 20:
 		return newBox(now, 500, spc.randomSpace())
@@ -114,7 +115,8 @@ func NewSpace(ctx context.Context, cancel func()) *Space {
 		Z: depth,
 	}
 	now := time.Now()
-	for i := 0; i < 10; i++ {
+	//for i := 0; i < 10; i++ {
+	for i := 0; i < 3; i++ {
 		obj := spc.GenFunc(now)
 		spc.addObj(obj)
 		go obj.run(ctx, cancel)
@@ -163,7 +165,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 	now := time.Now()
 	flyings := []Exister{}
 	bombs := []Exister{}
-	debug.Printf("loop1\n")
+	//debug.Printf("loop1\n")
 	for _, obj := range spc.Objects {
 		ch := obj.downCh()
 		ch <- downMsg
@@ -173,6 +175,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 				deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
 				if deltaTime > float64(1e4) {
 					// Delete 10 sec. after explosion.
+					debug.Printf("Delete 10 sec. after explosion.\n")
 					spc.deleteObj(obj)
 				}
 			}
@@ -181,7 +184,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			bombs = append(bombs, obj)
 		}
 	}
-	debug.Printf("loop2\n")
+	//debug.Printf("loop2\n")
 	// get msg from flying objects
 	for _, flying := range flyings {
 		upMsg := <-flying.upCh()
@@ -193,13 +196,13 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			sp2 := flying.getSpeed()
 			debug.Printf("sp1=%v\n", sp1)
 			debug.Printf("sp2=%v\n", sp2)
-			//relative_speed := Coordinates{X: -sp1.X + sp2.X, Y: -sp1.Y + sp2.Y, Z: -sp1.Z + sp2.Z}
+			relative_speed := Coordinates{X: -sp1.X + sp2.X, Y: -sp1.Y + sp2.Y, Z: -sp1.Z + sp2.Z}
 			position := flying.getPosition()
 			debug.Printf("position=%v\n", position)
-			//d1 := distance(relative_speed, Coordinates{}) + 80
+			d1 := state.screen.distance(relative_speed, Coordinates{}) + 80
 			d2 := state.screen.distance(position, Coordinates{})
-			speed := Coordinates{X: -position.X * 160 / d2, Y: -position.Y * 160 / d2, Z: -position.Z * 160 / d2}
-			//speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
+			//speed := Coordinates{X: -position.X * 160 / d2, Y: -position.Y * 160 / d2, Z: -position.Z * 160 / d2}
+			speed := Coordinates{X: -position.X * d1 / d2, Y: -position.Y * d1 / d2, Z: -position.Z * d1 / d2}
 			//speed := Coordinates{X: position.X * d1 / d2, Y: position.Y * d1 / d2, Z: position.Z * d1 / d2}
 			//speed := Coordinates{X: -sp2.X, Y: -sp2.Y, Z: -sp2.Z - 80}
 			//position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
@@ -211,7 +214,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		}
 		// Todo:敵同士の攻撃
 	}
-	debug.Printf("loop3\n")
+	//debug.Printf("loop3\n")
 	// get msg from bombs and judge explosion
 	for _, bomb := range bombs {
 		upMsg := <-bomb.upCh()
@@ -223,9 +226,10 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		}
 	L:
 		for _, flying := range flyings {
-			debug.Printf("flying.getPosition()=%v bomb.getPosition()=%v bomb.getPrevPosition=%v\n", flying.getPosition(), bomb.getPosition(), bomb.getPrevPosition())
+			//debug.Printf("flying.getPosition()=%v bomb.getPosition()=%v bomb.getPrevPosition=%v\n", flying.getPosition(), bomb.getPosition(), bomb.getPrevPosition())
 			flyingAt := flying.getPosition()
 			if between(bombPrevAt.Z, flyingAt.Z, bombAt.Z) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
+				debug.Printf("the flying object exploded!!!\n")
 				//fmt.Printf("distance=%v size=%v\n", distance(flying.getPosition(), bomb.getPosition()), bomb.getSize())
 				state.score++
 				flying.explode()
@@ -235,12 +239,14 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		}
 	}
 
-	debug.Printf("loop4\n")
+	//debug.Printf("loop4\n")
 	// if objct is out of the Space , remove and create new one
 	for _, obj := range spc.Objects {
 		if !spc.inTheSpace(obj.getPosition()) {
+			debug.Printf("if objct is out of the Space , remove and create new one\n")
 			spc.deleteObj(obj)
 			if !obj.isBomb() {
+				debug.Printf("objct is not a bomb\n")
 				newObj := spc.GenFunc(now)
 				spc.addObj(newObj)
 				go newObj.run(ctx, cancel)
@@ -254,6 +260,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 	return upMsgs
 }
 
+/*
 func (state *Olion) judgeExplosion(now time.Time, ctx context.Context, cancel func()) int {
 	spc := state.space
 	score := 0
@@ -317,6 +324,7 @@ func (state *Olion) judgeExplosion(now time.Time, ctx context.Context, cancel fu
 
 	return score
 }
+*/
 
 type Olion struct {
 	Argv        []string
@@ -545,7 +553,7 @@ mainloop:
 		case <-ctx.Done():
 			break mainloop
 		case <-tick:
-			debug.Printf("tick\n")
+			//debug.Printf("tick\n")
 			if state.Pause {
 				continue mainloop
 			}
@@ -588,13 +596,13 @@ mainloop:
 			//debug.Printf("len(colors)=%v color.red=%v id=%v ColorRed=%v\n", len(colors), colors.name("Red"), colors.name("Red").ColorId, ColorRed)
 			//debug.Printf("len(colors)=%v color.black=%v id=%v ColorBlack=%v\n", len(colors), colors.name("Black"), colors.name("Black").ColorId, ColorBlack)
 			//debug.Printf("typeOf(ColorId)=%v typeOf(ColorBlack)=%v\n", reflect.TypeOf(colors.name("Black").ColorId), reflect.TypeOf(ColorBlack))
-			debug.Printf("tick ->End\n\n")
+			//debug.Printf("tick ->End\n\n")
 			if state.Debug == true {
 				state.drawDebugInfo()
 			}
 			state.screen.flush()
 		case ev := <-TermBoxChan:
-			debug.Printf("TermBoxChan\n")
+			//debug.Printf("TermBoxChan\n")
 			upspeed := func(speed int, delta int) int {
 				limit := 80
 				switch {
@@ -645,7 +653,7 @@ mainloop:
 				default:
 				}
 			}
-			debug.Printf("TermBoxChan ->End\n")
+			//debug.Printf("TermBoxChan ->End\n")
 		}
 	}
 	return nil
