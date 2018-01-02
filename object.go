@@ -474,6 +474,39 @@ func newBomb(t time.Time, s int, position Coordinates, speed Coordinates) *Bomb 
 	return &bomb
 }
 
+type EnemyBomb struct {
+	Object
+}
+
+func newEnemyBomb(t time.Time, s int, position Coordinates, speed Coordinates) *EnemyBomb {
+	bomb := EnemyBomb{Object: *newObject()}
+	//bomb.position = position
+	bomb.position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
+	bomb.time = t
+	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z}
+	bomb.bomb = true
+	bomb.size = s
+	rectangle := newRectanglePart(&Part{
+		dots: []Coordinates{
+			Coordinates{X: s + position.X, Y: s + position.Y, Z: position.Z},
+			Coordinates{X: -s + position.X, Y: -s + position.Y, Z: position.Z},
+		},
+		color: colors.name("Yellow").Attribute(),
+		fill:  false,
+	})
+	bomb.addPart(rectangle)
+	rectangle = newRectanglePart(&Part{
+		dots: []Coordinates{
+			Coordinates{X: s/2 + position.X, Y: s/2 + position.Y, Z: position.Z},
+			Coordinates{X: -s/2 + position.X, Y: -s/2 + position.Y, Z: position.Z},
+		},
+		color: colors.name("Yellow").Attribute(),
+		fill:  false,
+	})
+	bomb.addPart(rectangle)
+	return &bomb
+}
+
 type FramedRectangle struct {
 	Object
 }
