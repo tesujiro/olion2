@@ -72,8 +72,8 @@ func (spc *Space) inTheSpace(c Coordinates) bool {
 func (spc *Space) genObject(now time.Time) Exister {
 	num := rand.Intn(100)
 	switch {
-	case true:
-		return newSpaceShip(now, 500, spc.randomSpace())
+	//case true:
+	//return newSpaceShip(now, 500, spc.randomSpace())
 	//return newFramedRectangle(now, 1000, spc.randomSpace())
 	case num < 20:
 		return newBox(now, 500, spc.randomSpace())
@@ -190,7 +190,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		upMsg := <-flying.upCh()
 		upMsgs = append(upMsgs, upMsg)
 		// Throw a bomb from enemy.
-		if flying.hasBomb() && state.screen.distance(flying.getPosition(), Coordinates{}) < flying.getThrowBombDistance() {
+		if !flying.isExploding() && flying.hasBomb() && state.screen.distance(flying.getPosition(), Coordinates{}) < flying.getThrowBombDistance() {
 			debug.Printf("Enemy Bomb!!\n")
 			sp1 := state.speed
 			sp2 := flying.getSpeed()
@@ -201,12 +201,13 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			debug.Printf("position=%v distance=%v\n", position, distance)
 			k := 0
 			if position.Z != 0 {
-				k = distance * 80 * 1000 / position.Z
+				//k = distance * 80 * 1000 / position.Z
+				k = distance * 80 / position.Z
 			}
-			//speed := Coordinates{X: -position.X*k/distance/1000 - sp1.X, Y: -position.Y*k/distance/1000 - sp1.Y, Z: -position.Z*k/distance/1000 - sp1.Z} //BUG
-			speed := Coordinates{X: -position.X*k/distance/1000 + sp1.X, Y: -position.Y*k/distance/1000 + sp1.Y, Z: -position.Z*k/distance/1000 + sp1.Z}
+			//speed := Coordinates{X: -position.X*k/distance/1000 + sp1.X, Y: -position.Y*k/distance/1000 + sp1.Y, Z: -position.Z*k/distance/1000 + sp1.Z}
+			speed := Coordinates{X: -position.X*k/distance + sp1.X, Y: -position.Y*k/distance + sp1.Y, Z: -position.Z*k/distance + sp1.Z}
 			debug.Printf("speed=%v\n", speed)
-			newObj := newEnemyBomb(now, 2000, position, speed)
+			newObj := newEnemyBomb(now, 1000, position, speed)
 			state.space.addObj(newObj)
 			flying.removeBomb()
 			go newObj.run(ctx, cancel)
@@ -224,7 +225,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		}
 	}
 
-	// get msg from bombs and judge explosion
+	// send and receive msg from bombs and judge explosion
 	for _, bomb := range bombs {
 		upMsg := <-bomb.upCh()
 		upMsgs = append(upMsgs, upMsg)
@@ -237,6 +238,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		// Judge Explosion of Bombs and the first view object
 		if between(bombPrevAt.Z, 0, bombAt.Z) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
 			debug.Printf("self object exploded!!!\n")
+			state.score--
 			state.screen.Vibration = 3
 			state.explodedAt = time.Now()
 			state.exploding = true
