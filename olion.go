@@ -203,7 +203,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			if position.Z != 0 {
 				k = distance * 80 * 1000 / position.Z
 			}
-			//speed := Coordinates{X: -position.X*k/distance/1000 - sp1.X, Y: -position.Y*k/distance/1000 - sp1.Y, Z: -position.Z*k/distance/1000 - sp1.Z}
+			//speed := Coordinates{X: -position.X*k/distance/1000 - sp1.X, Y: -position.Y*k/distance/1000 - sp1.Y, Z: -position.Z*k/distance/1000 - sp1.Z} //BUG
 			speed := Coordinates{X: -position.X*k/distance/1000 + sp1.X, Y: -position.Y*k/distance/1000 + sp1.Y, Z: -position.Z*k/distance/1000 + sp1.Z}
 			debug.Printf("speed=%v\n", speed)
 			newObj := newEnemyBomb(now, 2000, position, speed)
@@ -212,6 +212,16 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			go newObj.run(ctx, cancel)
 		}
 		// Todo:敵同士の攻撃
+	}
+
+	// Stop Vibration
+	if state.exploding {
+		deltaTime := float64(time.Now().Sub(state.explodedAt) / time.Millisecond)
+		if deltaTime > float64(3e3) {
+			// Stop 3 sec. after explosion.
+			state.screen.Vibration = 0
+			state.exploding = false
+		}
 	}
 
 	// get msg from bombs and judge explosion
@@ -224,9 +234,18 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		between := func(a, b, c int) bool {
 			return (a <= b && b <= c) || (a >= b && b >= c)
 		}
+		// Judge Explosion of Bombs and the first view object
+		if between(bombPrevAt.Z, 0, bombAt.Z) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
+			debug.Printf("self object exploded!!!\n")
+			state.screen.Vibration = 3
+			state.explodedAt = time.Now()
+			state.exploding = true
+		}
+
 	L:
+		//debug.Printf("flying.getPosition()=%v bomb.getPosition()=%v bomb.getPrevPosition=%v\n", flying.getPosition(), bomb.getPosition(), bomb.getPrevPosition())
+		// Judge Explosion of Bombs and Flying Objects
 		for _, flying := range flyings {
-			//debug.Printf("flying.getPosition()=%v bomb.getPosition()=%v bomb.getPrevPosition=%v\n", flying.getPosition(), bomb.getPosition(), bomb.getPrevPosition())
 			flyingAt := flying.getPosition()
 			if between(bombPrevAt.Z, flyingAt.Z, bombAt.Z) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 				debug.Printf("the flying object exploded!!!\n")
@@ -287,6 +306,8 @@ type Olion struct {
 	curBomb int
 	score   int
 	//vibration int
+	explodedAt time.Time
+	exploding  bool
 
 	// cancelFunc is called for Exit()
 	cancelFunc func()

@@ -556,7 +556,7 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		Z: rand.Intn(40),
 	}
 	ship.bombable = true
-	ship.throwBombDistance = 2000
+	ship.throwBombDistance = 50000
 	ship.spinXY = rand.Intn(180) - 90
 	ship.spinXZ = 0
 	rectangle1 := &PolygonPart{
