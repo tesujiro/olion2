@@ -523,7 +523,7 @@ mainloop:
 			if fireBomb {
 				debug.Printf("newBomb\n")
 				speed := Coordinates{state.speed.X, state.speed.Y, state.speed.Z + 80}
-				newObj := newBomb(now, 500, Coordinates{}, speed)
+				newObj := newBomb(now, 1000, Coordinates{}, speed)
 				state.space.addObj(newObj)
 				go newObj.run(ctx, cancel)
 				fireBomb = false
