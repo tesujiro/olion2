@@ -116,8 +116,8 @@ func NewSpace(ctx context.Context, cancel func()) *Space {
 		Z: depth,
 	}
 	now := time.Now()
-	//for i := 0; i < 10; i++ {
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 10; i++ {
+		//for i := 0; i < 3; i++ {
 		obj := spc.GenFunc(now)
 		spc.addObj(obj)
 		go obj.run(ctx, cancel)
@@ -177,6 +177,9 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 					// Delete 10 sec. after explosion.
 					debug.Printf("Delete 10 sec. after explosion.\n")
 					spc.deleteObj(obj)
+					newObj := spc.GenFunc(now)
+					spc.addObj(newObj)
+					go newObj.run(ctx, cancel)
 				}
 			}
 			flyings = append(flyings, obj)
