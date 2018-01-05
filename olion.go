@@ -278,6 +278,7 @@ type Olion struct {
 	Stdout      io.Writer
 	Stderr      io.Writer
 	Debug       bool
+	Palette     bool
 	Pause       bool
 	debugWindow *Window
 	//hub    MessageHub
@@ -310,6 +311,7 @@ type Olion struct {
 func New(ctx context.Context, cancel func()) *Olion {
 	rand.Seed(time.Now().UnixNano())
 	debug := flag.Bool("d", false, "Debug Mode")
+	palette := flag.Bool("p", false, "Color Palette Mode")
 	flag.Parse()
 	screen := NewScreen()
 	newDebugWriter(ctx)
@@ -321,6 +323,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 		Stdin:       os.Stdin,
 		Stdout:      os.Stdout,
 		Debug:       *debug,
+		Palette:     *palette,
 		Pause:       false,
 		debugWindow: newDebugWindow(screen),
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
@@ -545,6 +548,9 @@ mainloop:
 			//debug.Printf("len(colors)=%v color.black=%v id=%v ColorBlack=%v\n", len(colors), colors.name("Black"), colors.name("Black").ColorId, ColorBlack)
 			//debug.Printf("typeOf(ColorId)=%v typeOf(ColorBlack)=%v\n", reflect.TypeOf(colors.name("Black").ColorId), reflect.TypeOf(ColorBlack))
 			//debug.Printf("tick ->End\n\n")
+			if state.Palette == true {
+				state.drawColorPalette()
+			}
 			if state.Debug == true {
 				state.drawDebugInfo()
 			}

@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
+
+	termbox "github.com/nsf/termbox-go"
 )
 
 type Color struct {
@@ -56,4 +59,30 @@ func InitColor() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+}
+
+func (state *Olion) drawColorPalette() {
+	//debug.Printf("colors=%v\n", len(colors))
+	//var longest Color
+	//for _, col := range colors {
+	//	debug.Printf("id=%v\tname=%v\trgb=%v\n", col.ColorId, col.Name, col.RGB)
+	//	if len(col.Name) > len(longest.Name) {
+	//		longest = col
+	//	}
+	//}
+	//debug.Printf("LONGEST id=%v\tname=%v\trgb=%v\tlen(name)=%v\n", longest.ColorId, longest.Name, longest.RGB, len(longest.Name))
+	colorsPerLine := 13
+	length := 16
+	interval := 0
+	attributes := 3
+	for idx, col := range colors {
+		startX := (idx % colorsPerLine) * (length + interval)
+		startY := (idx / colorsPerLine) * (attributes + interval)
+		state.screen.printString(&Dot{startX, startY}, strconv.Itoa(int(col.ColorId)))
+		state.screen.printStringWithColor(&Dot{startX, startY + 1}, col.Name, termbox.Attribute(col.ColorId)+1)
+		for x := 0; x < length; x++ {
+			termbox.SetCell(startX+x, startY+2, ' ', termbox.ColorWhite, termbox.Attribute(col.ColorId)+1)
+		}
+	}
+
 }
