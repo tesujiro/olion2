@@ -15,19 +15,6 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
-type Coordinates struct {
-	X int
-	Y int
-	Z int
-}
-
-/*
-type Direction struct {
-	theta float64
-	phi   float64
-}
-*/
-
 type Space struct {
 	Objects []Exister
 	Min     Coordinates
