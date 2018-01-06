@@ -774,13 +774,17 @@ func newBox3(t time.Time, s int, c Coordinates) *SpaceBox3 {
 		Z: rand.Intn(10),
 	}
 	cs := []Attribute{
-		colors.name("Black").Attribute(),
+		colors.name("Grey50").Attribute(),
 		colors.name("Red").Attribute(),
 		colors.name("White").Attribute(),
 		colors.name("Green").Attribute(),
 		colors.name("Yellow").Attribute(),
 	}
 	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, cs, true)
+	cs = []Attribute{
+		colors.name("Black").Attribute(),
+	}
+	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, cs, false)
 
 	return &box
 }
