@@ -151,9 +151,10 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 	}
 	upMsgs := []upMessage{}
 	now := time.Now()
+
+	// send downMsg , and get flying objects and bombs
 	flyings := []Exister{}
 	bombs := []Exister{}
-
 	for _, obj := range spc.Objects {
 		ch := obj.downCh()
 		ch <- downMsg
@@ -181,14 +182,10 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		upMsgs = append(upMsgs, upMsg)
 		// Throw a bomb from enemy.
 		if !flying.isExploding() && flying.hasBomb() && state.screen.distance(flying.getPosition(), Coordinates{}) < flying.getThrowBombDistance() {
-			debug.Printf("Enemy Bomb!!\n")
 			sp1 := state.speed
-			sp2 := flying.getSpeed()
-			debug.Printf("self speed=%v\n", sp1)
-			debug.Printf("enemy speed=%v\n", sp2)
 			position := flying.getPosition()
 			distance := state.screen.distance(position, Coordinates{})
-			debug.Printf("position=%v distance=%v\n", position, distance)
+			debug.Printf("Enemy Bomb!! self speed=%v position=%v distance=%v\n", sp1, position, distance)
 			k := 0
 			if position.Z != 0 {
 				//k = distance * 80 * 1000 / position.Z
@@ -196,7 +193,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			}
 			//speed := Coordinates{X: -position.X*k/distance/1000 + sp1.X, Y: -position.Y*k/distance/1000 + sp1.Y, Z: -position.Z*k/distance/1000 + sp1.Z}
 			speed := Coordinates{X: -position.X*k/distance + sp1.X, Y: -position.Y*k/distance + sp1.Y, Z: -position.Z*k/distance + sp1.Z}
-			debug.Printf("speed=%v\n", speed)
+			//debug.Printf("speed=%v\n", speed)
 			newObj := newEnemyBomb(now, 1000, position, speed)
 			state.space.addObj(newObj)
 			flying.removeBomb()
@@ -209,7 +206,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 	if state.exploding {
 		deltaTime := float64(time.Now().Sub(state.explodedAt) / time.Millisecond)
 		if deltaTime > float64(3e3) {
-			// Stop 3 sec. after explosion.
+			// Stop vibration 3 sec. after explosion.
 			state.screen.Vibration = 0
 			state.exploding = false
 		}
@@ -220,14 +217,14 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		upMsg := <-bomb.upCh()
 		upMsgs = append(upMsgs, upMsg)
 		bombAt := bomb.getPosition()
-		debug.Printf("Bomb At %v Distance %v\n", bombAt, state.screen.distance(bombAt, Coordinates{}))
+		//debug.Printf("Bomb At %v Distance %v\n", bombAt, state.screen.distance(bombAt, Coordinates{}))
 		bombPrevAt := bomb.getPrevPosition()
 		between := func(a, b, c int) bool {
 			return (a <= b && b <= c) || (a >= b && b >= c)
 		}
 		// Judge Explosion of Bombs and the first view object
 		if between(bombPrevAt.Z, 0, bombAt.Z) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
-			debug.Printf("self object exploded!!!\n")
+			debug.Printf("my object exploded!!!\n")
 			state.score--
 			state.screen.Vibration = 3
 			state.explodedAt = time.Now()
@@ -241,7 +238,6 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			flyingAt := flying.getPosition()
 			if between(bombPrevAt.Z, flyingAt.Z, bombAt.Z) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 				debug.Printf("the flying object exploded!!!\n")
-				//fmt.Printf("distance=%v size=%v\n", distance(flying.getPosition(), bomb.getPosition()), bomb.getSize())
 				state.score++
 				flying.explode()
 				spc.deleteObj(bomb)
@@ -343,14 +339,14 @@ func New(ctx context.Context, cancel func()) *Olion {
 }
 
 func (state *Olion) drawConsole(count int) {
-	//drawLine(0, 0, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
-	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
+	//state.screen.printString(&Dot{0, 0}, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
 	state.screen.printString(&Dot{0, state.screen.Height - 1}, fmt.Sprintf("score=%v", state.score))
 	x, y := state.screen.Width/2+1, state.screen.Height/2+1
 	for i := 0; i < state.maxBomb-state.curBomb; i++ {
 		state.screen.printString(&Dot{x, y}, "**")
 		state.screen.printString(&Dot{x, y + 1}, "**")
 		x += 3
+		y += 0
 	}
 }
 
@@ -524,9 +520,7 @@ mainloop:
 				fireBomb = false
 			}
 			forward := state.getDistance(now)
-			//upMsgs := state.space.move(time.Now(), forward, ctx, cancel)
 			upMsgs := state.move(state.space, now, forward, ctx, cancel)
-			//state.score += state.judgeExplosion(now, ctx, cancel)
 			view.draw(upMsgs)
 			count++
 			state.setStatus()
