@@ -371,7 +371,7 @@ func (obj *Object) explode() {
 	obj.exploding = true
 }
 
-func (obj *Object) newRectangular(start Coordinates, width int, height int, depth int, cols []Attribute) {
+func (obj *Object) newRectangular(start Coordinates, width int, height int, depth int, cols []Attribute, fill bool) {
 	//debug.Printf("newRectangular\n")
 	var colors []Attribute
 	var m []int
@@ -402,27 +402,27 @@ func (obj *Object) newRectangular(start Coordinates, width int, height int, dept
 	addRectangular(
 		Coordinates{X: start.X, Y: start.Y, Z: start.Z},
 		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z},
-		colors[0], true)
+		colors[0], fill)
 	addRectangular(
 		Coordinates{X: start.X, Y: start.Y + height, Z: start.Z},
 		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
-		colors[1], true)
+		colors[1], fill)
 	addRectangular(
 		Coordinates{X: start.X + width, Y: start.Y, Z: start.Z},
 		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
-		colors[2], true)
+		colors[2], fill)
 	addRectangular(
 		Coordinates{X: start.X + width, Y: start.Y, Z: start.Z},
 		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
-		colors[3], true)
+		colors[3], fill)
 	addRectangular(
 		Coordinates{X: start.X, Y: start.Y, Z: start.Z},
 		Coordinates{X: start.X, Y: start.Y + height, Z: start.Z + depth},
-		colors[4], true)
+		colors[4], fill)
 	addRectangular(
 		Coordinates{X: start.X, Y: start.Y, Z: start.Z + depth},
 		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
-		colors[5], true)
+		colors[5], fill)
 }
 
 type Star struct {
@@ -780,7 +780,7 @@ func newBox3(t time.Time, s int, c Coordinates) *SpaceBox3 {
 		colors.name("Green").Attribute(),
 		colors.name("Yellow").Attribute(),
 	}
-	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, cs)
+	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, cs, true)
 
 	return &box
 }
