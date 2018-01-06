@@ -487,13 +487,15 @@ func newEnemyBomb(t time.Time, s int, position Coordinates, speed Coordinates) *
 	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z}
 	bomb.bomb = true
 	bomb.size = s
-	// enemy bombs face toward Zero (=first view)
-	d := math.Sqrt(float64(position.X*position.X + position.Y*position.Y + position.Z*position.Z))
-	theta := math.Asin(d / math.Sqrt(d*d+float64(s*s)))
-	debug.Printf("newEnemy d=%v theta=%v\n", d, theta)
-
 	color := "Yellow"
+
+	// enemy bombs face toward Zero (=first view)
 	addRect := func(s int) {
+		//d := math.Sqrt(float64(position.X*position.X + position.Y*position.Y + position.Z*position.Z))
+		//theta := math.Asin(d / math.Sqrt(d*d+float64(s*s)))
+		//deltaX := int(float64(position.X*s) / d)
+		//deltaY := int(float64(position.Y*s) / d)
+		//debug.Printf("newEnemy d=%v deltaX=%v deltaY=%v\n", d, deltaX, deltaY)
 		rectangle := &PolygonPart{
 			Part{
 				dots: []Coordinates{
@@ -501,6 +503,10 @@ func newEnemyBomb(t time.Time, s int, position Coordinates, speed Coordinates) *
 					Coordinates{X: position.X + s, Y: position.Y - s, Z: position.Z},
 					Coordinates{X: position.X - s, Y: position.Y - s, Z: position.Z},
 					Coordinates{X: position.X - s, Y: position.Y + s, Z: position.Z},
+					//Coordinates{X: position.X + s, Y: position.Y + s, Z: position.Z + deltaX/200 + deltaY/200},
+					//Coordinates{X: position.X + s, Y: position.Y - s, Z: position.Z + deltaX/200 - deltaY/200},
+					//Coordinates{X: position.X - s, Y: position.Y - s, Z: position.Z - deltaX/200 - deltaY/200},
+					//Coordinates{X: position.X - s, Y: position.Y + s, Z: position.Z - deltaX/200 + deltaY/200},
 				},
 				color: colors.name(color).Attribute(),
 				fill:  false,
