@@ -487,24 +487,28 @@ func newEnemyBomb(t time.Time, s int, position Coordinates, speed Coordinates) *
 	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z}
 	bomb.bomb = true
 	bomb.size = s
-	rectangle := newRectanglePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: s + position.X, Y: s + position.Y, Z: position.Z},
-			Coordinates{X: -s + position.X, Y: -s + position.Y, Z: position.Z},
-		},
-		color: colors.name("Yellow").Attribute(),
-		fill:  false,
-	})
-	bomb.addPart(rectangle)
-	rectangle = newRectanglePart(&Part{
-		dots: []Coordinates{
-			Coordinates{X: s/2 + position.X, Y: s/2 + position.Y, Z: position.Z},
-			Coordinates{X: -s/2 + position.X, Y: -s/2 + position.Y, Z: position.Z},
-		},
-		color: colors.name("Yellow").Attribute(),
-		fill:  false,
-	})
-	bomb.addPart(rectangle)
+	// enemy bombs face toward Zero (=first view)
+	d := math.Sqrt(float64(position.X*position.X + position.Y*position.Y + position.Z*position.Z))
+	theta := math.Asin(d / math.Sqrt(d*d+float64(s*s)))
+	debug.Printf("newEnemy d=%v theta=%v\n", d, theta)
+
+	color := "Yellow"
+	addRect := func(s int) {
+		rectangle := &PolygonPart{
+			Part{
+				dots: []Coordinates{
+					Coordinates{X: position.X + s, Y: position.Y + s, Z: position.Z},
+					Coordinates{X: position.X + s, Y: position.Y - s, Z: position.Z},
+					Coordinates{X: position.X - s, Y: position.Y - s, Z: position.Z},
+					Coordinates{X: position.X - s, Y: position.Y + s, Z: position.Z},
+				},
+				color: colors.name(color).Attribute(),
+				fill:  false,
+			}}
+		bomb.addPart(rectangle)
+	}
+	addRect(s)
+	addRect(s / 2)
 	return &bomb
 }
 
