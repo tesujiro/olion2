@@ -467,7 +467,10 @@ func newEnemyBomb(t time.Time, s int, position Coordinates, speed Coordinates) *
 	bomb := EnemyBomb{Object: *newObject()}
 	//bomb.position = position
 	bomb.prevPosition = position
-	bomb.position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
+	//bomb.position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
+	//debug.Printf("position\t=%v\n", bomb.position)
+	bomb.position = position.Add(speed.ScaleBy(-1))
+	//debug.Printf("position.Add\t=%v\n", position.Add(speed))
 	bomb.time = t
 	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z}
 	bomb.bomb = true

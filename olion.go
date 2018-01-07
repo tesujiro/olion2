@@ -217,7 +217,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		upMsg := <-bomb.upCh()
 		upMsgs = append(upMsgs, upMsg)
 		bombAt := bomb.getPosition()
-		//debug.Printf("Bomb At %v Distance %v\n", bombAt, state.screen.distance(bombAt, Coordinates{}))
+		debug.Printf("Bomb At %v Distance %v\n", bombAt, state.screen.distance(bombAt, Coordinates{}))
 		bombPrevAt := bomb.getPrevPosition()
 		between := func(a, b, c int) bool {
 			return (a <= b && b <= c) || (a >= b && b >= c)
