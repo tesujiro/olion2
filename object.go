@@ -767,8 +767,10 @@ type BigShip struct {
 }
 
 func newBigShip(t time.Time, c Coordinates) *BigShip {
+	s := 10000
+	compZ := 80
 	ship := BigShip{Object: *newObject()}
-	ship.size = 10000
+	ship.size = s
 	ship.position = c
 	ship.time = t
 	ship.speed = Coordinates{
@@ -780,9 +782,9 @@ func newBigShip(t time.Time, c Coordinates) *BigShip {
 	triangle = &PolygonPart{
 		Part{
 			dots: []Coordinates{
-				Coordinates{X: 0, Y: 0, Z: s * 3 / 4},
-				Coordinates{X: 0, Y: 0, Z: -s / 4},
-				Coordinates{X: 0, Y: -s / 4, Z: -s / 4},
+				Coordinates{X: 0, Y: 0, Z: -s * 3 / 4 / compZ},
+				Coordinates{X: 0, Y: 0, Z: s / 4 / compZ},
+				Coordinates{X: -s / 4, Y: 0, Z: 0},
 			},
 			color: colors.name("Grey30").Attribute(),
 			fill:  true,
@@ -791,11 +793,33 @@ func newBigShip(t time.Time, c Coordinates) *BigShip {
 	triangle = &PolygonPart{
 		Part{
 			dots: []Coordinates{
-				Coordinates{X: 0, Y: 0, Z: s * 3 / 4},
-				Coordinates{X: 0, Y: 0, Z: -s / 4},
-				Coordinates{X: 0, Y: +s / 4, Z: -s / 4},
+				Coordinates{X: 0, Y: 0, Z: -s * 3 / 4 / compZ},
+				Coordinates{X: 0, Y: 0, Z: s / 4 / compZ},
+				Coordinates{X: +s / 4, Y: 0, Z: 0},
 			},
 			color: colors.name("Grey30").Attribute(),
+			fill:  true,
+		}}
+	ship.addPart(triangle)
+	triangle = &PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: 0, Y: 0, Z: -s * 3 / 4 / compZ},
+				Coordinates{X: 0, Y: 0, Z: s / 4 / compZ},
+				Coordinates{X: 0, Y: s / 4, Z: 0},
+			},
+			color: colors.name("Grey50").Attribute(),
+			fill:  true,
+		}}
+	ship.addPart(triangle)
+	triangle = &PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: 0, Y: 0, Z: -s * 3 / 4 / compZ},
+				Coordinates{X: 0, Y: 0, Z: s / 4 / compZ},
+				Coordinates{X: 0, Y: -s / 8, Z: 0},
+			},
+			color: colors.name("Grey15").Attribute(),
 			fill:  true,
 		}}
 	ship.addPart(triangle)
