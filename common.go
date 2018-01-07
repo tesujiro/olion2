@@ -19,6 +19,10 @@ func (c Coordinates) ScaleBy(k int) Coordinates {
 	return Coordinates{X: c.X * k, Y: c.Y * k, Z: c.Z * k}
 }
 
+func (c Coordinates) Div(k int) Coordinates {
+	return Coordinates{X: c.X / k, Y: c.Y / k, Z: c.Z / k}
+}
+
 /*
 type Direction struct {
 	theta float64

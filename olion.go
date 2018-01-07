@@ -189,10 +189,11 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			k := 0
 			if position.Z != 0 {
 				//k = distance * 80 * 1000 / position.Z
-				k = distance * 80 / position.Z
+				k = distance * 80 / position.Z // 80 : z axis speed of enemy bombs
 			}
 			//speed := Coordinates{X: -position.X*k/distance/1000 + sp1.X, Y: -position.Y*k/distance/1000 + sp1.Y, Z: -position.Z*k/distance/1000 + sp1.Z}
-			speed := Coordinates{X: -position.X*k/distance + sp1.X, Y: -position.Y*k/distance + sp1.Y, Z: -position.Z*k/distance + sp1.Z}
+			//speed := Coordinates{X: -position.X*k/distance + sp1.X, Y: -position.Y*k/distance + sp1.Y, Z: -position.Z*k/distance + sp1.Z}
+			speed := position.ScaleBy(-k).Div(distance).Add(sp1)
 			//debug.Printf("speed=%v\n", speed)
 			newObj := newEnemyBomb(now, 1000, position, speed)
 			state.space.addObj(newObj)

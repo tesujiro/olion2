@@ -465,14 +465,10 @@ type EnemyBomb struct {
 
 func newEnemyBomb(t time.Time, s int, position Coordinates, speed Coordinates) *EnemyBomb {
 	bomb := EnemyBomb{Object: *newObject()}
-	//bomb.position = position
 	bomb.prevPosition = position
-	//bomb.position = Coordinates{X: position.X + speed.X, Y: position.Y + speed.Y, Z: position.Z + speed.Z}
-	//debug.Printf("position\t=%v\n", bomb.position)
 	bomb.position = position.Add(speed.ScaleBy(-1))
-	//debug.Printf("position.Add\t=%v\n", position.Add(speed))
 	bomb.time = t
-	bomb.speed = Coordinates{X: -speed.X, Y: -speed.Y, Z: -speed.Z}
+	bomb.speed = speed.ScaleBy(-1)
 	bomb.bomb = true
 	bomb.size = s
 	color := "Yellow"
@@ -555,7 +551,8 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 		Z: rand.Intn(40),
 	}
 	ship.bombable = true
-	ship.throwBombDistance = 50000
+	//ship.throwBombDistance = 50000
+	ship.throwBombDistance = rand.Intn(40000) + 20000
 	ship.spinXY = rand.Intn(180) - 90
 	ship.spinXZ = 0
 	rectangle1 := &PolygonPart{
