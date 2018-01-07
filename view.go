@@ -267,6 +267,7 @@ func NewView(state *Olion) *View {
 	return &View{state: state}
 }
 
+/*
 func drawLine(x, y int, str string) {
 	color := termbox.ColorDefault
 	runes := []rune(str)
@@ -275,6 +276,7 @@ func drawLine(x, y int, str string) {
 		termbox.SetCell(x+i, y, runes[i], color, 1)
 	}
 }
+*/
 
 func (view *View) mapObject(objPosition Coordinates) *Dot {
 	myScreen := view.state.screen
