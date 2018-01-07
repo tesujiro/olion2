@@ -23,6 +23,52 @@ func (c Coordinates) Div(k int) Coordinates {
 	return Coordinates{X: c.X / k, Y: c.Y / k, Z: c.Z / k}
 }
 
+func (center Coordinates) Symmetry(diff Coordinates) (ret []Coordinates) {
+	/*
+		perm := func(a, b int) (ret []int) {
+			if b == 0 {
+				ret = []int{a}
+			} else {
+				ret = []int{a - b, a + b}
+			}
+			return ret
+		}
+		for _, x := range perm(center.X, diff.X) {
+			for _, y := range perm(center.Y, diff.Y) {
+				for _, z := range perm(center.Z, diff.Z) {
+					ret = append(ret, Coordinates{X: x, Y: y, Z: z})
+				}
+			}
+		}
+	*/
+	switch {
+	case diff.X == 0:
+		ret = []Coordinates{
+			center.Add(Coordinates{X: 0, Y: diff.Y, Z: diff.Z}),
+			center.Add(Coordinates{X: 0, Y: diff.Y, Z: -diff.Z}),
+			center.Add(Coordinates{X: 0, Y: -diff.Y, Z: -diff.Z}),
+			center.Add(Coordinates{X: 0, Y: -diff.Y, Z: diff.Z}),
+		}
+	case diff.Y == 0:
+		ret = []Coordinates{
+			center.Add(Coordinates{X: diff.X, Y: 0, Z: diff.Z}),
+			center.Add(Coordinates{X: diff.X, Y: 0, Z: -diff.Z}),
+			center.Add(Coordinates{X: -diff.X, Y: 0, Z: -diff.Z}),
+			center.Add(Coordinates{X: -diff.X, Y: 0, Z: diff.Z}),
+		}
+	case diff.Z == 0:
+		ret = []Coordinates{
+			center.Add(Coordinates{X: diff.X, Y: diff.Y, Z: 0}),
+			center.Add(Coordinates{X: diff.X, Y: -diff.Y, Z: 0}),
+			center.Add(Coordinates{X: -diff.X, Y: -diff.Y, Z: 0}),
+			center.Add(Coordinates{X: -diff.X, Y: diff.Y, Z: 0}),
+		}
+	default:
+	}
+	debug.Printf("Symmetry=%v\n", ret)
+	return ret
+}
+
 /*
 type Direction struct {
 	theta float64

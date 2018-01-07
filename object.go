@@ -376,37 +376,38 @@ func (obj *Object) newRectangular(start Coordinates, width int, height int, dept
 		colors[i] = cols[m[i]]
 	}
 
-	addRectangular := func(c0 Coordinates, c1 Coordinates, color Attribute, fill bool) {
-		r := newRectanglePart(&Part{
-			dots:  []Coordinates{c0, c1},
-			color: color,
-			fill:  fill,
-		})
-		obj.addPart(r)
+	addRect := func(center Coordinates, diff Coordinates, color Attribute, fill bool) {
+		rectangle := &PolygonPart{
+			Part{
+				dots:  center.Symmetry(diff),
+				color: color,
+				fill:  fill,
+			}}
+		obj.addPart(rectangle)
 	}
-	addRectangular(
-		Coordinates{X: start.X, Y: start.Y, Z: start.Z},
-		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z},
+	addRect(
+		Coordinates{X: start.X, Y: start.Y, Z: start.Z - depth/2},
+		Coordinates{X: width / 2, Y: height / 2, Z: 0},
 		colors[0], fill)
-	addRectangular(
-		Coordinates{X: start.X, Y: start.Y + height, Z: start.Z},
-		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
+	addRect(
+		Coordinates{X: start.X, Y: start.Y - height/2, Z: start.Z},
+		Coordinates{X: width / 2, Y: 0, Z: depth / 2},
 		colors[1], fill)
-	addRectangular(
-		Coordinates{X: start.X + width, Y: start.Y, Z: start.Z},
-		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
+	addRect(
+		Coordinates{X: start.X - width/2, Y: start.Y, Z: start.Z},
+		Coordinates{X: 0, Y: height / 2, Z: depth / 2},
 		colors[2], fill)
-	addRectangular(
-		Coordinates{X: start.X + width, Y: start.Y, Z: start.Z},
-		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
+	addRect(
+		Coordinates{X: start.X, Y: start.Y + height/2, Z: start.Z},
+		Coordinates{X: width / 2, Y: 0, Z: depth / 2},
 		colors[3], fill)
-	addRectangular(
-		Coordinates{X: start.X, Y: start.Y, Z: start.Z},
-		Coordinates{X: start.X, Y: start.Y + height, Z: start.Z + depth},
+	addRect(
+		Coordinates{X: start.X + width/2, Y: start.Y, Z: start.Z},
+		Coordinates{X: 0, Y: height / 2, Z: depth / 2},
 		colors[4], fill)
-	addRectangular(
-		Coordinates{X: start.X, Y: start.Y, Z: start.Z + depth},
-		Coordinates{X: start.X + width, Y: start.Y + height, Z: start.Z + depth},
+	addRect(
+		Coordinates{X: start.X, Y: start.Y, Z: start.Z + depth/2},
+		Coordinates{X: width / 2, Y: height / 2, Z: 0},
 		colors[5], fill)
 }
 
@@ -557,24 +558,14 @@ func newSpaceShip(t time.Time, s int, c Coordinates) *SpaceShip {
 	ship.spinXZ = 0
 	rectangle1 := &PolygonPart{
 		Part{
-			dots: []Coordinates{
-				Coordinates{X: s / 2, Y: s / 2, Z: 0},
-				Coordinates{X: s / 2, Y: -s / 2, Z: 0},
-				Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
-				Coordinates{X: -s / 2, Y: s / 2, Z: 0},
-			},
+			dots:  Coordinates{}.Symmetry(Coordinates{X: s / 2, Y: s / 2, Z: 0}),
 			color: colors.name("Red").Attribute(),
 			fill:  true,
 		}}
 	ship.addPart(rectangle1)
 	rectangle2 := &PolygonPart{
 		Part{
-			dots: []Coordinates{
-				Coordinates{X: s / 2, Y: s / 2, Z: -1},
-				Coordinates{X: s / 2, Y: -s / 2, Z: -1},
-				Coordinates{X: -s / 2, Y: -s / 2, Z: -1},
-				Coordinates{X: -s / 2, Y: s / 2, Z: -1},
-			},
+			dots:  Coordinates{Z: -1}.Symmetry(Coordinates{X: s / 2, Y: s / 2, Z: 0}),
 			color: colors.name("Black").Attribute(),
 			fill:  false,
 		}}
@@ -676,12 +667,7 @@ func newBox(t time.Time, s int, c Coordinates) *SpaceBox {
 	height := -50
 	ship.addPart(&PolygonPart{
 		Part{
-			dots: []Coordinates{
-				Coordinates{X: s / 2, Y: s / 2, Z: 0},
-				Coordinates{X: s / 2, Y: -s / 2, Z: 0},
-				Coordinates{X: -s / 2, Y: -s / 2, Z: 0},
-				Coordinates{X: -s / 2, Y: s / 2, Z: 0},
-			},
+			dots:  Coordinates{}.Symmetry(Coordinates{X: s / 2, Y: s / 2, Z: 0}),
 			color: colors.name("Black").Attribute(),
 			fill:  true,
 		}})
@@ -760,16 +746,18 @@ func newBox3(t time.Time, s int, c Coordinates) *SpaceBox3 {
 	}
 	cs := []Attribute{
 		colors.name("Grey50").Attribute(),
-		//colors.name("Red").Attribute(),
-		//colors.name("White").Attribute(),
-		//colors.name("Green").Attribute(),
-		//colors.name("Yellow").Attribute(),
+		colors.name("Red").Attribute(),
+		colors.name("White").Attribute(),
+		colors.name("Green").Attribute(),
+		colors.name("Yellow").Attribute(),
 	}
-	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, cs, true)
-	cs = []Attribute{
-		colors.name("Black").Attribute(),
-	}
-	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/10, cs, false)
+	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/20, cs, true)
+	/*
+		cs = []Attribute{
+			colors.name("Black").Attribute(),
+		}
+		box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/20, cs, false)
+	*/
 
 	return &box
 }
