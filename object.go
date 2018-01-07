@@ -761,3 +761,44 @@ func newBox3(t time.Time, s int, c Coordinates) *SpaceBox3 {
 
 	return &box
 }
+
+type BigShip struct {
+	Object
+}
+
+func newBigShip(t time.Time, c Coordinates) *BigShip {
+	ship := BigShip{Object: *newObject()}
+	ship.size = 10000
+	ship.position = c
+	ship.time = t
+	ship.speed = Coordinates{
+		X: rand.Intn(50) - 5,
+		Y: rand.Intn(50) - 5,
+		Z: rand.Intn(50),
+	}
+	var triangle *PolygonPart
+	triangle = &PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: 0, Y: 0, Z: s * 3 / 4},
+				Coordinates{X: 0, Y: 0, Z: -s / 4},
+				Coordinates{X: 0, Y: -s / 4, Z: -s / 4},
+			},
+			color: colors.name("Grey30").Attribute(),
+			fill:  true,
+		}}
+	ship.addPart(triangle)
+	triangle = &PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: 0, Y: 0, Z: s * 3 / 4},
+				Coordinates{X: 0, Y: 0, Z: -s / 4},
+				Coordinates{X: 0, Y: +s / 4, Z: -s / 4},
+			},
+			color: colors.name("Grey30").Attribute(),
+			fill:  true,
+		}}
+	ship.addPart(triangle)
+
+	return &ship
+}
