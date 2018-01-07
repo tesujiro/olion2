@@ -57,6 +57,9 @@ func (spc *Space) inTheSpace(c Coordinates) bool {
 }
 
 func (spc *Space) genObject(now time.Time) Exister {
+	if Debug != nil {
+		return newBigShip(now, spc.randomSpace())
+	}
 	num := rand.Intn(100)
 	switch {
 	//case true:
