@@ -93,21 +93,6 @@ type LinePart struct {
 	Part
 }
 
-/*
-func newLinePart(p Parter) LinePart {
-	// Todo: check len(p.getDots())
-	return LinePart{
-		Part: p.(*Part),
-	}
-}
-*/
-
-/*
-type RectanglePart struct {
-	*Part
-}
-*/
-
 func newRectanglePart(p Parter) *PolygonPart {
 	ds := p.getDots()
 	// Todo: check len(p.getDots())
