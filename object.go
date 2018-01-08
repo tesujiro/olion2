@@ -783,7 +783,7 @@ func newBigShip(t time.Time, c Coordinates) *BigShip {
 		Part{
 			dots: []Coordinates{
 				Coordinates{X: 0, Y: 0, Z: -s * 3 / 4 / compZ},
-				Coordinates{X: 0, Y: 0, Z: s / 4 / compZ},
+				Coordinates{X: 0, Y: s / 8, Z: s / 4 / compZ},
 				Coordinates{X: -s / 4, Y: 0, Z: 0},
 			},
 			color: colors.name("Grey30").Attribute(),
@@ -794,7 +794,7 @@ func newBigShip(t time.Time, c Coordinates) *BigShip {
 		Part{
 			dots: []Coordinates{
 				Coordinates{X: 0, Y: 0, Z: -s * 3 / 4 / compZ},
-				Coordinates{X: 0, Y: 0, Z: s / 4 / compZ},
+				Coordinates{X: 0, Y: s / 8, Z: s / 4 / compZ},
 				Coordinates{X: +s / 4, Y: 0, Z: 0},
 			},
 			color: colors.name("Grey30").Attribute(),
@@ -809,6 +809,28 @@ func newBigShip(t time.Time, c Coordinates) *BigShip {
 				Coordinates{X: 0, Y: s / 4, Z: 0},
 			},
 			color: colors.name("Grey50").Attribute(),
+			fill:  true,
+		}}
+	ship.addPart(triangle)
+	triangle = &PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: 0, Y: 0, Z: -s * 3 / 4 / compZ},
+				Coordinates{X: s / 4, Y: 0, Z: s / 4 / compZ},
+				Coordinates{X: 0, Y: -s / 16, Z: 0},
+			},
+			color: colors.name("Grey39").Attribute(),
+			fill:  true,
+		}}
+	ship.addPart(triangle)
+	triangle = &PolygonPart{
+		Part{
+			dots: []Coordinates{
+				Coordinates{X: 0, Y: 0, Z: -s * 3 / 4 / compZ},
+				Coordinates{X: -s / 4, Y: 0, Z: s / 4 / compZ},
+				Coordinates{X: 0, Y: -s / 16, Z: 0},
+			},
+			color: colors.name("Grey39").Attribute(),
 			fill:  true,
 		}}
 	ship.addPart(triangle)
