@@ -22,7 +22,7 @@ type Screen struct {
 
 func NewScreen() *Screen {
 	w, h := termbox.Size()
-	d := 5
+	d := 10
 	//fmt.Printf("\nW=%v H=%v\n", int(w), int(h))
 	return &Screen{Width: int(w), Height: int(h), Distance: d}
 }
