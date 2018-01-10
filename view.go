@@ -39,6 +39,7 @@ func (sc *Screen) cover(dot Dot) bool {
 	return 0 <= dot.X && dot.X <= sc.Width && 0 <= dot.Y && dot.Y <= sc.Height
 }
 
+/*
 func (sc *Screen) cover2(dot1, dot2 Dot) bool {
 	if dot1.X < 0 && dot2.X < 0 || dot1.X > sc.Width && dot2.X > sc.Width {
 		return false
@@ -47,6 +48,29 @@ func (sc *Screen) cover2(dot1, dot2 Dot) bool {
 		return false
 	}
 	return true
+}
+*/
+
+func (sc *Screen) cover2(dot1, dot2 Dot) (ret1, ret2 *Dot) {
+	if dot1.X < 0 && dot2.X < 0 || dot1.X > sc.Width && dot2.X > sc.Width {
+		return
+	}
+	if dot1.Y < 0 && dot2.Y < 0 || dot1.Y > sc.Height && dot2.Y > sc.Height {
+		return
+	}
+	middle := func(a, b, c int) int {
+		switch {
+		case a > b:
+			return a
+		case b > c:
+			return c
+		default:
+			return b
+		}
+	}
+	//fmt.Printf("dot1=%v %v %v %v\n", dot1, dot1.X, sc.Width, middle(0, dot1.X, sc.Width))
+	return &Dot{middle(0, dot1.X, sc.Width), middle(0, dot1.Y, sc.Height)}, &Dot{middle(0, dot2.X, sc.Width), middle(0, dot2.Y, sc.Height)}
+
 }
 
 func (sc *Screen) distance(p1, p2 Coordinates) int {
@@ -91,10 +115,12 @@ func (sc *Screen) printDot(dot *Dot, color Attribute) {
 
 func (sc *Screen) getLinedDots(d1, d2 *Dot) []*Dot {
 	var result []*Dot
+	//if !sc.cover2(*d1, *d2) {
+	//return result
+	//}
+	d1, d2 = sc.cover2(*d1, *d2)
+
 	if d1 == nil || d2 == nil {
-		return result
-	}
-	if !sc.cover2(*d1, *d2) {
 		return result
 	}
 
