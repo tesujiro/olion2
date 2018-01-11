@@ -58,18 +58,25 @@ func (sc *Screen) cover2(dot1, dot2 Dot) (ret1, ret2 *Dot) {
 	if dot1.Y < 0 && dot2.Y < 0 || dot1.Y > sc.Height && dot2.Y > sc.Height {
 		return
 	}
-	middle := func(a, b, c int) int {
-		switch {
-		case a > b:
-			return a
-		case b > c:
-			return c
-		default:
-			return b
+	return &dot1, &dot2
+	/*
+		middle := func(a, b, c int) int {
+			switch {
+			case a > b:
+				debug.Printf("a > b\n")
+				return a
+			case b > c:
+				debug.Printf("b > c\n")
+				return c
+			default:
+				return b
+			}
 		}
-	}
-	//fmt.Printf("dot1=%v %v %v %v\n", dot1, dot1.X, sc.Width, middle(0, dot1.X, sc.Width))
-	return &Dot{middle(0, dot1.X, sc.Width), middle(0, dot1.Y, sc.Height)}, &Dot{middle(0, dot2.X, sc.Width), middle(0, dot2.Y, sc.Height)}
+		//fmt.Printf("dot1=%v %v %v %v\n", dot1, dot1.X, sc.Width, middle(0, dot1.X, sc.Width))
+		//debug.Printf("dot1=%v dot2q=%v\n", &Dot{middle(0, dot1.X, sc.Width), middle(0, dot1.Y, sc.Height)}, &Dot{middle(0, dot2.X, sc.Width), middle(0, dot2.Y, sc.Height)})
+		//debug.Printf("dot1=%v dot2q=%v\n", &Dot{middle(0, dot1.X, sc.Width), middle(0, dot1.Y, sc.Height)}, &Dot{middle(0, dot2.X, sc.Width), middle(0, dot2.Y, sc.Height)})
+		return &Dot{middle(0, dot1.X, sc.Width), middle(0, dot1.Y, sc.Height)}, &Dot{middle(0, dot2.X, sc.Width), middle(0, dot2.Y, sc.Height)}
+	*/
 
 }
 
