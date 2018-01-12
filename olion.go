@@ -385,15 +385,12 @@ func newDebugWriter(ctx context.Context) {
 		for {
 			select {
 			case str := <-d.writeChan:
-				pline := ""
-				//fmt.Printf("str=%v\n", str)
+				lines := strings.Count(str, "\n")
 				for idx, line := range strings.Split(str, "\n") {
-					if idx == 0 {
-						pline = line
-					} else {
-						d.buff[d.curLine] = pline //Todo: bad performance
+					if idx < lines || len(line) > 0 {
+						//d.buff[d.curLine] = fmt.Sprintf("[%v]:%v", idx, line) //Todo: bad performance
+						d.buff[d.curLine] = line //Todo: bad performance
 						d.curLine = (d.curLine + 1) % len(d.buff)
-						pline = line
 					}
 				}
 				d.writeDone <- struct{}{}
