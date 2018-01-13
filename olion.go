@@ -7,7 +7,6 @@ import (
 	"io"
 	"math/rand"
 	"os"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -161,17 +160,18 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		ch := obj.downCh()
 		ch <- downMsg
 		if !obj.isBomb() {
-			if obj.isExploding() {
-				deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
-				if deltaTime > float64(1e4) {
-					// Delete 10 sec. after explosion.
-					debug.Printf("Delete 10 sec. after explosion.\n")
-					spc.deleteObj(obj)
-					newObj := spc.GenFunc(now)
-					spc.addObj(newObj)
-					go newObj.run(ctx, cancel)
+			/*
+				if obj.isExploding() {
+					deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
+					if deltaTime > float64(1e4) {
+						// Delete 10 sec. after explosion.
+						spc.deleteObj(obj)
+						newObj := spc.GenFunc(now)
+						spc.addObj(newObj)
+						go newObj.run(ctx, cancel)
+					}
 				}
-			}
+			*/
 			flyings = append(flyings, obj)
 		} else {
 			bombs = append(bombs, obj)
@@ -214,15 +214,15 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		}
 	}
 
-	// send and receive msg from bombs and judge explosion
+	// receive msg from bombs and judge explosion
 	for _, bomb := range bombs {
 		upMsg := <-bomb.upCh()
 		upMsgs = append(upMsgs, upMsg)
 		bombAt := bomb.getPosition()
-		debug.Printf("Bomb At %v Distance %v\n", bombAt, state.screen.distance(bombAt, Coordinates{}))
+		//debug.Printf("Bomb At %v Distance %v\n", bombAt, state.screen.distance(bombAt, Coordinates{}))
 		bombPrevAt := bomb.getPrevPosition()
 		between := func(a, b, c int) bool {
-			return (a <= b && b <= c) || (a >= b && b >= c)
+			return (a < b && b <= c) || (a > b && b >= c)
 		}
 		// Judge Explosion of Bombs and the first view object
 		if between(bombPrevAt.Z, 0, bombAt.Z) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
@@ -240,6 +240,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			flyingAt := flying.getPosition()
 			if between(bombPrevAt.Z, flyingAt.Z, bombAt.Z) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 				debug.Printf("the flying object exploded!!!\n")
+				debug.Printf("bomb@%v flying@%v distance=%v\n", bomb.getPosition(), flying.getPosition(), state.screen.distance(flying.getPosition(), bomb.getPosition()))
 				state.score++
 				flying.explode()
 				spc.deleteObj(bomb)
@@ -248,12 +249,23 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		}
 	}
 
-	// if objct is out of the Space , remove and create new one
 	for _, obj := range spc.Objects {
-		if !spc.inTheSpace(obj.getPosition()) {
-			if fmt.Sprintf("%v", reflect.TypeOf(obj)) != "*olion.Star" {
-				debug.Printf("objct(%v) is out of the Space (%v), remove and create new one\n", reflect.TypeOf(obj), obj.getPosition())
+		// stop flying object explosion
+		if obj.isExploding() {
+			deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
+			if deltaTime > float64(1e4) {
+				// Delete 10 sec. after explosion.
+				spc.deleteObj(obj)
+				newObj := spc.GenFunc(now)
+				spc.addObj(newObj)
+				go newObj.run(ctx, cancel)
 			}
+		}
+		// if objct is out of the Space , remove it and create new one
+		if !spc.inTheSpace(obj.getPosition()) {
+			//if fmt.Sprintf("%v", reflect.TypeOf(obj)) != "*olion.Star" {
+			//debug.Printf("objct(%v) is out of the Space (%v), remove and create new one\n", reflect.TypeOf(obj), obj.getPosition())
+			//}
 			spc.deleteObj(obj)
 			if !obj.isBomb() {
 				//debug.Printf("objct is not a bomb\n")

@@ -466,8 +466,9 @@ type EnemyBomb struct {
 
 func newEnemyBomb(t time.Time, s int, position Coordinates, speed Coordinates) *EnemyBomb {
 	bomb := EnemyBomb{Object: *newObject()}
-	bomb.prevPosition = position
-	bomb.position = position.Add(speed.ScaleBy(-1))
+	//bomb.prevPosition = position
+	bomb.prevPosition = position.Add(speed.ScaleBy(-1))
+	bomb.position = position.Add(speed.ScaleBy(-2))
 	bomb.time = t
 	bomb.speed = speed.ScaleBy(-1)
 	bomb.bomb = true

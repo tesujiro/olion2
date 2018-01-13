@@ -65,7 +65,7 @@ func (center Coordinates) Symmetry(diff Coordinates) (ret []Coordinates) {
 		}
 	default:
 	}
-	debug.Printf("Symmetry=%v\n", ret)
+	//debug.Printf("Symmetry=%v\n", ret)
 	return ret
 }
 
