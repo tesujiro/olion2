@@ -160,18 +160,6 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		ch := obj.downCh()
 		ch <- downMsg
 		if !obj.isBomb() {
-			/*
-				if obj.isExploding() {
-					deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
-					if deltaTime > float64(1e4) {
-						// Delete 10 sec. after explosion.
-						spc.deleteObj(obj)
-						newObj := spc.GenFunc(now)
-						spc.addObj(newObj)
-						go newObj.run(ctx, cancel)
-					}
-				}
-			*/
 			flyings = append(flyings, obj)
 		} else {
 			bombs = append(bombs, obj)
@@ -305,9 +293,13 @@ type Olion struct {
 
 	position Coordinates
 	mobile
-	maxBomb int
-	curBomb int
-	score   int
+	maxBomb     int
+	curBomb     int
+	score       int
+	dispFps     int
+	dispFpsUnix int64
+	curFps      int
+	curFpsUnix  int64
 	//vibration int
 	explodedAt time.Time
 	exploding  bool
@@ -352,8 +344,24 @@ func New(ctx context.Context, cancel func()) *Olion {
 	}
 }
 
+/*
+	dispFps     int
+	dispFpsUnix int64
+	curFps      int
+	curFpsUnix  int64
+*/
+
 func (state *Olion) drawConsole(count int) {
-	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("counter=%v move=%v bombs=%v", count, state.speed, state.curBomb))
+	unix := time.Now().Unix()
+	if unix == state.curFpsUnix {
+		state.curFps++
+	} else {
+		state.dispFps = state.curFps
+		state.dispFpsUnix = state.curFpsUnix
+		state.curFps = 0
+		state.curFpsUnix = unix
+	}
+	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("%v frameRate=%vfps counter=%v move=%v bombs=%v", time.Unix(state.dispFpsUnix, 0), state.dispFps, count, state.speed, state.curBomb))
 	state.screen.printString(&Dot{0, state.screen.Height - 1}, fmt.Sprintf("score=%v", state.score))
 	x, y := state.screen.Width/2+1, state.screen.Height/2+1
 	for i := 0; i < state.maxBomb-state.curBomb; i++ {
