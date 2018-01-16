@@ -351,6 +351,33 @@ func New(ctx context.Context, cancel func()) *Olion {
 	curFpsUnix  int64
 */
 
+const (
+	edge1 int = 1 << iota
+	edge2
+	edge3
+	edge4
+	edge5
+	edge6
+	edge7
+)
+
+const (
+	digit1 = edge1 | edge2 | edge3 | edge5 | edge6 | edge7
+	digit2 = edge3 | edge6
+	digit3 = edge1 | edge3 | edge4 | edge5 | edge7
+)
+
+func disp_score(d int) {
+	interval := 1
+	edge_width := 5
+	edge_height := 3
+	edge_weight := 1
+	state.screen.printString(&Dot{0, state.screen.Height - 1}, fmt.Sprintf("score=%v", state.score))
+	switch {
+	case d & edge1:
+	}
+}
+
 func (state *Olion) drawConsole(count int) {
 	unix := time.Now().Unix()
 	if unix == state.curFpsUnix {
@@ -362,7 +389,29 @@ func (state *Olion) drawConsole(count int) {
 		state.curFpsUnix = unix
 	}
 	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("%v frameRate=%vfps counter=%v move=%v bombs=%v", time.Unix(state.dispFpsUnix, 0), state.dispFps, count, state.speed, state.curBomb))
-	state.screen.printString(&Dot{0, state.screen.Height - 1}, fmt.Sprintf("score=%v", state.score))
+
+	state.disp_score(state.score)
+	/*
+		digits := [][]int{
+			{1, 1, 1, 0, 1, 1, 1}, // "0"
+			{0, 0, 1, 0, 0, 1, 0}, // "1"
+			{1, 0, 1, 1, 1, 0, 1}, // "2"
+			{1, 0, 1, 1, 0, 1, 1}, // "3"
+			{0, 1, 1, 1, 0, 1, 0}, // "4"
+			{1, 1, 0, 1, 0, 1, 1}, // "5"
+			{1, 1, 0, 1, 1, 1, 1}, // "6"
+			{1, 1, 0, 0, 0, 1, 0}, // "7"
+			{1, 1, 1, 1, 1, 1, 1}, // "8"
+			{1, 1, 1, 1, 0, 1, 1}, // "9"
+			{0, 0, 0, 1, 0, 0, 0}, // "-"
+		}
+		interval := 1
+		edge_width := 5
+		edge_height := 3
+		edge_weight := 1
+		state.screen.printString(&Dot{0, state.screen.Height - 1}, fmt.Sprintf("score=%v", state.score))
+	*/
+
 	x, y := state.screen.Width/2+1, state.screen.Height/2+1
 	for i := 0; i < state.maxBomb-state.curBomb; i++ {
 		state.screen.printString(&Dot{x, y}, "**")
