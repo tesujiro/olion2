@@ -362,20 +362,106 @@ const (
 )
 
 const (
-	digit1 = edge1 | edge2 | edge3 | edge5 | edge6 | edge7
-	digit2 = edge3 | edge6
-	digit3 = edge1 | edge3 | edge4 | edge5 | edge7
+	digitMinus = edge4
+	digit0     = edge1 | edge2 | edge3 | edge5 | edge6 | edge7
+	digit1     = edge3 | edge6
+	digit2     = edge1 | edge3 | edge4 | edge5 | edge7
+	digit3     = edge1 | edge3 | edge4 | edge6 | edge7
+	digit4     = edge2 | edge3 | edge4 | edge6
+	digit5     = edge1 | edge2 | edge4 | edge6 | edge7
+	digit6     = edge1 | edge2 | edge4 | edge5 | edge6 | edge7
+	digit7     = edge1 | edge3 | edge6
+	digit8     = edge1 | edge2 | edge3 | edge4 | edge5 | edge6 | edge7
+	digit9     = edge1 | edge2 | edge3 | edge4 | edge6 | edge7
 )
 
-func disp_score(d int) {
-	interval := 1
-	edge_width := 5
-	edge_height := 3
-	edge_weight := 1
-	state.screen.printString(&Dot{0, state.screen.Height - 1}, fmt.Sprintf("score=%v", state.score))
-	switch {
-	case d & edge1:
+func digit(n int) int {
+	switch n {
+	case -1:
+		return digitMinus
+	case 0:
+		return digit0
+	case 1:
+		return digit1
+	case 2:
+		return digit2
+	case 3:
+		return digit3
+	case 4:
+		return digit4
+	case 5:
+		return digit5
+	case 6:
+		return digit6
+	case 7:
+		return digit7
+	case 8:
+		return digit8
+	case 9:
+		return digit9
 	}
+	return 0
+}
+
+func (state *Olion) disp_number(n int) {
+	char := "*"
+	f := func(dot Dot, digit int) {
+		debug.Printf("disp_number %v\n", digit)
+
+		if digit&edge1 > 0 {
+			debug.Printf("edge1\n")
+			state.screen.printString(&Dot{dot.X, dot.Y}, char)
+			state.screen.printString(&Dot{dot.X + 1, dot.Y}, char)
+			state.screen.printString(&Dot{dot.X + 2, dot.Y}, char)
+		}
+		if digit&edge2 > 0 {
+			debug.Printf("edge2\n")
+			state.screen.printString(&Dot{dot.X, dot.Y}, char)
+			state.screen.printString(&Dot{dot.X, dot.Y + 1}, char)
+			state.screen.printString(&Dot{dot.X, dot.Y + 2}, char)
+		}
+		if digit&edge3 > 0 {
+			debug.Printf("edge3\n")
+			state.screen.printString(&Dot{dot.X + 2, dot.Y}, char)
+			state.screen.printString(&Dot{dot.X + 2, dot.Y + 1}, char)
+			state.screen.printString(&Dot{dot.X + 2, dot.Y + 2}, char)
+		}
+		if digit&edge4 > 0 {
+			debug.Printf("edge4\n")
+			state.screen.printString(&Dot{dot.X, dot.Y + 2}, char)
+			state.screen.printString(&Dot{dot.X + 1, dot.Y + 2}, char)
+			state.screen.printString(&Dot{dot.X + 2, dot.Y + 2}, char)
+		}
+		if digit&edge5 > 0 {
+			debug.Printf("edge5\n")
+			state.screen.printString(&Dot{dot.X, dot.Y + 2}, char)
+			state.screen.printString(&Dot{dot.X, dot.Y + 3}, char)
+			state.screen.printString(&Dot{dot.X, dot.Y + 4}, char)
+		}
+		if digit&edge6 > 0 {
+			debug.Printf("edge6\n")
+			state.screen.printString(&Dot{dot.X + 2, dot.Y + 2}, char)
+			state.screen.printString(&Dot{dot.X + 2, dot.Y + 3}, char)
+			state.screen.printString(&Dot{dot.X + 2, dot.Y + 4}, char)
+		}
+		if digit&edge7 > 0 {
+			debug.Printf("edge7\n")
+			state.screen.printString(&Dot{dot.X, dot.Y + 4}, char)
+			state.screen.printString(&Dot{dot.X + 1, dot.Y + 4}, char)
+			state.screen.printString(&Dot{dot.X + 2, dot.Y + 4}, char)
+		}
+	}
+	dot := Dot{0, state.screen.Height - 6}
+	if n < 0 {
+		f(dot, digit(-1))
+		dot = Dot{dot.X + 4, dot.Y}
+	}
+	for d := n; d > 0; d = d / 10 {
+		f(dot, digit(d%10))
+		dot = Dot{dot.X + 4, dot.Y}
+	}
+
+	//state.screen.printString(&Dot{0, state.screen.Height - 1}, fmt.Sprintf("score=%v", state.score))
 }
 
 func (state *Olion) drawConsole(count int) {
@@ -390,7 +476,8 @@ func (state *Olion) drawConsole(count int) {
 	}
 	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("%v frameRate=%vfps counter=%v move=%v bombs=%v", time.Unix(state.dispFpsUnix, 0), state.dispFps, count, state.speed, state.curBomb))
 
-	state.disp_score(state.score)
+	state.disp_number(123456789)
+	//state.disp_number(state.score)
 	/*
 		digits := [][]int{
 			{1, 1, 1, 0, 1, 1, 1}, // "0"
@@ -405,10 +492,6 @@ func (state *Olion) drawConsole(count int) {
 			{1, 1, 1, 1, 0, 1, 1}, // "9"
 			{0, 0, 0, 1, 0, 0, 0}, // "-"
 		}
-		interval := 1
-		edge_width := 5
-		edge_height := 3
-		edge_weight := 1
 		state.screen.printString(&Dot{0, state.screen.Height - 1}, fmt.Sprintf("score=%v", state.score))
 	*/
 
