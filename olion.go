@@ -408,7 +408,9 @@ func (state *Olion) disp_number(n int) {
 	setCell := func(dot *Dot, color Attribute) {
 		termbox.SetCell(dot.X, dot.Y, ' ', termbox.ColorDefault, termbox.Attribute(color))
 	}
-	f := func(dot Dot, digit int) {
+	start := Dot{0, state.screen.Height - 6}
+	drawDigit := func(count int, digit int) {
+		dot := Dot{start.X + count*4, start.Y}
 
 		if digit&edge1 > 0 {
 			setCell(&Dot{dot.X, dot.Y}, color)
@@ -446,20 +448,26 @@ func (state *Olion) disp_number(n int) {
 			setCell(&Dot{dot.X + 2, dot.Y + 4}, color)
 		}
 	}
-	dot := Dot{0, state.screen.Height - 6}
+	count := 0
 	if n == 0 {
-		f(dot, digit(0))
+		drawDigit(count, digit(0))
 		return
 	}
 	if n < 0 {
-		f(dot, digit(-1))
+		drawDigit(count, digit(-1))
 		n = -n
-		dot = Dot{dot.X + 4, dot.Y}
+		count++
 	}
-	for d := n; d > 0; d = d / 10 {
-		f(dot, digit(d%10))
-		dot = Dot{dot.X + 4, dot.Y}
+	var rec func(count int, d int) int
+	rec = func(count int, d int) int {
+		if d == 0 {
+			return count
+		}
+		next := rec(count, d/10)
+		drawDigit(next, digit(d%10))
+		return next + 1
 	}
+	rec(count, n)
 }
 
 func (state *Olion) drawConsole(count int) {
