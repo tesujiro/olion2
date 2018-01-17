@@ -404,64 +404,62 @@ func digit(n int) int {
 }
 
 func (state *Olion) disp_number(n int) {
-	char := "*"
+	color := colors.name("White").Attribute()
+	setCell := func(dot *Dot, color Attribute) {
+		termbox.SetCell(dot.X, dot.Y, ' ', termbox.ColorDefault, termbox.Attribute(color))
+	}
 	f := func(dot Dot, digit int) {
-		debug.Printf("disp_number %v\n", digit)
 
 		if digit&edge1 > 0 {
-			debug.Printf("edge1\n")
-			state.screen.printString(&Dot{dot.X, dot.Y}, char)
-			state.screen.printString(&Dot{dot.X + 1, dot.Y}, char)
-			state.screen.printString(&Dot{dot.X + 2, dot.Y}, char)
+			setCell(&Dot{dot.X, dot.Y}, color)
+			setCell(&Dot{dot.X + 1, dot.Y}, color)
+			setCell(&Dot{dot.X + 2, dot.Y}, color)
 		}
 		if digit&edge2 > 0 {
-			debug.Printf("edge2\n")
-			state.screen.printString(&Dot{dot.X, dot.Y}, char)
-			state.screen.printString(&Dot{dot.X, dot.Y + 1}, char)
-			state.screen.printString(&Dot{dot.X, dot.Y + 2}, char)
+			setCell(&Dot{dot.X, dot.Y}, color)
+			setCell(&Dot{dot.X, dot.Y + 1}, color)
+			setCell(&Dot{dot.X, dot.Y + 2}, color)
 		}
 		if digit&edge3 > 0 {
-			debug.Printf("edge3\n")
-			state.screen.printString(&Dot{dot.X + 2, dot.Y}, char)
-			state.screen.printString(&Dot{dot.X + 2, dot.Y + 1}, char)
-			state.screen.printString(&Dot{dot.X + 2, dot.Y + 2}, char)
+			setCell(&Dot{dot.X + 2, dot.Y}, color)
+			setCell(&Dot{dot.X + 2, dot.Y + 1}, color)
+			setCell(&Dot{dot.X + 2, dot.Y + 2}, color)
 		}
 		if digit&edge4 > 0 {
-			debug.Printf("edge4\n")
-			state.screen.printString(&Dot{dot.X, dot.Y + 2}, char)
-			state.screen.printString(&Dot{dot.X + 1, dot.Y + 2}, char)
-			state.screen.printString(&Dot{dot.X + 2, dot.Y + 2}, char)
+			setCell(&Dot{dot.X, dot.Y + 2}, color)
+			setCell(&Dot{dot.X + 1, dot.Y + 2}, color)
+			setCell(&Dot{dot.X + 2, dot.Y + 2}, color)
 		}
 		if digit&edge5 > 0 {
-			debug.Printf("edge5\n")
-			state.screen.printString(&Dot{dot.X, dot.Y + 2}, char)
-			state.screen.printString(&Dot{dot.X, dot.Y + 3}, char)
-			state.screen.printString(&Dot{dot.X, dot.Y + 4}, char)
+			setCell(&Dot{dot.X, dot.Y + 2}, color)
+			setCell(&Dot{dot.X, dot.Y + 3}, color)
+			setCell(&Dot{dot.X, dot.Y + 4}, color)
 		}
 		if digit&edge6 > 0 {
-			debug.Printf("edge6\n")
-			state.screen.printString(&Dot{dot.X + 2, dot.Y + 2}, char)
-			state.screen.printString(&Dot{dot.X + 2, dot.Y + 3}, char)
-			state.screen.printString(&Dot{dot.X + 2, dot.Y + 4}, char)
+			setCell(&Dot{dot.X + 2, dot.Y + 2}, color)
+			setCell(&Dot{dot.X + 2, dot.Y + 3}, color)
+			setCell(&Dot{dot.X + 2, dot.Y + 4}, color)
 		}
 		if digit&edge7 > 0 {
-			debug.Printf("edge7\n")
-			state.screen.printString(&Dot{dot.X, dot.Y + 4}, char)
-			state.screen.printString(&Dot{dot.X + 1, dot.Y + 4}, char)
-			state.screen.printString(&Dot{dot.X + 2, dot.Y + 4}, char)
+			setCell(&Dot{dot.X, dot.Y + 4}, color)
+			setCell(&Dot{dot.X + 1, dot.Y + 4}, color)
+			setCell(&Dot{dot.X + 2, dot.Y + 4}, color)
 		}
 	}
 	dot := Dot{0, state.screen.Height - 6}
+	if n == 0 {
+		f(dot, digit(0))
+		return
+	}
 	if n < 0 {
 		f(dot, digit(-1))
+		n = -n
 		dot = Dot{dot.X + 4, dot.Y}
 	}
 	for d := n; d > 0; d = d / 10 {
 		f(dot, digit(d%10))
 		dot = Dot{dot.X + 4, dot.Y}
 	}
-
-	//state.screen.printString(&Dot{0, state.screen.Height - 1}, fmt.Sprintf("score=%v", state.score))
 }
 
 func (state *Olion) drawConsole(count int) {
@@ -476,8 +474,8 @@ func (state *Olion) drawConsole(count int) {
 	}
 	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("%v frameRate=%vfps counter=%v move=%v bombs=%v", time.Unix(state.dispFpsUnix, 0), state.dispFps, count, state.speed, state.curBomb))
 
-	state.disp_number(123456789)
-	//state.disp_number(state.score)
+	//state.disp_number(123456789)
+	state.disp_number(state.score)
 	/*
 		digits := [][]int{
 			{1, 1, 1, 0, 1, 1, 1}, // "0"
