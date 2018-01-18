@@ -458,16 +458,16 @@ func (state *Olion) disp_number(n int) {
 		n = -n
 		count++
 	}
-	var rec func(count int, d int) int
-	rec = func(count int, d int) int {
+	var printNumber func(start int, d int) int
+	printNumber = func(start int, d int) int {
 		if d == 0 {
-			return count
+			return start
 		}
-		next := rec(count, d/10)
+		next := printNumber(start, d/10)
 		drawDigit(next, digit(d%10))
 		return next + 1
 	}
-	rec(count, n)
+	printNumber(count, n)
 }
 
 func (state *Olion) drawConsole(count int) {
