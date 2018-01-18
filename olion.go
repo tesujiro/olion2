@@ -458,7 +458,7 @@ func (state *Olion) disp_number(n int) {
 		n = -n
 		count++
 	}
-	var printNumber func(start int, d int) int
+	var printNumber func(int, int) int
 	printNumber = func(start int, d int) int {
 		if d == 0 {
 			return start
