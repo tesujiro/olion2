@@ -202,18 +202,41 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		}
 	}
 
+	between := func(a, b, c int) bool {
+		return (a < b && b <= c) || (a > b && b >= c)
+	}
+	min := func(a, b int) int {
+		if a >= b {
+			return b
+		} else {
+			return a
+		}
+	}
+	max := func(a, b int) int {
+		if a >= b {
+			return a
+		} else {
+			return b
+		}
+	}
+	cross := func(a Exister, b Coordinates) bool {
+		aSize := a.getSize() / 2
+		aAt := a.getPosition()
+		aPrevAt := a.getPrevPosition()
+		return between(min(aAt.X, aPrevAt.X)-aSize, b.X, max(aAt.X, aPrevAt.X)+aSize) && between(min(aAt.Y, aPrevAt.Y)-aSize, b.Y, max(aAt.Y, aPrevAt.Y)+aSize) && between(aPrevAt.Z, b.Z, aAt.Z)
+	}
+
 	// receive msg from bombs and judge explosion
 	for _, bomb := range bombs {
 		upMsg := <-bomb.upCh()
 		upMsgs = append(upMsgs, upMsg)
-		bombAt := bomb.getPosition()
+		//bombAt := bomb.getPosition()
 		//debug.Printf("Bomb At %v Distance %v\n", bombAt, state.screen.distance(bombAt, Coordinates{}))
-		bombPrevAt := bomb.getPrevPosition()
-		between := func(a, b, c int) bool {
-			return (a < b && b <= c) || (a > b && b >= c)
-		}
+		//bombPrevAt := bomb.getPrevPosition()
 		// Judge Explosion of Bombs and the first view object
-		if between(bombPrevAt.Z, 0, bombAt.Z) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
+		//if between(bombPrevAt.Z, 0, bombAt.Z) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
+		//if (Coordinates{}).between(bombPrevAt, bombAt) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
+		if cross(bomb, Coordinates{}) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
 			debug.Printf("my object exploded!!!\n")
 			state.score--
 			state.screen.Vibration = 3
@@ -225,8 +248,10 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		//debug.Printf("flying.getPosition()=%v bomb.getPosition()=%v bomb.getPrevPosition=%v\n", flying.getPosition(), bomb.getPosition(), bomb.getPrevPosition())
 		// Judge Explosion of Bombs and Flying Objects
 		for _, flying := range flyings {
-			flyingAt := flying.getPosition()
-			if between(bombPrevAt.Z, flyingAt.Z, bombAt.Z) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
+			//flyingAt := flying.getPosition()
+			//if between(bombPrevAt.Z, flyingAt.Z, bombAt.Z) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
+			//if flyingAt.between(bombPrevAt, bombAt) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
+			if cross(bomb, flying.getPosition()) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 				debug.Printf("the flying object exploded!!!\n")
 				debug.Printf("bomb@%v flying@%v distance=%v\n", bomb.getPosition(), flying.getPosition(), state.screen.distance(flying.getPosition(), bomb.getPosition()))
 				state.score++

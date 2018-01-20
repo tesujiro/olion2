@@ -6,10 +6,15 @@ type Coordinates struct {
 	Z int
 }
 
-//func (c *Coordinates) Add(c1, c2 *Coordinates) *Coordinates {
-//	c = &Coordinates{X: c1.X + c2.X, Y: c1.Y + C2.Y, Z: c1.Z + C2.Z}
-//	return c
-//}
+/*
+func between(a, b, c int) bool {
+	return (a < b && b <= c) || (a > b && b >= c)
+}
+
+func (c1 Coordinates) between(c0, c2 Coordinates) bool {
+	return between(c0.X, c1.X, c2.X) && between(c0.Y, c1.Y, c2.Y) && between(c0.Z, c1.Z, c2.Z)
+}
+*/
 
 func (c1 Coordinates) Add(c2 Coordinates) Coordinates {
 	return Coordinates{X: c1.X + c2.X, Y: c1.Y + c2.Y, Z: c1.Z + c2.Z}

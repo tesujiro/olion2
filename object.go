@@ -214,6 +214,7 @@ type Exister interface {
 	explode()
 	isExploding() bool
 	getExplodedTime() time.Time
+	//cross(Exister) bool
 }
 
 func newObject() *Object {
@@ -346,6 +347,17 @@ func (obj *Object) isExploding() bool {
 func (obj *Object) getExplodedTime() time.Time {
 	return obj.explodedAt
 }
+
+/*
+func (obj1 *Object) cross(obj2 Exister) bool {
+	obj1At := obj1.getPosition()
+	obj2Size := obj2.getSize()
+	obj2At := obj2.getPosition()
+	obj2PrevAt := obj2.getPrevPosition()
+
+	return obj1At.between(
+}
+*/
 
 func (obj *Object) explode() {
 	for _, p := range obj.parts {
