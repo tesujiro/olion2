@@ -141,15 +141,16 @@ func init_alphabet() {
 	alphabet['J'] = 0x1F10A4C
 	alphabet['K'] = 0x1197251
 	alphabet['L'] = 0x108421F
+	alphabet['M'] = 0x11DD631
+	alphabet['N'] = 0x11CD671
+	alphabet['O'] = 0xE8C62E
+	alphabet['P'] = 0x1E8FA10
+	alphabet['Q'] = 0xE8D64D
+	alphabet['R'] = 0x1E8FA31
+	alphabet['S'] = 0xF8383E
+	alphabet['T'] = 0x1F21084
+	alphabet['U'] = 0x118C62E
 	/*
-		alphabet['M'] = 0x
-		alphabet['N'] = 0x
-		alphabet['O'] = 0x
-		alphabet['P'] = 0x
-		alphabet['R'] = 0x
-		alphabet['S'] = 0x
-		alphabet['T'] = 0x
-		alphabet['U'] = 0x
 		alphabet['V'] = 0x
 		alphabet['W'] = 0x
 		alphabet['X'] = 0x
@@ -170,7 +171,16 @@ func init_alphabet() {
 			1111100100001000010011111
 			1111100010000101001001100
 			1000110010111001001010001
-			1000010000100001000011111
+			1000010000100001000011111, // L
+			1000111011101011000110001
+			1000111001101011001110001
+			0111010001100011000101110
+			1111010001111101000010000
+			0111010001101011001001101
+			1111010001111101000110001, //R
+			0111110000011100000111110
+			1111100100001000010000100
+			1000110001100011000101110
 
 
 

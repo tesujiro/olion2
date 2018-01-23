@@ -384,8 +384,7 @@ func (state *Olion) drawConsole(count int) {
 	//state.disp_number(123456789)
 	start := Dot{0, state.screen.Height - 5}
 	disp_number(start, state.score)
-	disp_string(Dot{state.screen.Width / 2, state.screen.Height - 5}, "ABCDEFGHIJKLMNO")
-
+	disp_string(Dot{state.screen.Width / 2, state.screen.Height - 5}, "GHIJKLMNOPQRSTUVWXYZ")
 	x, y := state.screen.Width/2+1, state.screen.Height/2+1
 	for i := 0; i < state.maxBomb-state.curBomb; i++ {
 		state.screen.printString(&Dot{x, y}, "**")
