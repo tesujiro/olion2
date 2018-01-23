@@ -150,42 +150,25 @@ func init_alphabet() {
 	alphabet['S'] = 0xF8383E
 	alphabet['T'] = 0x1F21084
 	alphabet['U'] = 0x118C62E
-	/*
-		alphabet['V'] = 0x
-		alphabet['W'] = 0x
-		alphabet['X'] = 0x
-		alphabet['Y'] = 0x
-		alphabet['Z'] = 0x
-	*/
+	alphabet['V'] = 0x118C544
+	alphabet['W'] = 0x118D771
+	alphabet['X'] = 0x1151151
+	alphabet['Y'] = 0x1151084
+	alphabet['Z'] = 0x1F1111F
+	alphabet['0'] = 0xE9D72E
+	alphabet['1'] = 0xC2108E
+	alphabet['2'] = 0x1E0BA1F
+	alphabet['3'] = 0x1E0983E
+	alphabet['4'] = 0x654BE2
+	alphabet['5'] = 0x1F8783E
+	alphabet['6'] = 0xF87A2E
+	alphabet['7'] = 0x1F08888
+	alphabet['8'] = 0xE8BA2E
+	alphabet['9'] = 0xE8BC3E
+	alphabet['.'] = 0x000004
+	alphabet[':'] = 0x020004
+	alphabet['-'] = 0x007C00
 
-	/*
-		alphabet = []int{
-			0010001010100011111110001, // 'A'
-			1111010001111101000111110, // 'B'
-			0111110000100001000001111, // 'C'
-			1111010001100011000111110, // 'D'
-			1111110000111001000011111
-			1111110000111001000010000
-			0111110000100111000101110, // G
-			1000110001111111000110001
-			1111100100001000010011111
-			1111100010000101001001100
-			1000110010111001001010001
-			1000010000100001000011111, // L
-			1000111011101011000110001
-			1000111001101011001110001
-			0111010001100011000101110
-			1111010001111101000010000
-			0111010001101011001001101
-			1111010001111101000110001, //R
-			0111110000011100000111110
-			1111100100001000010000100
-			1000110001100011000101110
-
-
-
-		}
-	*/
 }
 
 func disp_string(start Dot, str string) {
@@ -199,7 +182,7 @@ func disp_string(start Dot, str string) {
 	drawRune := func(count int, r rune) int {
 		dot := Dot{start.X + count*6, start.Y}
 		font := alphabet[r]
-		debug.Printf("rune=%c font=%x\n", r, font)
+		//debug.Printf("rune=%c font=%x\n", r, font)
 		for y := 0; y < 5; y++ {
 			for x := 0; x < 5; x++ {
 				if font&(1<<uint(24-y*5-x)) > 0 {
@@ -212,6 +195,5 @@ func disp_string(start Dot, str string) {
 	next := 0
 	for _, r := range str {
 		next = drawRune(next, r)
-		//debug.Printf("rune=%c next=%v\n", r, next)
 	}
 }
