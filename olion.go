@@ -175,7 +175,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			sp1 := state.speed
 			position := flying.getPosition()
 			distance := state.screen.distance(position, Coordinates{})
-			debug.Printf("Enemy Bomb!! self speed=%v position=%v distance=%v\n", sp1, position, distance)
+			debug.Printf("Enemy Bomb!! self=%v speed=%v position=%v distance=%v\n", &flying, sp1, position, distance)
 			k := 0
 			if position.Z != 0 {
 				//k = distance * 80 * 1000 / position.Z
@@ -185,6 +185,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			speed := position.ScaleBy(-k).Div(distance).Add(sp1)
 			//debug.Printf("speed=%v\n", speed)
 			newObj := newEnemyBomb(now, 1000, position, speed)
+			newObj.setBomber(flying)
 			state.space.addObj(newObj)
 			flying.removeBomb()
 			go newObj.run(ctx, cancel)
@@ -244,14 +245,15 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			state.exploding = true
 		}
 
-	L:
+		//debug.Printf("bomber=%v\n", bomb.getBomber)
 		//debug.Printf("flying.getPosition()=%v bomb.getPosition()=%v bomb.getPrevPosition=%v\n", flying.getPosition(), bomb.getPosition(), bomb.getPrevPosition())
 		// Judge Explosion of Bombs and Flying Objects
+	L:
 		for _, flying := range flyings {
 			//flyingAt := flying.getPosition()
 			//if between(bombPrevAt.Z, flyingAt.Z, bombAt.Z) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 			//if flyingAt.between(bombPrevAt, bombAt) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
-			if cross(bomb, flying.getPosition()) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
+			if bomb.getBomber() != flying && cross(bomb, flying.getPosition()) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 				debug.Printf("the flying object exploded!!!\n")
 				debug.Printf("bomb@%v flying@%v distance=%v\n", bomb.getPosition(), flying.getPosition(), state.screen.distance(flying.getPosition(), bomb.getPosition()))
 				state.score++

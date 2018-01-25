@@ -190,6 +190,7 @@ type Object struct {
 	downChannel       downChannel
 	upChannel         upChannel
 	bomb              bool
+	bomber            Exister
 	bombable          bool
 	throwBombDistance int
 	explodedAt        time.Time
@@ -208,6 +209,8 @@ type Exister interface {
 	getSize() int
 	setSize(int)
 	isBomb() bool
+	getBomber() Exister
+	setBomber(Exister)
 	hasBomb() bool
 	removeBomb()
 	getThrowBombDistance() int
@@ -294,6 +297,14 @@ func (obj *Object) updateCurDots(currentTime time.Time) {
 
 func (obj *Object) isBomb() bool {
 	return obj.bomb
+}
+
+func (obj *Object) setBomber(e Exister) {
+	obj.bomber = e
+}
+
+func (obj *Object) getBomber() Exister {
+	return obj.bomber
 }
 
 func (obj *Object) hasBomb() bool {
