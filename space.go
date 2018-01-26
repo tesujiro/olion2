@@ -29,6 +29,11 @@ func (spc *Space) deleteObj(obj Exister) {
 	spc.Objects = objects
 }
 
+/*
+func (spc *Space) vanish(obj Exister) {
+}
+*/
+
 func (spc *Space) randomSpace() Coordinates {
 	if spc.Max.Z-spc.Min.Z > 0 {
 		return Coordinates{

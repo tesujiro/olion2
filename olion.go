@@ -121,22 +121,24 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 		}
 	}
 
-	for _, obj := range spc.Objects {
-		deleteAndCreate := func(o Exister) {
-			//if fmt.Sprintf("%v", reflect.TypeOf(obj)) != "*olion.Star" {
-			//debug.Printf("objct(%v) is out of the Space (%v), remove and create new one\n", reflect.TypeOf(obj), obj.getPosition())
-			//}
-			spc.deleteObj(o)
-			if !obj.isBomb() {
-				//debug.Printf("objct is not a bomb\n")
-				newObj := spc.GenFunc(now)
-				spc.addObj(newObj)
-				go newObj.run(ctx, cancel)
+	deleteAndCreate := func(o Exister) {
+		//if fmt.Sprintf("%v", reflect.TypeOf(obj)) != "*olion.Star" {
+		//debug.Printf("objct(%v) is out of the Space (%v), remove and create new one\n", reflect.TypeOf(obj), obj.getPosition())
+		//}
+		spc.deleteObj(o)
+		if !o.isBomb() {
+			//debug.Printf("objct is not a bomb\n")
+			newObj := spc.GenFunc(now)
+			spc.addObj(newObj)
+			go newObj.run(ctx, cancel)
+			/*
 				newObj.downCh() <- downMsg
 				upMsg := <-newObj.upCh()
 				upMsgs = append(upMsgs, upMsg)
-			}
+			*/
 		}
+	}
+	for _, obj := range spc.Objects {
 		// stop flying object explosion
 		if obj.isExploding() {
 			// Delete 10 sec. after explosion.
