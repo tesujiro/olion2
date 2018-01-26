@@ -83,7 +83,7 @@ func (spc *Space) genBackgroundObject(now time.Time) Exister {
 	}
 }
 
-func NewSpace(ctx context.Context, cancel func()) *Space {
+func NewSpace(ctx context.Context, cancel func(), objects int) *Space {
 	spc := &Space{}
 	spc.GenFunc = spc.genObject
 
@@ -103,7 +103,7 @@ func NewSpace(ctx context.Context, cancel func()) *Space {
 		Z: depth,
 	}
 	now := time.Now()
-	for i := 0; i < 10; i++ {
+	for i := 0; i < objects; i++ {
 		//for i := 0; i < 3; i++ {
 		obj := spc.GenFunc(now)
 		spc.addObj(obj)
@@ -113,7 +113,7 @@ func NewSpace(ctx context.Context, cancel func()) *Space {
 	return spc
 }
 
-func NewOuterSpace(ctx context.Context, cancel func()) *Space {
+func NewOuterSpace(ctx context.Context, cancel func(), objects int) *Space {
 	spc := &Space{}
 	spc.GenFunc = spc.genBackgroundObject
 
@@ -134,7 +134,7 @@ func NewOuterSpace(ctx context.Context, cancel func()) *Space {
 		Z: depth / 10,
 	}
 	now := time.Now()
-	for i := 0; i < 10; i++ {
+	for i := 0; i < objects; i++ {
 		obj := spc.GenFunc(now)
 		spc.addObj(obj)
 		go obj.run(ctx, cancel)

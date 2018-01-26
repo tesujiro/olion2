@@ -200,6 +200,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 	rand.Seed(time.Now().UnixNano())
 	debug := flag.Bool("d", false, "Debug Mode")
 	palette := flag.Bool("p", false, "Color Palette Mode")
+	objects := flag.Int("o", 10, "Number of Flying Objects")
 	flag.Parse()
 	screen := NewScreen()
 	newDebugWriter(ctx)
@@ -217,8 +218,8 @@ func New(ctx context.Context, cancel func()) *Olion {
 		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
 		readyCh:    make(chan struct{}),
 		screen:     screen,
-		space:      NewSpace(ctx, cancel),
-		outerSpace: NewOuterSpace(ctx, cancel),
+		space:      NewSpace(ctx, cancel, *objects),
+		outerSpace: NewOuterSpace(ctx, cancel, 10),
 		//maxScanBufferSize: bufio.MaxScanTokenSize,
 		position: Coordinates{X: 0, Y: 0, Z: 0},
 		mobile:   mobile{speed: Coordinates{X: 0, Y: 0, Z: 20}, time: time.Now()},
