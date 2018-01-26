@@ -9,20 +9,6 @@ import (
 
 type Attribute uint16
 
-/*
-const (
-	ColorDefault Attribute = iota
-	ColorBlack
-	ColorRed
-	ColorGreen
-	ColorYellow
-	ColorBlue
-	ColorMagenta
-	ColorCyan
-	ColorWhite
-)
-*/
-
 type Part struct {
 	curDots []Coordinates
 	dots    []Coordinates
@@ -320,11 +306,6 @@ func (obj *Object) getThrowBombDistance() int {
 	return obj.throwBombDistance
 }
 
-//func (obj *Object) throwBomb() {
-//	obj.hasBomb = false
-//	return
-//}
-
 func (obj *Object) run(ctx context.Context, cancel func()) {
 	defer cancel()
 mainloop:
@@ -358,17 +339,6 @@ func (obj *Object) isExploding() bool {
 func (obj *Object) getExplodedTime() time.Time {
 	return obj.explodedAt
 }
-
-/*
-func (obj1 *Object) cross(obj2 Exister) bool {
-	obj1At := obj1.getPosition()
-	obj2Size := obj2.getSize()
-	obj2At := obj2.getPosition()
-	obj2PrevAt := obj2.getPrevPosition()
-
-	return obj1At.between(
-}
-*/
 
 func (obj *Object) explode() {
 	for _, p := range obj.parts {
@@ -500,10 +470,6 @@ func newEnemyBomb(t time.Time, s int, position Coordinates, speed Coordinates) *
 
 	// enemy bombs face toward Zero (=first view)
 	addRect := func(s int) {
-		//d := math.Sqrt(float64(position.X*position.X + position.Y*position.Y + position.Z*position.Z))
-		//theta := math.Asin(d / math.Sqrt(d*d+float64(s*s)))
-		//deltaX := int(float64(position.X*s) / d)
-		//deltaY := int(float64(position.Y*s) / d)
 		//debug.Printf("newEnemy d=%v deltaX=%v deltaY=%v\n", d, deltaX, deltaY)
 		rectangle := &PolygonPart{
 			Part{
@@ -512,10 +478,6 @@ func newEnemyBomb(t time.Time, s int, position Coordinates, speed Coordinates) *
 					Coordinates{X: position.X + s, Y: position.Y - s, Z: position.Z},
 					Coordinates{X: position.X - s, Y: position.Y - s, Z: position.Z},
 					Coordinates{X: position.X - s, Y: position.Y + s, Z: position.Z},
-					//Coordinates{X: position.X + s, Y: position.Y + s, Z: position.Z + deltaX/200 + deltaY/200},
-					//Coordinates{X: position.X + s, Y: position.Y - s, Z: position.Z + deltaX/200 - deltaY/200},
-					//Coordinates{X: position.X - s, Y: position.Y - s, Z: position.Z - deltaX/200 - deltaY/200},
-					//Coordinates{X: position.X - s, Y: position.Y + s, Z: position.Z - deltaX/200 + deltaY/200},
 				},
 				color: colors.name(color).Attribute(),
 				fill:  false,
@@ -776,12 +738,6 @@ func newBox3(t time.Time, s int, c Coordinates) *SpaceBox3 {
 		colors.name("Yellow").Attribute(),
 	}
 	box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/20, cs, true)
-	/*
-		cs = []Attribute{
-			colors.name("Black").Attribute(),
-		}
-		box.newRectangular(Coordinates{X: 0, Y: 0, Z: 0}, s, s, s/20, cs, false)
-	*/
 
 	return &box
 }

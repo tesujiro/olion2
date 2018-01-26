@@ -231,12 +231,6 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 	for _, bomb := range bombs {
 		upMsg := <-bomb.upCh()
 		upMsgs = append(upMsgs, upMsg)
-		//bombAt := bomb.getPosition()
-		//debug.Printf("Bomb At %v Distance %v\n", bombAt, state.screen.distance(bombAt, Coordinates{}))
-		//bombPrevAt := bomb.getPrevPosition()
-		// Judge Explosion of Bombs and the first view object
-		//if between(bombPrevAt.Z, 0, bombAt.Z) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
-		//if (Coordinates{}).between(bombPrevAt, bombAt) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
 		if cross(bomb, Coordinates{}) && state.screen.distance(Coordinates{}, bomb.getPosition()) <= bomb.getSize() {
 			debug.Printf("my object exploded!!!\n")
 			state.score--
@@ -245,14 +239,8 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			state.exploding = true
 		}
 
-		//debug.Printf("bomber=%v\n", bomb.getBomber)
-		//debug.Printf("flying.getPosition()=%v bomb.getPosition()=%v bomb.getPrevPosition=%v\n", flying.getPosition(), bomb.getPosition(), bomb.getPrevPosition())
-		// Judge Explosion of Bombs and Flying Objects
 	L:
 		for _, flying := range flyings {
-			//flyingAt := flying.getPosition()
-			//if between(bombPrevAt.Z, flyingAt.Z, bombAt.Z) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
-			//if flyingAt.between(bombPrevAt, bombAt) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 			if bomb.getBomber() != flying && cross(bomb, flying.getPosition()) && state.screen.distance(flying.getPosition(), bomb.getPosition()) <= bomb.getSize() {
 				debug.Printf("the flying object exploded!!!\n")
 				debug.Printf("bomb@%v flying@%v distance=%v\n", bomb.getPosition(), flying.getPosition(), state.screen.distance(flying.getPosition(), bomb.getPosition()))
