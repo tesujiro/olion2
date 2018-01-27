@@ -167,7 +167,6 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates) []upMessage {
 			newObj.setBomber(flying)
 			state.space.addObj(newObj)
 			flying.removeBomb()
-			//go newObj.run(ctx, cancel)
 		}
 		// Todo:敵同士の攻撃
 	}
@@ -279,7 +278,6 @@ mainloop:
 				speed := Coordinates{state.speed.X, state.speed.Y, state.speed.Z + 80}
 				newObj := newBomb(now, 1000, Coordinates{}, speed)
 				state.space.addObj(newObj)
-				//go newObj.run(ctx, cancel)
 				fireBomb = false
 			}
 			forward := state.getDistance(now)
