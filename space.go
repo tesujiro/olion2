@@ -29,10 +29,24 @@ func (spc *Space) deleteObj(obj Exister) {
 	spc.Objects = objects
 }
 
-/*
-func (spc *Space) vanish(obj Exister) {
+//func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Context, cancel func()) []upMessage {
+func (spc *Space) vanish(obj Exister, ctx context.Context, cancel func()) {
+	//if fmt.Sprintf("%v", reflect.TypeOf(obj)) != "*olion.Star" {
+	//debug.Printf("objct(%v) is out of the Space (%v), remove and create new one\n", reflect.TypeOf(obj), obj.getPosition())
+	//}
+	spc.deleteObj(obj)
+	if !obj.isBomb() {
+		//debug.Printf("objct is not a bomb\n")
+		newObj := spc.GenFunc(time.Now())
+		spc.addObj(newObj)
+		go newObj.run(ctx, cancel)
+		/*
+			newObj.downCh() <- downMsg
+			upMsg := <-newObj.upCh()
+			upMsgs = append(upMsgs, upMsg)
+		*/
+	}
 }
-*/
 
 func (spc *Space) randomSpace() Coordinates {
 	if spc.Max.Z-spc.Min.Z > 0 {
