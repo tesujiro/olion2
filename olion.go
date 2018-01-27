@@ -135,7 +135,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates) []upMessage {
 	// send downMsg , and get flying objects and bombs
 	flyings := []Exister{}
 	bombs := []Exister{}
-	for _, obj := range spc.Objects {
+	for _, obj := range spc.GetObjects() {
 		ch := obj.downCh()
 		ch <- downMsg
 		if !obj.isBomb() {
@@ -231,18 +231,18 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates) []upMessage {
 		}
 	}
 
-	for _, obj := range spc.Objects {
+	for _, obj := range spc.GetObjects() {
 		// stop flying object explosion
 		if obj.isExploding() {
 			// Delete 10 sec. after explosion.
 			deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
 			if deltaTime > float64(1e4) {
-				spc.vanish(obj)
+				spc.Vanish(obj)
 			}
 		}
 		// if objct is out of the Space , remove it and create new one
 		if !spc.inTheSpace(obj.getPosition()) {
-			spc.vanish(obj)
+			spc.Vanish(obj)
 		}
 	}
 

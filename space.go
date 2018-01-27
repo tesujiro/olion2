@@ -82,6 +82,10 @@ func NewOuterSpace(ctx context.Context, cancel func(), objects int) *Space {
 	return spc
 }
 
+func (spc *Space) GetObjects() []Exister {
+	return spc.Objects
+}
+
 func (spc *Space) addObj(obj Exister) {
 	spc.Objects = append(spc.Objects, obj)
 	go obj.run(spc.ctx, spc.cancel)
@@ -97,7 +101,7 @@ func (spc *Space) deleteObj(obj Exister) {
 	spc.Objects = objects
 }
 
-func (spc *Space) vanish(obj Exister) {
+func (spc *Space) Vanish(obj Exister) {
 	//if fmt.Sprintf("%v", reflect.TypeOf(obj)) != "*olion.Star" {
 	//debug.Printf("objct(%v) is out of the Space (%v), remove and create new one\n", reflect.TypeOf(obj), obj.getPosition())
 	//}
