@@ -127,12 +127,12 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			// Delete 10 sec. after explosion.
 			deltaTime := float64(time.Now().Sub(obj.getExplodedTime()) / time.Millisecond)
 			if deltaTime > float64(1e4) {
-				spc.vanish(obj, ctx, cancel)
+				spc.vanish(obj)
 			}
 		}
 		// if objct is out of the Space , remove it and create new one
 		if !spc.inTheSpace(obj.getPosition()) {
-			spc.vanish(obj, ctx, cancel)
+			spc.vanish(obj)
 		}
 	}
 

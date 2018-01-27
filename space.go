@@ -13,6 +13,73 @@ type Space struct {
 	Min     Coordinates
 	Max     Coordinates
 	GenFunc func(time.Time) Exister
+	ctx     context.Context
+	cancel  func()
+}
+
+func NewSpace(ctx context.Context, cancel func(), objects int) *Space {
+	spc := &Space{}
+	spc.GenFunc = spc.genObject
+	spc.ctx = ctx
+	spc.cancel = cancel
+
+	w, h := termbox.Size()
+	max := int((w + h) * 30)
+	min := -max
+	depth := (w + h) * 40
+
+	spc.Min = Coordinates{
+		X: min,
+		Y: min,
+		Z: 0,
+	}
+	spc.Max = Coordinates{
+		X: max,
+		Y: max,
+		Z: depth,
+	}
+	now := time.Now()
+	for i := 0; i < objects; i++ {
+		//for i := 0; i < 3; i++ {
+		obj := spc.GenFunc(now)
+		spc.addObj(obj)
+		go obj.run(ctx, cancel)
+	}
+
+	return spc
+}
+
+func NewOuterSpace(ctx context.Context, cancel func(), objects int) *Space {
+	spc := &Space{}
+	spc.GenFunc = spc.genBackgroundObject
+	spc.ctx = ctx
+	spc.cancel = cancel
+
+	w, h := termbox.Size()
+	max := int((w + h) * 20)
+	min := -max
+	depth := max
+
+	spc.Min = Coordinates{
+		X: min,
+		Y: min,
+		Z: 0,
+	}
+	spc.Max = Coordinates{
+		X: max,
+		Y: max,
+		//Z: depth / 20,
+		Z: depth / 10,
+	}
+	now := time.Now()
+	for i := 0; i < objects; i++ {
+		obj := spc.GenFunc(now)
+		spc.addObj(obj)
+		go obj.run(ctx, cancel)
+	}
+
+	//fmt.Printf("OuterSpace ==> %v Objects\n", len(spc.Objects))
+	return spc
 }
 
 func (spc *Space) addObj(obj Exister) {
@@ -29,8 +96,7 @@ func (spc *Space) deleteObj(obj Exister) {
 	spc.Objects = objects
 }
 
-//func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Context, cancel func()) []upMessage {
-func (spc *Space) vanish(obj Exister, ctx context.Context, cancel func()) {
+func (spc *Space) vanish(obj Exister) {
 	//if fmt.Sprintf("%v", reflect.TypeOf(obj)) != "*olion.Star" {
 	//debug.Printf("objct(%v) is out of the Space (%v), remove and create new one\n", reflect.TypeOf(obj), obj.getPosition())
 	//}
@@ -39,12 +105,7 @@ func (spc *Space) vanish(obj Exister, ctx context.Context, cancel func()) {
 		//debug.Printf("objct is not a bomb\n")
 		newObj := spc.GenFunc(time.Now())
 		spc.addObj(newObj)
-		go newObj.run(ctx, cancel)
-		/*
-			newObj.downCh() <- downMsg
-			upMsg := <-newObj.upCh()
-			upMsgs = append(upMsgs, upMsg)
-		*/
+		go newObj.run(spc.ctx, spc.cancel)
 	}
 }
 
@@ -95,65 +156,4 @@ func (spc *Space) genBackgroundObject(now time.Time) Exister {
 		//Add Star
 		return newStar(now, 1, spc.randomSpace())
 	}
-}
-
-func NewSpace(ctx context.Context, cancel func(), objects int) *Space {
-	spc := &Space{}
-	spc.GenFunc = spc.genObject
-
-	w, h := termbox.Size()
-	max := int((w + h) * 30)
-	min := -max
-	depth := (w + h) * 40
-
-	spc.Min = Coordinates{
-		X: min,
-		Y: min,
-		Z: 0,
-	}
-	spc.Max = Coordinates{
-		X: max,
-		Y: max,
-		Z: depth,
-	}
-	now := time.Now()
-	for i := 0; i < objects; i++ {
-		//for i := 0; i < 3; i++ {
-		obj := spc.GenFunc(now)
-		spc.addObj(obj)
-		go obj.run(ctx, cancel)
-	}
-
-	return spc
-}
-
-func NewOuterSpace(ctx context.Context, cancel func(), objects int) *Space {
-	spc := &Space{}
-	spc.GenFunc = spc.genBackgroundObject
-
-	w, h := termbox.Size()
-	max := int((w + h) * 20)
-	min := -max
-	depth := max
-
-	spc.Min = Coordinates{
-		X: min,
-		Y: min,
-		Z: 0,
-	}
-	spc.Max = Coordinates{
-		X: max,
-		Y: max,
-		//Z: depth / 20,
-		Z: depth / 10,
-	}
-	now := time.Now()
-	for i := 0; i < objects; i++ {
-		obj := spc.GenFunc(now)
-		spc.addObj(obj)
-		go obj.run(ctx, cancel)
-	}
-
-	//fmt.Printf("OuterSpace ==> %v Objects\n", len(spc.Objects))
-	return spc
 }
