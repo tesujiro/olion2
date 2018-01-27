@@ -14,7 +14,8 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
-func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Context, cancel func()) []upMessage {
+//func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Context, cancel func()) []upMessage {
+func (state *Olion) move(spc *Space, t time.Time, dp Coordinates) []upMessage {
 	downMsg := downMessage{
 		time:          t,
 		deltaPosition: dp,
@@ -57,7 +58,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Co
 			newObj.setBomber(flying)
 			state.space.addObj(newObj)
 			flying.removeBomb()
-			go newObj.run(ctx, cancel)
+			//go newObj.run(ctx, cancel)
 		}
 		// Todo:敵同士の攻撃
 	}
@@ -327,13 +328,6 @@ func newDebugWindow(screen *Screen) *Window {
 	}
 }
 
-/*
-func (state *Olion) Printf(format string, a ...interface{}) (n int, err error) {
-	d := state.debugWriter
-	return fmt.Fprintf(d, format, a...)
-}
-*/
-
 func (state *Olion) drawDebugInfo() {
 	//d := state.debugWriter
 	d := debug
@@ -393,7 +387,7 @@ mainloop:
 			state.screen.clear()
 			//OuterSpace
 			speed := Coordinates{X: state.speed.X, Y: state.speed.Y, Z: 0}
-			upMsgsOuterSpace := state.move(state.outerSpace, time.Now(), speed, ctx, cancel)
+			upMsgsOuterSpace := state.move(state.outerSpace, time.Now(), speed)
 			view.draw(upMsgsOuterSpace)
 			//Space
 			now := time.Now()
@@ -402,11 +396,11 @@ mainloop:
 				speed := Coordinates{state.speed.X, state.speed.Y, state.speed.Z + 80}
 				newObj := newBomb(now, 1000, Coordinates{}, speed)
 				state.space.addObj(newObj)
-				go newObj.run(ctx, cancel)
+				//go newObj.run(ctx, cancel)
 				fireBomb = false
 			}
 			forward := state.getDistance(now)
-			upMsgs := state.move(state.space, now, forward, ctx, cancel)
+			upMsgs := state.move(state.space, now, forward)
 			view.draw(upMsgs)
 			count++
 			state.setStatus()

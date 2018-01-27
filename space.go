@@ -43,7 +43,7 @@ func NewSpace(ctx context.Context, cancel func(), objects int) *Space {
 		//for i := 0; i < 3; i++ {
 		obj := spc.GenFunc(now)
 		spc.addObj(obj)
-		go obj.run(ctx, cancel)
+		//go obj.run(ctx, cancel)
 	}
 
 	return spc
@@ -75,7 +75,7 @@ func NewOuterSpace(ctx context.Context, cancel func(), objects int) *Space {
 	for i := 0; i < objects; i++ {
 		obj := spc.GenFunc(now)
 		spc.addObj(obj)
-		go obj.run(ctx, cancel)
+		//go obj.run(ctx, cancel)
 	}
 
 	//fmt.Printf("OuterSpace ==> %v Objects\n", len(spc.Objects))
@@ -84,6 +84,7 @@ func NewOuterSpace(ctx context.Context, cancel func(), objects int) *Space {
 
 func (spc *Space) addObj(obj Exister) {
 	spc.Objects = append(spc.Objects, obj)
+	go obj.run(spc.ctx, spc.cancel)
 }
 
 func (spc *Space) deleteObj(obj Exister) {
@@ -105,7 +106,7 @@ func (spc *Space) vanish(obj Exister) {
 		//debug.Printf("objct is not a bomb\n")
 		newObj := spc.GenFunc(time.Now())
 		spc.addObj(newObj)
-		go newObj.run(spc.ctx, spc.cancel)
+		//go newObj.run(spc.ctx, spc.cancel)
 	}
 }
 
