@@ -7,14 +7,123 @@ import (
 	"io"
 	"math/rand"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/nsf/termbox-go"
 )
 
-//func (state *Olion) move(spc *Space, t time.Time, dp Coordinates, ctx context.Context, cancel func()) []upMessage {
+type Olion struct {
+	Argv        []string
+	Stdin       io.Reader
+	Stdout      io.Writer
+	Stderr      io.Writer
+	Debug       bool
+	Palette     bool
+	Pause       bool
+	debugWindow *Window
+	//hub    MessageHub
+
+	//bufferSize int
+	// Config contains the values read in from config file
+	//config Config
+	//currentLineBuffer Buffer
+	//maxScanBufferSize int
+	readyCh    chan struct{}
+	screen     *Screen
+	space      *Space
+	outerSpace *Space
+
+	position Coordinates
+	mobile
+	maxBomb     int
+	curBomb     int
+	score       int
+	dispFps     int
+	dispFpsUnix int64
+	curFps      int
+	curFpsUnix  int64
+	//vibration int
+	explodedAt time.Time
+	exploding  bool
+
+	// cancelFunc is called for Exit()
+	cancelFunc func()
+	// Errors are stored here
+	err error
+}
+
+func New(ctx context.Context, cancel func()) *Olion {
+	rand.Seed(time.Now().UnixNano())
+	debug := flag.Bool("d", false, "Debug Mode")
+	palette := flag.Bool("p", false, "Color Palette Mode")
+	objects := flag.Int("o", 10, "Number of Flying Objects")
+	flag.Parse()
+	screen := NewScreen()
+	newDebugWriter(ctx)
+	InitColor()
+
+	return &Olion{
+		Argv:        os.Args,
+		Stderr:      os.Stderr,
+		Stdin:       os.Stdin,
+		Stdout:      os.Stdout,
+		Debug:       *debug,
+		Palette:     *palette,
+		Pause:       false,
+		debugWindow: newDebugWindow(screen),
+		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
+		readyCh:    make(chan struct{}),
+		screen:     screen,
+		space:      NewSpace(ctx, cancel, *objects),
+		outerSpace: NewOuterSpace(ctx, cancel, 10),
+		//maxScanBufferSize: bufio.MaxScanTokenSize,
+		position: Coordinates{X: 0, Y: 0, Z: 0},
+		mobile:   mobile{speed: Coordinates{X: 0, Y: 0, Z: 20}, time: time.Now()},
+		maxBomb:  4,
+		curBomb:  0,
+		score:    0,
+		//vibration: 0,
+		//cancelFunc: func() {},
+	}
+}
+
+func (state *Olion) drawConsole(count int) {
+	unix := time.Now().Unix()
+	if unix == state.curFpsUnix {
+		state.curFps++
+	} else {
+		state.dispFps = state.curFps
+		state.dispFpsUnix = state.curFpsUnix
+		state.curFps = 0
+		state.curFpsUnix = unix
+	}
+	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("%v frameRate=%vfps counter=%v move=%v bombs=%v", time.Unix(state.dispFpsUnix, 0), state.dispFps, count, state.speed, state.curBomb))
+
+	//state.disp_number(123456789)
+	start := Dot{0, state.screen.Height - 5}
+	//disp_number(start, state.score)
+	disp_string(start, fmt.Sprintf("SCORE:%v", state.score))
+	x, y := state.screen.Width/2+1, state.screen.Height/2+1
+	for i := 0; i < state.maxBomb-state.curBomb; i++ {
+		state.screen.printString(&Dot{x, y}, "**")
+		state.screen.printString(&Dot{x, y + 1}, "**")
+		x += 3
+		y += 0
+	}
+}
+
+func (state *Olion) setStatus() {
+	//count bombs
+	bombs := 0
+	for _, obj := range state.space.Objects {
+		if obj.isBomb() {
+			bombs++
+		}
+	}
+	state.curBomb = bombs
+}
+
 func (state *Olion) move(spc *Space, t time.Time, dp Coordinates) []upMessage {
 	downMsg := downMessage{
 		time:          t,
@@ -138,232 +247,6 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates) []upMessage {
 	}
 
 	return upMsgs
-}
-
-type Olion struct {
-	Argv        []string
-	Stdin       io.Reader
-	Stdout      io.Writer
-	Stderr      io.Writer
-	Debug       bool
-	Palette     bool
-	Pause       bool
-	debugWindow *Window
-	//hub    MessageHub
-
-	//bufferSize int
-	// Config contains the values read in from config file
-	//config Config
-	//currentLineBuffer Buffer
-	//maxScanBufferSize int
-	readyCh    chan struct{}
-	screen     *Screen
-	space      *Space
-	outerSpace *Space
-
-	position Coordinates
-	mobile
-	maxBomb     int
-	curBomb     int
-	score       int
-	dispFps     int
-	dispFpsUnix int64
-	curFps      int
-	curFpsUnix  int64
-	//vibration int
-	explodedAt time.Time
-	exploding  bool
-
-	// cancelFunc is called for Exit()
-	cancelFunc func()
-	// Errors are stored here
-	err error
-}
-
-func New(ctx context.Context, cancel func()) *Olion {
-	rand.Seed(time.Now().UnixNano())
-	debug := flag.Bool("d", false, "Debug Mode")
-	palette := flag.Bool("p", false, "Color Palette Mode")
-	objects := flag.Int("o", 10, "Number of Flying Objects")
-	flag.Parse()
-	screen := NewScreen()
-	newDebugWriter(ctx)
-	InitColor()
-
-	return &Olion{
-		Argv:        os.Args,
-		Stderr:      os.Stderr,
-		Stdin:       os.Stdin,
-		Stdout:      os.Stdout,
-		Debug:       *debug,
-		Palette:     *palette,
-		Pause:       false,
-		debugWindow: newDebugWindow(screen),
-		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
-		readyCh:    make(chan struct{}),
-		screen:     screen,
-		space:      NewSpace(ctx, cancel, *objects),
-		outerSpace: NewOuterSpace(ctx, cancel, 10),
-		//maxScanBufferSize: bufio.MaxScanTokenSize,
-		position: Coordinates{X: 0, Y: 0, Z: 0},
-		mobile:   mobile{speed: Coordinates{X: 0, Y: 0, Z: 20}, time: time.Now()},
-		maxBomb:  4,
-		curBomb:  0,
-		score:    0,
-		//vibration: 0,
-		//cancelFunc: func() {},
-	}
-}
-
-func (state *Olion) drawConsole(count int) {
-	unix := time.Now().Unix()
-	if unix == state.curFpsUnix {
-		state.curFps++
-	} else {
-		state.dispFps = state.curFps
-		state.dispFpsUnix = state.curFpsUnix
-		state.curFps = 0
-		state.curFpsUnix = unix
-	}
-	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("%v frameRate=%vfps counter=%v move=%v bombs=%v", time.Unix(state.dispFpsUnix, 0), state.dispFps, count, state.speed, state.curBomb))
-
-	//state.disp_number(123456789)
-	start := Dot{0, state.screen.Height - 5}
-	//disp_number(start, state.score)
-	disp_string(start, fmt.Sprintf("SCORE:%v", state.score))
-	x, y := state.screen.Width/2+1, state.screen.Height/2+1
-	for i := 0; i < state.maxBomb-state.curBomb; i++ {
-		state.screen.printString(&Dot{x, y}, "**")
-		state.screen.printString(&Dot{x, y + 1}, "**")
-		x += 3
-		y += 0
-	}
-}
-
-type debugWriter struct {
-	//w      io.Writer
-	//buff    [][]byte
-	buff    []string
-	curLine int
-
-	// Goroutine Implementation
-	writeChan chan string
-	writeDone chan struct{}
-	readReq   chan int
-	readChan  chan string
-	//readDone  chan struct{}
-}
-
-var debug *debugWriter
-
-func newDebugWriter(ctx context.Context) {
-	size := 1000
-	d := &debugWriter{
-		buff:      make([]string, size),
-		curLine:   0,
-		writeChan: make(chan string),
-		writeDone: make(chan struct{}),
-		readReq:   make(chan int),
-		readChan:  make(chan string),
-		//readDone:  make(chan struct{}),
-	}
-
-	go func() {
-	L:
-		for {
-			select {
-			case str := <-d.writeChan:
-				lines := strings.Count(str, "\n")
-				for idx, line := range strings.Split(str, "\n") {
-					if idx < lines || len(line) > 0 {
-						//d.buff[d.curLine] = fmt.Sprintf("[%v]:%v", idx, line) //Todo: bad performance
-						d.buff[d.curLine] = line //Todo: bad performance
-						d.curLine = (d.curLine + 1) % len(d.buff)
-					}
-				}
-				d.writeDone <- struct{}{}
-			case size := <-d.readReq:
-				firstLine := (d.curLine + len(d.buff) - size) % len(d.buff)
-				for i := 0; i < size; i++ {
-					idx := (firstLine + i) % len(d.buff)
-					msg := d.buff[idx]
-					//msg := strconv.Itoa(idx) + ":" + msg
-					d.readChan <- msg
-				}
-			case <-ctx.Done():
-				break L
-			}
-		}
-	}()
-
-	debug = d
-}
-
-func (d *debugWriter) Write(p []byte) (int, error) {
-	d.writeChan <- string(p)
-	<-d.writeDone
-	return len(p), nil
-}
-
-func (d *debugWriter) Printf(format string, a ...interface{}) (n int, err error) {
-	return fmt.Fprintf(d, format, a...)
-}
-
-type Window struct {
-	screen *Screen
-	width  int
-	height int
-	StartX int
-	StartY int
-	cursor int
-}
-
-func newDebugWindow(screen *Screen) *Window {
-	return &Window{
-		width:  80,
-		height: 50,
-		screen: screen,
-		StartX: 5,
-		StartY: 5,
-	}
-}
-
-func (state *Olion) drawDebugInfo() {
-	//d := state.debugWriter
-	d := debug
-	w := state.debugWindow
-
-	//draw debug window frame
-	for x := w.StartX - 1; x <= w.StartX+w.width; x++ {
-		w.screen.printString(&Dot{x, w.StartY - 1}, "+")
-		w.screen.printString(&Dot{x, w.StartY + w.height}, "+")
-	}
-	for y := w.StartY; y < w.StartX+w.height; y++ {
-		w.screen.printString(&Dot{w.StartX - 1, y}, "+")
-		w.screen.printString(&Dot{w.StartX + w.width, y}, "+")
-	}
-
-	//print debug buffer
-	d.readReq <- w.height
-	for i := 0; i < w.height; i++ {
-		msg := <-d.readChan
-		//msg = strconv.Itoa(i) + ":" + msg
-		if len(msg) > w.width {
-			msg = msg[:w.width]
-		}
-		w.screen.printString(&Dot{w.StartX, w.StartY + i}, msg)
-	}
-}
-
-func (state *Olion) setStatus() {
-	//count bombs
-	bombs := 0
-	for _, obj := range state.space.Objects {
-		if obj.isBomb() {
-			bombs++
-		}
-	}
-	state.curBomb = bombs
 }
 
 func (state *Olion) Loop(view *View, ctx context.Context, cancel func()) error {
