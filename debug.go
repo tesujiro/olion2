@@ -22,7 +22,7 @@ type debugWriter struct {
 
 var debug *debugWriter
 
-func newDebugWriter(ctx context.Context) {
+func newDebugWriter(ctx context.Context, cancel func()) {
 	size := 1000
 	d := &debugWriter{
 		buff:      make([]string, size),
@@ -35,6 +35,7 @@ func newDebugWriter(ctx context.Context) {
 	}
 
 	go func() {
+		defer cancel()
 	L:
 		for {
 			select {

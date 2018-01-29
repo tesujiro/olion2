@@ -60,7 +60,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 	objects := flag.Int("o", 10, "Number of Flying Objects")
 	flag.Parse()
 	screen := NewScreen()
-	newDebugWriter(ctx)
+	newDebugWriter(ctx, cancel)
 	InitColor()
 
 	return &Olion{
