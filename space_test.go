@@ -17,7 +17,7 @@ func TestGetObjects(t *testing.T) {
 	}
 	defer termbox.Close()
 	ctx, cancel := context.WithCancel(context.Background())
-	n := 10
+	n := 1
 	spc := NewSpace(ctx, cancel, n)
 	expected := n
 	actual := len(spc.GetObjects())
