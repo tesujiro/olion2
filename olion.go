@@ -303,6 +303,7 @@ mainloop:
 			//debug.Printf("len(colors)=%v color.black=%v id=%v ColorBlack=%v\n", len(colors), colors.name("Black"), colors.name("Black").ColorId, ColorBlack)
 			//debug.Printf("typeOf(ColorId)=%v typeOf(ColorBlack)=%v\n", reflect.TypeOf(colors.name("Black").ColorId), reflect.TypeOf(ColorBlack))
 			//debug.Printf("tick ->End\n\n")
+			debug.Printf("abc\td\te231312312312321312312312312312312312312312123123123123123\t\t\t12312312\t12312312312312312312312312312312312\n")
 			if state.Palette == true {
 				state.drawColorPalette()
 			}

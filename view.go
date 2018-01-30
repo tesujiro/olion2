@@ -100,6 +100,9 @@ func (sc *Screen) printStringWithColor(dot *Dot, str string, col termbox.Attribu
 			if r == '\n' {
 				y = y + 1
 				x = dot.X - 1
+			} else if r == '\t' {
+				x = (x/4 + 1) * 4
+
 			} else {
 				termbox.SetCell(x, y, r, col, c.Bg)
 			}
