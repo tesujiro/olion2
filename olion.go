@@ -116,7 +116,8 @@ func (state *Olion) drawConsole(count int) {
 func (state *Olion) setStatus() {
 	//count bombs
 	bombs := 0
-	for _, obj := range state.space.Objects {
+	//for _, obj := range state.space.Objects {
+	for _, obj := range state.space.GetObjects() {
 		if obj.isBomb() {
 			bombs++
 		}
@@ -165,7 +166,7 @@ func (state *Olion) move(spc *Space, t time.Time, dp Coordinates) []upMessage {
 			//debug.Printf("speed=%v\n", speed)
 			newObj := newEnemyBomb(now, 1000, position, speed)
 			newObj.setBomber(flying)
-			state.space.addObj(newObj)
+			state.space.AddObj(newObj)
 			flying.removeBomb()
 		}
 		// Todo:敵同士の攻撃
@@ -277,7 +278,7 @@ mainloop:
 				debug.Printf("newBomb\n")
 				speed := Coordinates{state.speed.X, state.speed.Y, state.speed.Z + 80}
 				newObj := newBomb(now, 1000, Coordinates{}, speed)
-				state.space.addObj(newObj)
+				state.space.AddObj(newObj)
 				fireBomb = false
 			}
 			forward := state.getDistance(now)
