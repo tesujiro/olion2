@@ -3,21 +3,38 @@ package olion
 import (
 	"context"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
 	termbox "github.com/nsf/termbox-go"
 )
 
-func TestGetObjects(t *testing.T) {
+var cancel func()
+var ctx context.Context
+
+func InitTest() {
 	rand.Seed(time.Now().UnixNano())
 	InitColor()
+	ctx, cancel = context.WithCancel(context.Background())
+}
+
+func TestMain(m *testing.M) {
+	// ここにテストの初期化処理
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer termbox.Close()
-	ctx, cancel := context.WithCancel(context.Background())
+	InitTest()
+
+	code := m.Run()
+
+	// ここでテストのお片づけ
+	os.Exit(code)
+}
+
+func TestGetObjects(t *testing.T) {
 	n := 1
 	spc := NewSpace(ctx, cancel, n)
 	expected := n

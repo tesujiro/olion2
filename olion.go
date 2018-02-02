@@ -61,7 +61,7 @@ func New(ctx context.Context, cancel func()) *Olion {
 	flag.Parse()
 	screen := NewScreen()
 	newDebugWriter(ctx, cancel)
-	InitColor()
+	//InitColor()
 
 	return &Olion{
 		Argv:        os.Args,
