@@ -11,6 +11,7 @@ import (
 
 func TestGetObjects(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
+	InitColor()
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
