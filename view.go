@@ -97,13 +97,13 @@ func (sc *Screen) printStringWithColor(dot *Dot, str string, col termbox.Attribu
 		}
 		c := &termbox.CellBuffer()[idx]
 		if sc.cover(*dot) {
-			if r == '\n' {
+			switch r {
+			case '\n':
 				y = y + 1
 				x = dot.X - 1
-			} else if r == '\t' {
+			case '\t':
 				x = (x/4 + 1) * 4
-
-			} else {
+			default:
 				termbox.SetCell(x, y, r, col, c.Bg)
 			}
 		}

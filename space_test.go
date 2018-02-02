@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	// ここでテストのお片づけ
-	os.Exit(code)
+	defer os.Exit(code)
 }
 
 func TestGetObjects(t *testing.T) {
