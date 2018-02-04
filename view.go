@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/nsf/termbox-go"
+	"golang.org/x/text/width"
 )
 
 type Dot struct {
@@ -85,6 +86,43 @@ func (sc *Screen) distance(p1, p2 Coordinates) int {
 	//return int(math.Sqrt(float64((p1.X-p2.X)*(p1.X-p2.X) + (p1.Y-p2.Y)*(p1.Y-p2.Y) + (p1.Z-p2.Z)*(p1.Z-p2.Z)/(sc.Width*sc.Width))))
 }
 
+const TabStop = 4
+
+func CutStringInWidth(s string, w int) []string {
+	var ret []string
+	push := func(l string) {
+		ret = append(ret, l)
+	}
+	line := ""
+	lineWidth := 0
+	for _, r := range s {
+		var rwidth int
+		p := width.LookupRune(r)
+		switch p.Kind() {
+		//ToDo: double byte
+		//case width.EastAsianWide:
+		//rwidth = 2
+		default:
+			rwidth = 1
+		}
+		switch r {
+		case '\t':
+			lineWidth = (lineWidth/TabStop + 1) * TabStop
+		default:
+			lineWidth += rwidth
+		}
+		if lineWidth > w {
+			push(line)
+			line = ""
+			lineWidth = rwidth
+		}
+		line += string(r)
+		//line += fmt.Sprintf("(%v)", lineWidth)
+	}
+	push(line)
+	return ret
+}
+
 //func (sc *Screen) printString(dot *Dot, str string) {
 func (sc *Screen) printStringWithColor(dot *Dot, str string, col termbox.Attribute) {
 	//x, y := dot.X, sc.Height-dot.Y+1
@@ -102,7 +140,7 @@ func (sc *Screen) printStringWithColor(dot *Dot, str string, col termbox.Attribu
 				y = y + 1
 				x = dot.X - 1
 			case '\t':
-				x = (x/4 + 1) * 4
+				x = (x/TabStop + 1) * TabStop
 			default:
 				termbox.SetCell(x, y, r, col, c.Bg)
 			}
@@ -110,6 +148,7 @@ func (sc *Screen) printStringWithColor(dot *Dot, str string, col termbox.Attribu
 		x += 1
 	}
 }
+
 func (sc *Screen) printString(dot *Dot, str string) {
 	sc.printStringWithColor(dot, str, termbox.ColorWhite)
 }

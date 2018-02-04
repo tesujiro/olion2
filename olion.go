@@ -304,7 +304,11 @@ mainloop:
 			//debug.Printf("len(colors)=%v color.black=%v id=%v ColorBlack=%v\n", len(colors), colors.name("Black"), colors.name("Black").ColorId, ColorBlack)
 			//debug.Printf("typeOf(ColorId)=%v typeOf(ColorBlack)=%v\n", reflect.TypeOf(colors.name("Black").ColorId), reflect.TypeOf(ColorBlack))
 			//debug.Printf("tick ->End\n\n")
-			debug.Printf("abc\td\te231312312312321312312312312312312312312312123123123123123\t\t\t12312312\t12312312312312312312312312312312312\n")
+			//debug.Printf("abc\td\te231312312312321312312312312312312312312312123123123123123\t\t\t12312312\t12312312312312312312312312312312312\n")
+			str := "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+			for _, line := range CutStringInWidth(str, 32) {
+				debug.Printf(line)
+			}
 			if state.Palette == true {
 				state.drawColorPalette()
 			}
