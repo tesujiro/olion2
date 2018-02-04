@@ -117,7 +117,6 @@ func CutStringInWidth(s string, w int) []string {
 			lineWidth = rwidth
 		}
 		line += string(r)
-		//line += fmt.Sprintf("(%v)", lineWidth)
 	}
 	push(line)
 	return ret

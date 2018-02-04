@@ -13,10 +13,12 @@ type debugWriter struct {
 	curLine int
 
 	// Goroutine Implementation
-	writeChan chan string
-	writeDone chan struct{}
-	readReq   chan int
-	readChan  chan string
+	writeChan    chan string
+	writeDone    chan struct{}
+	readInitReq  chan struct{}
+	readInitDone chan struct{}
+	readNextReq  chan struct{} // reverse from current line
+	readChan     chan string
 	//readDone  chan struct{}
 }
 
@@ -25,12 +27,14 @@ var debug *debugWriter
 func newDebugWriter(ctx context.Context, cancel func()) {
 	size := 1000
 	d := &debugWriter{
-		buff:      make([]string, size),
-		curLine:   0,
-		writeChan: make(chan string),
-		writeDone: make(chan struct{}),
-		readReq:   make(chan int),
-		readChan:  make(chan string),
+		buff:         make([]string, size),
+		curLine:      0,
+		writeChan:    make(chan string),
+		writeDone:    make(chan struct{}),
+		readInitReq:  make(chan struct{}),
+		readInitDone: make(chan struct{}),
+		readNextReq:  make(chan struct{}),
+		readChan:     make(chan string),
 		//readDone:  make(chan struct{}),
 	}
 
@@ -38,6 +42,7 @@ func newDebugWriter(ctx context.Context, cancel func()) {
 		defer cancel()
 	L:
 		for {
+			var readNextLine int
 			select {
 			case str := <-d.writeChan:
 				lines := strings.Count(str, "\n")
@@ -49,14 +54,23 @@ func newDebugWriter(ctx context.Context, cancel func()) {
 					}
 				}
 				d.writeDone <- struct{}{}
-			case size := <-d.readReq:
-				firstLine := (d.curLine + len(d.buff) - size) % len(d.buff)
-				for i := 0; i < size; i++ {
-					idx := (firstLine + i) % len(d.buff)
-					msg := d.buff[idx]
-					//msg := strconv.Itoa(idx) + ":" + msg
-					d.readChan <- msg
-				}
+			//case size := <-d.readReq:
+			case <-d.readInitReq:
+				readNextLine = d.curLine
+				d.readInitDone <- struct{}{}
+				/*
+					firstLine := (d.curLine + len(d.buff) - size) % len(d.buff)
+					for i := 0; i < size; i++ {
+						idx := (firstLine + i) % len(d.buff)
+						msg := d.buff[idx]
+						//msg := strconv.Itoa(idx) + ":" + msg
+						d.readChan <- msg
+					}
+				*/
+			case <-d.readNextReq:
+				msg := d.buff[readNextLine]
+				readNextLine = (readNextLine - 1 + len(d.buff)) % len(d.buff)
+				d.readChan <- fmt.Sprintf("%v:", readNextLine) + msg
 			case <-ctx.Done():
 				break L
 			}
@@ -111,13 +125,42 @@ func (state *Olion) drawDebugInfo() {
 	}
 
 	//print debug buffer
-	d.readReq <- w.height
-	for i := 0; i < w.height; i++ {
-		msg := <-d.readChan
-		//msg = strconv.Itoa(i) + ":" + msg
-		if len(msg) > w.width {
-			msg = msg[:w.width]
+	/*
+		d.readReq <- w.height
+		for i := 0; i < w.height; i++ {
+			msg := <-d.readChan
+			//msg = strconv.Itoa(i) + ":" + msg
+			if len(msg) > w.width {
+				msg = msg[:w.width]
+			}
+			for _, line := range sort.Reverse(CutStringInWidth(msg, w.width)) {
+				w.screen.printString(&Dot{w.StartX, w.StartY + i}, line)
+			}
 		}
-		w.screen.printString(&Dot{w.StartX, w.StartY + i}, msg)
+	*/
+	reverse := func(strs []string) []string {
+		for i := 0; i < len(strs)/2; i++ {
+			j := len(strs) - i - 1
+			strs[i], strs[j] = strs[j], strs[i]
+		}
+		return strs
+	}
+
+	d.readInitReq <- struct{}{}
+	<-d.readInitDone
+label:
+	for i := w.height - 1; ; {
+		if i < 0 {
+			break label
+		}
+		d.readNextReq <- struct{}{}
+		msg := <-d.readChan
+		for _, line := range reverse(CutStringInWidth(msg, w.width)) {
+			w.screen.printString(&Dot{w.StartX, w.StartY + i}, line)
+			i--
+			if i < 0 {
+				break label
+			}
+		}
 	}
 }
