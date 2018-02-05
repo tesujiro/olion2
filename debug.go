@@ -40,9 +40,9 @@ func newDebugWriter(ctx context.Context, cancel func()) {
 
 	go func() {
 		defer cancel()
+		var readNextLine int
 	L:
 		for {
-			var readNextLine int
 			select {
 			case str := <-d.writeChan:
 				lines := strings.Count(str, "\n")
@@ -70,7 +70,8 @@ func newDebugWriter(ctx context.Context, cancel func()) {
 			case <-d.readNextReq:
 				msg := d.buff[readNextLine]
 				readNextLine = (readNextLine - 1 + len(d.buff)) % len(d.buff)
-				d.readChan <- fmt.Sprintf("%v:", readNextLine) + msg
+				//d.readChan <- fmt.Sprintf("%v/%v:", readNextLine, len(d.buff)) + msg
+				d.readChan <- msg
 			case <-ctx.Done():
 				break L
 			}

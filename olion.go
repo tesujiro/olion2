@@ -306,9 +306,9 @@ mainloop:
 			//debug.Printf("tick ->End\n\n")
 			//str := "12\t345678901234\t56789\t012345\t67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
 			//debug.Printf(str)
-			debug.Printf("123")
-			debug.Printf("456")
-			debug.Printf("789")
+			//debug.Printf("123")
+			//debug.Printf("456")
+			//debug.Printf("789")
 			if state.Palette == true {
 				state.drawColorPalette()
 			}
