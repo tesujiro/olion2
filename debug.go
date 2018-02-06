@@ -35,7 +35,6 @@ func newDebugWriter(ctx context.Context, cancel func()) {
 		readInitDone: make(chan struct{}),
 		readNextReq:  make(chan struct{}),
 		readChan:     make(chan string),
-		//readDone:  make(chan struct{}),
 	}
 
 	go func() {
@@ -55,18 +54,8 @@ func newDebugWriter(ctx context.Context, cancel func()) {
 				}
 				d.writeDone <- struct{}{}
 			case <-d.readInitReq:
-				//readNextLine = d.curLine
 				readNextLine = (d.curLine - 1 + len(d.buff)) % len(d.buff)
 				d.readInitDone <- struct{}{}
-				/*
-					firstLine := (d.curLine + len(d.buff) - size) % len(d.buff)
-					for i := 0; i < size; i++ {
-						idx := (firstLine + i) % len(d.buff)
-						msg := d.buff[idx]
-						//msg := strconv.Itoa(idx) + ":" + msg
-						d.readChan <- msg
-					}
-				*/
 			case <-d.readNextReq:
 				msg := d.buff[readNextLine]
 				readNextLine = (readNextLine - 1 + len(d.buff)) % len(d.buff)
