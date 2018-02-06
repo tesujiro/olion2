@@ -54,9 +54,9 @@ func newDebugWriter(ctx context.Context, cancel func()) {
 					}
 				}
 				d.writeDone <- struct{}{}
-			//case size := <-d.readReq:
 			case <-d.readInitReq:
-				readNextLine = d.curLine
+				//readNextLine = d.curLine
+				readNextLine = (d.curLine - 1 + len(d.buff)) % len(d.buff)
 				d.readInitDone <- struct{}{}
 				/*
 					firstLine := (d.curLine + len(d.buff) - size) % len(d.buff)
