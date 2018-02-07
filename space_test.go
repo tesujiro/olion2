@@ -35,11 +35,20 @@ func TestMain(m *testing.M) {
 }
 
 func TestGetObjects(t *testing.T) {
-	n := 1
-	spc := NewSpace(ctx, cancel, n)
-	expected := n
-	actual := len(spc.GetObjects())
-	if actual != expected {
-		t.Errorf("got %v\nwant %v", actual, expected)
+	cases := []struct {
+		objects int
+	}{
+		{objects: 0},
+		{objects: 10},
+		{objects: 20},
+	}
+	for _, c := range cases {
+		n := c.objects
+		spc := NewSpace(ctx, cancel, n)
+		expected := n
+		actual := len(spc.GetObjects())
+		if actual != expected {
+			t.Errorf("got %v\nwant %v", actual, expected)
+		}
 	}
 }
