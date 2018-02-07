@@ -25,13 +25,13 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
-	defer termbox.Close()
 	InitTest()
 
 	code := m.Run()
 
 	// ここでテストのお片づけ
 	defer os.Exit(code)
+	defer termbox.Close()
 }
 
 func TestGetObjects(t *testing.T) {
