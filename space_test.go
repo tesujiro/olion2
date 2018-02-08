@@ -52,3 +52,14 @@ func TestGetObjects(t *testing.T) {
 		}
 	}
 }
+
+func TestAddObj(t *testing.T) {
+	objects := 10
+	spc := NewSpace(ctx, cancel, objects)
+	spc.AddObj(newStar(time.Now(), 10, Coordinates{}))
+	expected := objects + 1
+	actual := len(spc.GetObjects())
+	if actual != expected {
+		t.Errorf("got %v\nwant %v", actual, expected)
+	}
+}
