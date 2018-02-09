@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/nsf/termbox-go"
+	"github.com/pkg/errors"
 )
 
 type Olion struct {
@@ -20,6 +21,7 @@ type Olion struct {
 	Stderr      io.Writer
 	Debug       bool
 	Palette     bool
+	Objects     int
 	Pause       bool
 	debugWindow *Window
 	//hub    MessageHub
@@ -54,38 +56,52 @@ type Olion struct {
 }
 
 func New(ctx context.Context, cancel func()) *Olion {
+	return &Olion{
+		Argv:    os.Args,
+		Stderr:  os.Stderr,
+		Stdin:   os.Stdin,
+		Stdout:  os.Stdout,
+		Pause:   false,
+		readyCh: make(chan struct{}),
+	}
+}
+
+func (state *Olion) Setup(ctx context.Context, cancel func()) error {
 	rand.Seed(time.Now().UnixNano())
+	err := state.setupOptions()
+	if err != nil {
+		return errors.Wrap(err, "Setup Options Failed")
+	}
+
+	state.screen = NewScreen()
+
+	go newDebugWriter(ctx, cancel)
+	state.debugWindow = newDebugWindow(state.screen)
+
+	//setup Space
+	state.space = NewSpace(ctx, cancel, state.Objects)
+	state.outerSpace = NewOuterSpace(ctx, cancel, 10)
+
+	//setup Self Object
+	state.position = Coordinates{X: 0, Y: 0, Z: 0}
+	state.mobile = mobile{speed: Coordinates{X: 0, Y: 0, Z: 20}, time: time.Now()}
+	state.maxBomb = 4
+	state.curBomb = 0
+	state.score = 0
+
+	return nil
+}
+
+func (state *Olion) setupOptions() error {
 	debug := flag.Bool("d", false, "Debug Mode")
 	palette := flag.Bool("p", false, "Color Palette Mode")
 	objects := flag.Int("o", 10, "Number of Flying Objects")
 	flag.Parse()
-	screen := NewScreen()
-	newDebugWriter(ctx, cancel)
-	//InitColor()
 
-	return &Olion{
-		Argv:        os.Args,
-		Stderr:      os.Stderr,
-		Stdin:       os.Stdin,
-		Stdout:      os.Stdout,
-		Debug:       *debug,
-		Palette:     *palette,
-		Pause:       false,
-		debugWindow: newDebugWindow(screen),
-		//currentLineBuffer: NewMemoryBuffer(), // XXX revisit this
-		readyCh:    make(chan struct{}),
-		screen:     screen,
-		space:      NewSpace(ctx, cancel, *objects),
-		outerSpace: NewOuterSpace(ctx, cancel, 10),
-		//maxScanBufferSize: bufio.MaxScanTokenSize,
-		position: Coordinates{X: 0, Y: 0, Z: 0},
-		mobile:   mobile{speed: Coordinates{X: 0, Y: 0, Z: 20}, time: time.Now()},
-		maxBomb:  4,
-		curBomb:  0,
-		score:    0,
-		//vibration: 0,
-		//cancelFunc: func() {},
-	}
+	state.Debug = *debug
+	state.Palette = *palette
+	state.Objects = *objects
+	return nil
 }
 
 func (state *Olion) drawConsole(count int) {
@@ -381,8 +397,13 @@ func (state *Olion) Run(ctx context.Context) (err error) {
 			_cancel()
 		})
 	}
-
 	state.cancelFunc = cancel
+
+	err = state.Setup(ctx, cancel)
+	if err != nil {
+		return errors.Wrap(err, "Setup Failed")
+	}
+
 	go state.Loop(NewView(state), ctx, cancel)
 
 	// Alright, done everything we need to do automatically. We'll let
