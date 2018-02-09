@@ -63,3 +63,14 @@ func TestAddObj(t *testing.T) {
 		t.Errorf("got %v\nwant %v", actual, expected)
 	}
 }
+
+func TestVanish(t *testing.T) {
+	objects := 10
+	spc := NewSpace(ctx, cancel, objects)
+	expected := objects
+	spc.Vanish(spc.GetObjects()[0])
+	actual := len(spc.GetObjects())
+	if actual != expected {
+		t.Errorf("got %v\nwant %v", actual, expected)
+	}
+}
