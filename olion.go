@@ -114,12 +114,15 @@ func (state *Olion) drawConsole(count int) {
 		state.curFps = 0
 		state.curFpsUnix = unix
 	}
-	state.screen.printString(&Dot{0, 0}, fmt.Sprintf("%v frameRate=%vfps counter=%v move=%v bombs=%v", time.Unix(state.dispFpsUnix, 0), state.dispFps, count, state.speed, state.curBomb))
 
-	//state.disp_number(123456789)
 	start := Dot{0, state.screen.Height - 5}
-	//disp_number(start, state.score)
 	disp_string(start, fmt.Sprintf("SCORE:%v", state.score))
+	if state.Debug {
+		state.screen.printString(&Dot{0, 0}, fmt.Sprintf("%v frameRate=%vfps counter=%v move=%v bombs=%v", time.Unix(state.dispFpsUnix, 0), state.dispFps, count, state.speed, state.curBomb))
+		start = Dot{state.screen.Width - 30, state.screen.Height - 5}
+		disp_string(start, fmt.Sprintf("%vFPS", state.dispFps))
+	}
+
 	x, y := state.screen.Width/2+1, state.screen.Height/2+1
 	for i := 0; i < state.maxBomb-state.curBomb; i++ {
 		state.screen.printString(&Dot{x, y}, "**")
