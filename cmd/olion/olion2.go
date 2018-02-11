@@ -63,7 +63,7 @@ func _main() int {
 		for e := err; e != nil; {
 			switch e.(type) {
 			case ignorable:
-				time.Sleep(3 * time.Second) // is this okay?
+				time.Sleep(3 * time.Second)
 				return 0
 			case causer:
 				e = e.(causer).Cause()
