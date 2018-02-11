@@ -16,7 +16,7 @@ var ctx context.Context
 func InitTest() {
 	rand.Seed(time.Now().UnixNano())
 	InitColor()
-	ctx, cancel = context.WithCancel(context.Background())
+	//ctx, cancel = context.WithCancel(context.Background())
 }
 
 func TestMain(m *testing.M) {

@@ -68,14 +68,19 @@ func New(ctx context.Context, cancel func()) *Olion {
 
 func (state *Olion) Setup(ctx context.Context, cancel func()) error {
 	rand.Seed(time.Now().UnixNano())
+
+	//setup Options
 	err := state.setupOptions()
 	if err != nil {
 		return errors.Wrap(err, "Setup Options Failed")
 	}
 
+	//setup Screen
 	state.screen = NewScreen()
 
-	go newDebugWriter(ctx, cancel)
+	//setup DebugWriter and DebugWindow
+	buffSize := 1000
+	newDebugWriter(buffSize, ctx, cancel)
 	state.debugWindow = newDebugWindow(state.screen)
 
 	//setup Space

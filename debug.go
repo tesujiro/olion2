@@ -24,10 +24,9 @@ type debugWriter struct {
 
 var debug *debugWriter
 
-func newDebugWriter(ctx context.Context, cancel func()) {
-	size := 1000
+func newDebugWriter(buffSize int, ctx context.Context, cancel func()) {
 	d := &debugWriter{
-		buff:         make([]string, size),
+		buff:         make([]string, buffSize),
 		curLine:      0,
 		writeChan:    make(chan string),
 		writeDone:    make(chan struct{}),
@@ -36,6 +35,7 @@ func newDebugWriter(ctx context.Context, cancel func()) {
 		readNextReq:  make(chan struct{}),
 		readChan:     make(chan string),
 	}
+	debug = d
 
 	go func() {
 		defer cancel()
@@ -66,8 +66,6 @@ func newDebugWriter(ctx context.Context, cancel func()) {
 			}
 		}
 	}()
-
-	debug = d
 }
 
 func (d *debugWriter) Write(p []byte) (int, error) {
