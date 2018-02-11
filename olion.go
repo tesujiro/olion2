@@ -14,6 +14,25 @@ import (
 	"github.com/pkg/errors"
 )
 
+type ignorable interface {
+	Ignorable() bool
+}
+
+type errIgnorable struct {
+	err error
+}
+
+func (e errIgnorable) Ignorable() bool { return true }
+func (e errIgnorable) Cause() error {
+	return e.err
+}
+func (e errIgnorable) Error() string {
+	return e.err.Error()
+}
+func makeIgnorable(err error) error {
+	return &errIgnorable{err: err}
+}
+
 type Olion struct {
 	Argv        []string
 	Stdin       io.Reader
@@ -97,11 +116,26 @@ func (state *Olion) Setup(ctx context.Context, cancel func()) error {
 	return nil
 }
 
+const version = "v0.0.1"
+
 func (state *Olion) setupOptions() error {
 	debug := flag.Bool("d", false, "Debug Mode")
 	palette := flag.Bool("p", false, "Color Palette Mode")
 	objects := flag.Int("o", 10, "Number of Flying Objects")
+	help := flag.Bool("h", false, "Show Helps")
+	ver := flag.Bool("v", false, "Show Version")
 	flag.Parse()
+
+	if *help {
+		state.Stdout.Write([]byte("Help Messages"))
+		//return makeIgnorable(errors.New("user asked to show help message"))
+		return makeIgnorable(errors.New("user asked to show help message"))
+	}
+
+	if *ver {
+		state.Stdout.Write([]byte("Olion version " + version + "\n"))
+		return makeIgnorable(errors.New("user asked to show version"))
+	}
 
 	state.Debug = *debug
 	state.Palette = *palette
