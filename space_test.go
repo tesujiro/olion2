@@ -13,10 +13,10 @@ import (
 var cancel func()
 var ctx context.Context
 
-func InitTest() {
+func InitTest() (context.Context, func()) {
 	rand.Seed(time.Now().UnixNano())
 	InitColor()
-	//ctx, cancel = context.WithCancel(context.Background())
+	return context.WithCancel(context.Background())
 }
 
 func TestMain(m *testing.M) {
@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
-	InitTest()
+	ctx, cancel = InitTest()
 
 	code := m.Run()
 
@@ -74,3 +74,6 @@ func TestVanish(t *testing.T) {
 		t.Errorf("got %v\nwant %v", actual, expected)
 	}
 }
+
+/*
+ */

@@ -29,23 +29,6 @@ func (c Coordinates) Div(k int) Coordinates {
 }
 
 func (center Coordinates) Symmetry(diff Coordinates) (ret []Coordinates) {
-	/*
-		perm := func(a, b int) (ret []int) {
-			if b == 0 {
-				ret = []int{a}
-			} else {
-				ret = []int{a - b, a + b}
-			}
-			return ret
-		}
-		for _, x := range perm(center.X, diff.X) {
-			for _, y := range perm(center.Y, diff.Y) {
-				for _, z := range perm(center.Z, diff.Z) {
-					ret = append(ret, Coordinates{X: x, Y: y, Z: z})
-				}
-			}
-		}
-	*/
 	switch {
 	case diff.X == 0:
 		ret = []Coordinates{
