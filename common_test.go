@@ -28,6 +28,7 @@ func TestScaleBy(t *testing.T) {
 		{c: Coordinates{0, 0, 0}, k: 1, expected: Coordinates{0, 0, 0}},
 		{c: Coordinates{1, 2, 3}, k: 0, expected: Coordinates{0, 0, 0}},
 		{c: Coordinates{1, 2, 3}, k: 2, expected: Coordinates{2, 4, 6}},
+		{c: Coordinates{1, 2, 3}, k: -3, expected: Coordinates{-3, -6, -9}},
 	}
 	for _, c := range cases {
 		actual := c.c.ScaleBy(c.k)
