@@ -10,13 +10,9 @@ import (
 	termbox "github.com/nsf/termbox-go"
 )
 
-var cancel func()
-var ctx context.Context
-
-func InitTest() (context.Context, func()) {
+func InitTest() {
 	rand.Seed(time.Now().UnixNano())
 	InitColor()
-	return context.WithCancel(context.Background())
 }
 
 func TestMain(m *testing.M) {
@@ -25,7 +21,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
-	ctx, cancel = InitTest()
+	InitTest()
 
 	code := m.Run()
 
@@ -44,6 +40,7 @@ func TestGetObjects(t *testing.T) {
 	}
 	for _, c := range cases {
 		n := c.objects
+		ctx, cancel := context.WithCancel(context.Background())
 		spc := NewSpace(ctx, cancel, n)
 		expected := n
 		actual := len(spc.GetObjects())
@@ -55,6 +52,7 @@ func TestGetObjects(t *testing.T) {
 
 func TestAddObj(t *testing.T) {
 	objects := 10
+	ctx, cancel := context.WithCancel(context.Background())
 	spc := NewSpace(ctx, cancel, objects)
 	spc.AddObj(newStar(time.Now(), 10, Coordinates{}))
 	expected := objects + 1
@@ -66,6 +64,7 @@ func TestAddObj(t *testing.T) {
 
 func TestVanish(t *testing.T) {
 	objects := 10
+	ctx, cancel := context.WithCancel(context.Background())
 	spc := NewSpace(ctx, cancel, objects)
 	expected := objects
 	spc.Vanish(spc.GetObjects()[0])
