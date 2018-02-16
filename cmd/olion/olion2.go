@@ -44,7 +44,11 @@ func _main() int {
 	}
 	defer termbox.Close()
 
-	olion.InitColor()
+	err = olion.InitColor()
+	if err != nil {
+		log.Fatal(err)
+		return 1
+	}
 
 	termbox.SetOutputMode(termbox.Output256)
 	//termbox.SetOutputMode(termbox.OutputGrayscale)

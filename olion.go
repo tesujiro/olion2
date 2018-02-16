@@ -429,7 +429,6 @@ mainloop:
 
 func (state *Olion) Run(ctx context.Context) (err error) {
 
-	//InitColor()
 	var _cancelOnce sync.Once
 	var _cancel func()
 	ctx, _cancel = context.WithCancel(ctx)

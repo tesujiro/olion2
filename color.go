@@ -2,12 +2,11 @@ package olion
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"os"
 	"strconv"
 
 	termbox "github.com/nsf/termbox-go"
+	"github.com/pkg/errors"
 )
 
 type Color struct {
@@ -47,30 +46,20 @@ type HSL struct {
 
 var colors Colors
 
-func InitColor() {
+func InitColor() error {
 	raw, err := ioutil.ReadFile("./color.json")
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+		return errors.Wrap(err, "Read ./color.json")
 	}
 
 	err = json.Unmarshal(raw, &colors)
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
+		return errors.Wrap(err, "Unmarshal ./color.json")
 	}
+	return nil
 }
 
 func (state *Olion) drawColorPalette() {
-	//debug.Printf("colors=%v\n", len(colors))
-	//var longest Color
-	//for _, col := range colors {
-	//	debug.Printf("id=%v\tname=%v\trgb=%v\n", col.ColorId, col.Name, col.RGB)
-	//	if len(col.Name) > len(longest.Name) {
-	//		longest = col
-	//	}
-	//}
-	//debug.Printf("LONGEST id=%v\tname=%v\trgb=%v\tlen(name)=%v\n", longest.ColorId, longest.Name, longest.RGB, len(longest.Name))
 	colorsPerLine := 13
 	length := 16
 	interval := 0

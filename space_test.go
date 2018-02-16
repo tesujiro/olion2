@@ -13,6 +13,7 @@ import (
 func InitTest() {
 	rand.Seed(time.Now().UnixNano())
 	InitColor()
+	InitTest_Color()
 }
 
 func TestMain(m *testing.M) {
