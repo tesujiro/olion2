@@ -152,15 +152,15 @@ func (obj *mobile) getSpin() (int, int) {
 	return obj.spinXY, obj.spinXZ
 }
 
-func (obj *mobile) getDistance(currentTime time.Time) Coordinates {
+func (obj *mobile) getMovingDistance(currentTime time.Time) Coordinates {
 	prevTime := obj.getTime()
 	speed := obj.getSpeed()
 	deltaTime := float64(currentTime.Sub(prevTime) / time.Millisecond)
 	obj.setTime(prevTime.Add(time.Duration(deltaTime) * time.Millisecond))
 	distance := Coordinates{
-		X: int(float64(speed.X) * deltaTime / 100),
-		Y: int(float64(speed.Y) * deltaTime / 100),
-		Z: int(float64(speed.Z) * deltaTime / 100),
+		X: int(float64(speed.X) * deltaTime / 100), // Todo: Why 100?
+		Y: int(float64(speed.Y) * deltaTime / 100), // Todo:
+		Z: int(float64(speed.Z) * deltaTime / 100), // Todo:
 	}
 	return distance
 }
@@ -316,7 +316,7 @@ mainloop:
 		case downMsg := <-obj.downChannel:
 			obj.updateCurDots(downMsg.time)
 			parts := obj.getParts()
-			distance := obj.getDistance(downMsg.time)
+			distance := obj.getMovingDistance(downMsg.time)
 			newPosition := Coordinates{
 				X: obj.position.X - downMsg.deltaPosition.X - distance.X,
 				Y: obj.position.Y - downMsg.deltaPosition.Y - distance.Y,

@@ -339,7 +339,7 @@ mainloop:
 				state.space.AddObj(newObj)
 				fireBomb = false
 			}
-			forward := state.getDistance(now)
+			forward := state.getMovingDistance(now)
 			upMsgs := state.move(state.space, now, forward)
 			view.draw(upMsgs)
 			count++
