@@ -127,3 +127,28 @@ func TestSpaceBox2(t *testing.T) {
 		}
 	}
 }
+
+func TestSpaceBox3(t *testing.T) {
+	cases := []struct {
+		size                               int
+		position                           Coordinates
+		expectedSpeedMin, expectedSpeedMax int
+		expectedParts                      int
+	}{
+		{size: 10, position: Coordinates{10, 20, 30}, expectedSpeedMin: 0, expectedSpeedMax: 10, expectedParts: 6},
+	}
+	for _, c := range cases {
+		o := newBox3(time.Now(), c.size, c.position)
+		actualSpeed := o.getSpeed()
+		if actualSpeed.Z < c.expectedSpeedMin {
+			t.Errorf("got %v\nwant min:%v", actualSpeed, c.expectedSpeedMin)
+		}
+		if c.expectedSpeedMax < actualSpeed.Z {
+			t.Errorf("got %v\nwant max:%v", actualSpeed, c.expectedSpeedMax)
+		}
+		actualParts := len(o.getParts())
+		if actualParts != c.expectedParts {
+			t.Errorf("got %v\nwant :%v", actualParts, c.expectedParts)
+		}
+	}
+}
